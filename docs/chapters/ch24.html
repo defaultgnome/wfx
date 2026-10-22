@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plugin Ecosystems and DCC Sprawl · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 24. The cost of an integration is not writing it. It is keeping it alive through every upgrade of both sides, forever.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch24">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part VII · People and Process</p>
+    <p class="chap-num" aria-hidden="true">24</p>
+    <h1>Plugin Ecosystems and DCC Sprawl</h1>
+    <p class="dek">We are guests in other people's software, and the rent is due every time either side moves.</p>
+    <p class="meta"><span>Chapter 24</span><span>Continues from Chapter 23</span><span id="reading-time">15 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">The release note said that a core interface had “evolved.” <em>Somewhere in the building, a spreadsheet woke up.</em></p>
+
+    <p>It arrived in the middle of a show, on a Tuesday, from a vendor whose application about a third of our artists use for most of the day. A new major version. Better performance, a refreshed interface, a long list of improvements, and, in the fourth paragraph, a sentence about how one of the ways code talks to the application had evolved. Anyone who has written an in-house plugin reads that sentence the way a homeowner reads a letter from the city about the road outside.</p>
+
+    <p>I opened a new sheet and started a list: every plugin we had written that touched the part that had evolved. By the end of the afternoon it had 47 rows. By the end of the week, with help from people who remembered things I didn't, it had owners next to most of them, a priority column, and a column headed “who knows how this works,” which was mostly empty.</p>
+
+    <p>We sorted them. Twelve were critical: if they broke, artists couldn't publish, load assets or submit to the farm. Twenty were routine, the kind of thing that would be annoying for a week if it failed. Fifteen had no owner anyone could name. Getting through all of it took nine weeks. The close call was a publish plugin that passed its smoke test and then failed on any shot with more than one cache, which, as it happens, was most of the shots we were about to deliver. We caught it on the canary machines, three days before the build would have reached everyone.</p>
+
+    <p>One of the fifteen orphans turned out to be the nine-year-old tool from Chapter 3, still doing something nobody had written down, and it was, naturally, the first one to break.<span class="xref">Ch. 3</span> That is the extreme case of an integration nobody maintains. This chapter is about the ordinary case, which is bad enough.</p>
+
+    <p>The thesis is short. <em>The cost of an integration is not writing it. It is keeping it alive through every upgrade of both sides, forever.</em> If you keep one sentence, keep this one: you don't maintain a plugin. You maintain a relationship with someone else's release schedule.</p>
+
+    <h2 id="why-many" data-short="Why there are so many">Why there are so many</h2>
+
+    <p>It would be tidy if a facility ran one application. We don't, and neither does anyone else I've talked to. As Chapter 1 described, a <dfn>DCC</dfn> is the digital content creation tool an artist works in, and each of them is excellent at something. One is the natural home of character animation. Another is where simulation artists live. A third is where compositors spend their days, and a fourth is where modeling and sculpting happen. Artists are trained on them, often for years, and a shot needs all of them in turn. Asking a lighter to do their work in the application built for effects is like asking a pastry chef to do it all on the grill: possible, and nobody's idea of a good Tuesday.</p>
+
+    <p>So the facility accumulates applications, and then versions of them, and then in-house forks and add-ons. I call this <dfn>DCC sprawl</dfn>: the slow growth of applications, versions and customizations, each of which needs its own connection to asset management (<span class="xref">Ch. 4</span>), to scene description (<span class="xref">Ch. 5</span>), to publishing, and to the farm (<span class="xref">Ch. 19</span>).</p>
+
+    <p>Each application also has its own scripting language, its own object model for what a scene is, its own idea of what “selection” and “undo” mean, and its own way of loading other people's code. A universal integration, one that works the same everywhere, is mostly a polite fiction. The common ground is real, but it is smaller than the differences, and the differences are where the bugs live.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>When I took on the integration work, I carried two beliefs. The first was that you write a plugin once and then you're done. The second, which is its cousin, was that we would soon standardize on one application, so the whole problem would shrink on its own.</p>
+
+    <p>The standardization plan was real. It had a date. The date was the end of the year. It was the end of the year for several years running, and each time the plan was sincere, and each time a show arrived whose supervisor needed a specific tool for a specific kind of shot, and the date slid politely forward. I was the person who kept writing the date on the slide. I'd like it noted that I was the only one who ever believed it.</p>
+
+    <p>The first belief lasted longer, and it was wrong in a more interesting way. A plugin isn't a thing you finish. It's a thing you promise to keep working, and the promise has no end date.</p>
+
+    <h2 id="treadmill" data-short="The treadmill">The treadmill</h2>
+
+    <p>The cost grew in three stages, and each one felt, at the time, like the normal state of affairs.</p>
+
+    <p>In the first, we had one application and one plugin, written by one engineer who understood both. A vendor release meant a quiet week for that engineer. The cost was visible, small and entirely in one head.</p>
+
+    <p>In the second, we had three applications. The sensible thing was to share what could be shared, so we built a common library for publishing, naming and asset lookup, and each application got a thin layer that called it. This worked. Then the shared library began to collect special cases, the way a kitchen drawer collects things: if the application is this one, do that; if it's that one, in this version or later, do something else. The library was supposed to hide the differences. Over time it just became the place where they were all written down.</p>
+
+    <p>In the third, we had a matrix. Four applications. Roughly three versions of each in use at any time, because a vendor's current release, last year's release and an older one that a long-running show hadn't dared leave were all alive at once. And a show in flight can pin its own set of tool versions, so that nothing changes under it in the final months. With eight shows in flight, that is 4 times 3 times 8, ninety-six combinations of application, version and show. Nearly a hundred cells, each one a place where a plugin might load differently, find a different library, or behave in a way nobody had seen.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 250" role="img" aria-labelledby="f241t f241d">
+          <title id="f241t">The integration matrix growing over three stages</title>
+          <desc id="f241d">Three grids of small squares side by side. The first has one square. The second has three rows of three, nine squares. The third is a large grid of ninety-six squares, four applications by three versions by eight show pins, drawn as twelve columns of eight rows.</desc>
+          <g class="node">
+            <rect x="40" y="100" width="30" height="30" rx="4"/>
+          </g>
+          <text class="sm" x="55" y="165" text-anchor="middle">One application,</text>
+          <text class="sm" x="55" y="182" text-anchor="middle">one plugin</text>
+          <g class="node">
+            <rect x="170" y="90" width="22" height="22" rx="3"/><rect x="198" y="90" width="22" height="22" rx="3"/><rect x="226" y="90" width="22" height="22" rx="3"/>
+            <rect x="170" y="118" width="22" height="22" rx="3"/><rect x="198" y="118" width="22" height="22" rx="3"/><rect x="226" y="118" width="22" height="22" rx="3"/>
+            <rect x="170" y="146" width="22" height="22" rx="3"/><rect x="198" y="146" width="22" height="22" rx="3"/><rect x="226" y="146" width="22" height="22" rx="3"/>
+          </g>
+          <text class="sm" x="209" y="195" text-anchor="middle">Three applications,</text>
+          <text class="sm" x="209" y="212" text-anchor="middle">a shared library</text>
+          <g class="node" id="g241">
+            <rect x="340" y="40" width="26" height="22" rx="3"/><rect x="372" y="40" width="26" height="22" rx="3"/><rect x="404" y="40" width="26" height="22" rx="3"/><rect x="436" y="40" width="26" height="22" rx="3"/><rect x="468" y="40" width="26" height="22" rx="3"/><rect x="500" y="40" width="26" height="22" rx="3"/><rect x="532" y="40" width="26" height="22" rx="3"/><rect x="564" y="40" width="26" height="22" rx="3"/><rect x="596" y="40" width="26" height="22" rx="3"/><rect x="628" y="40" width="26" height="22" rx="3"/><rect x="660" y="40" width="26" height="22" rx="3"/><rect x="692" y="40" width="26" height="22" rx="3"/>
+            <rect x="340" y="68" width="26" height="22" rx="3"/><rect x="372" y="68" width="26" height="22" rx="3"/><rect x="404" y="68" width="26" height="22" rx="3"/><rect x="436" y="68" width="26" height="22" rx="3"/><rect x="468" y="68" width="26" height="22" rx="3"/><rect x="500" y="68" width="26" height="22" rx="3"/><rect x="532" y="68" width="26" height="22" rx="3"/><rect x="564" y="68" width="26" height="22" rx="3"/><rect x="596" y="68" width="26" height="22" rx="3"/><rect x="628" y="68" width="26" height="22" rx="3"/><rect x="660" y="68" width="26" height="22" rx="3"/><rect x="692" y="68" width="26" height="22" rx="3"/>
+            <rect x="340" y="96" width="26" height="22" rx="3"/><rect x="372" y="96" width="26" height="22" rx="3"/><rect x="404" y="96" width="26" height="22" rx="3"/><rect x="436" y="96" width="26" height="22" rx="3"/><rect x="468" y="96" width="26" height="22" rx="3"/><rect x="500" y="96" width="26" height="22" rx="3"/><rect x="532" y="96" width="26" height="22" rx="3"/><rect x="564" y="96" width="26" height="22" rx="3"/><rect x="596" y="96" width="26" height="22" rx="3"/><rect x="628" y="96" width="26" height="22" rx="3"/><rect x="660" y="96" width="26" height="22" rx="3"/><rect x="692" y="96" width="26" height="22" rx="3"/>
+            <rect x="340" y="124" width="26" height="22" rx="3"/><rect x="372" y="124" width="26" height="22" rx="3"/><rect x="404" y="124" width="26" height="22" rx="3"/><rect x="436" y="124" width="26" height="22" rx="3"/><rect x="468" y="124" width="26" height="22" rx="3"/><rect x="500" y="124" width="26" height="22" rx="3"/><rect x="532" y="124" width="26" height="22" rx="3"/><rect x="564" y="124" width="26" height="22" rx="3"/><rect x="596" y="124" width="26" height="22" rx="3"/><rect x="628" y="124" width="26" height="22" rx="3"/><rect x="660" y="124" width="26" height="22" rx="3"/><rect x="692" y="124" width="26" height="22" rx="3"/>
+            <rect x="340" y="152" width="26" height="22" rx="3"/><rect x="372" y="152" width="26" height="22" rx="3"/><rect x="404" y="152" width="26" height="22" rx="3"/><rect x="436" y="152" width="26" height="22" rx="3"/><rect x="468" y="152" width="26" height="22" rx="3"/><rect x="500" y="152" width="26" height="22" rx="3"/><rect x="532" y="152" width="26" height="22" rx="3"/><rect x="564" y="152" width="26" height="22" rx="3"/><rect x="596" y="152" width="26" height="22" rx="3"/><rect x="628" y="152" width="26" height="22" rx="3"/><rect x="660" y="152" width="26" height="22" rx="3"/><rect x="692" y="152" width="26" height="22" rx="3"/>
+            <rect x="340" y="180" width="26" height="22" rx="3"/><rect x="372" y="180" width="26" height="22" rx="3"/><rect x="404" y="180" width="26" height="22" rx="3"/><rect x="436" y="180" width="26" height="22" rx="3"/><rect x="468" y="180" width="26" height="22" rx="3"/><rect x="500" y="180" width="26" height="22" rx="3"/><rect x="532" y="180" width="26" height="22" rx="3"/><rect x="564" y="180" width="26" height="22" rx="3"/><rect x="596" y="180" width="26" height="22" rx="3"/><rect x="628" y="180" width="26" height="22" rx="3"/><rect x="660" y="180" width="26" height="22" rx="3"/><rect x="692" y="180" width="26" height="22" rx="3"/>
+          </g>
+          <text class="sm" x="529" y="228" text-anchor="middle">4 applications × 3 versions × 8 show pins (illustrative; 6 of 8 rows drawn per column)</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 24.1</b>The integration matrix over three stages. The last grid is drawn smaller than the real thing; the real one does not fit on a page and, I came to feel, did not fit in anyone's head.</figcaption>
+    </figure>
+
+    <p>I remember the moment the arithmetic landed. We were planning a test pass for a release, and someone asked, reasonably, how many combinations we'd test. I said ninety-six. Someone else asked how many people we had who could set up and run one. The room went quiet in the way rooms do when the answer is smaller than the question.</p>
+
+    <p>Add the people cost. Deep knowledge of one application's internals is rare, and it takes years to build. The engineer who understands how one tool loads plugins is not interchangeable with the one who understands another's scripting model, so a team of ten doesn't have ten of anything. It has a few of each, and sometimes exactly one.</p>
+
+    <h2 id="runtime" data-short="A runtime upgrade">What a runtime upgrade costs</h2>
+
+    <p>If you want to see the treadmill at a run, watch what happens when a scripting-language runtime moves. Every one of our applications embeds one, and the vendors move them on their own schedules. A new version of the language drops something old, tightens how text is handled or changes a library our code leans on. Nothing about our code has changed. It was right yesterday. Today it fails to load.</p>
+
+    <p>Multiply it out. Four applications, each with a few in-house plugins, and each plugin sitting on shared libraries that must now work with two runtimes at once during the transition. That is the same tax as the 47-row spreadsheet, paid at full speed, and in Chapter 28 it becomes a case file of its own.<span class="xref">Ch. 28</span> For now it's enough to know that this is the ordinary weather of the job, not an emergency.</p>
+
+    <p>Two quieter costs came with it. The first is environment collisions. A plugin shares a process with other people's code, and two of them might need different versions of the same library; whichever loads first wins, and the loser fails strangely, sometimes only on one machine, sometimes only when loaded in a particular order. It is a cousin of the script nobody told us about, which Chapter 23 owns: a dependency that nobody listed, found only when it goes missing. The second is that none of this can be tested the way you test a service. You can't run a unit test against a closed application from the outside. What you can do is run it without a window, script it through a few representative tasks, and see whether it survives. That catches the loud failures. It does not catch the quiet ones, and the publish plugin that failed on multiple caches was exactly that.</p>
+
+    <h2 id="seam" data-short="Own the seam">Own the seam, not the application</h2>
+
+    <p>The reframe came slowly, and at first as irritation. We cannot control the vendors. They don't work for us; they have thousands of customers, and from where they sit we are a very small and unusually opinionated one. We cannot stop applications changing. The only thing we control is how much of our own code depends on the parts that move.</p>
+
+    <p>So the aim became to shrink the surface we depend on, and to make the boundary explicit. The boundary is the seam: the place where our world meets the application's. Everything on our side of the seam should be application-neutral: how a publish is named, which asset a shot needs, what gets sent to the farm. Everything on the application's side should be as little as we can make it: a thin adapter that translates between the application's idea of a scene and ours.</p>
+
+    <p>Treat the seam as an interface with a contract, even when the contract is informal. The adapter promises a short list of things (here is the selection, here is the scene, publish it) and nothing else. If we are honest about what we ask of the application, we can say what we'd need to re-check when it changes. The question I learned to ask, before the first line of any new integration, was: what does this look like on the vendor's next major release? Usually the answer was “I don't know,” and it was worth knowing that before writing the thing.</p>
+
+    <p>The second half of the reframe was to avoid doing the integration N times in the first place. If four applications each need to talk to a dozen departments' tools directly, that is up to forty-eight connections. If they all speak a common open format for the thing being exchanged, each application needs one connection to the format, and each department needs one too. Four plus twelve, sixteen connections instead of forty-eight. That's what the open scene description of <span class="xref">Ch. 5</span> bought us, and it is the strongest argument I know for open interchange. The N times M becomes N plus M.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 260" role="img" aria-labelledby="f242t f242d">
+          <title id="f242t">Direct integrations versus an interchange hub</title>
+          <desc id="f242d">On the left, four application boxes each joined by a line to each of three department boxes, twelve lines in all. On the right, the same boxes each joined by one line to a central interchange box, seven lines in all.</desc>
+          <g class="node">
+            <rect x="20" y="30" width="100" height="36" rx="6"/><text x="70" y="53">App A</text>
+            <rect x="20" y="85" width="100" height="36" rx="6"/><text x="70" y="108">App B</text>
+            <rect x="20" y="140" width="100" height="36" rx="6"/><text x="70" y="163">App C</text>
+            <rect x="20" y="195" width="100" height="36" rx="6"/><text x="70" y="218">App D</text>
+            <rect x="260" y="55" width="120" height="36" rx="6"/><text x="320" y="78">Lighting</text>
+            <rect x="260" y="112" width="120" height="36" rx="6"/><text x="320" y="135">Publishing</text>
+            <rect x="260" y="169" width="120" height="36" rx="6"/><text x="320" y="192">Farm</text>
+          </g>
+          <g class="flow">
+            <path d="M120 48 L260 73"/><path d="M120 48 L260 130"/><path d="M120 48 L260 187"/>
+            <path d="M120 103 L260 73"/><path d="M120 103 L260 130"/><path d="M120 103 L260 187"/>
+            <path d="M120 158 L260 73"/><path d="M120 158 L260 130"/><path d="M120 158 L260 187"/>
+            <path d="M120 213 L260 73"/><path d="M120 213 L260 130"/><path d="M120 213 L260 187"/>
+          </g>
+          <text class="sm" x="200" y="250" text-anchor="middle">4 × 3 = 12 connections</text>
+          <g class="node">
+            <rect x="440" y="30" width="100" height="36" rx="6"/><text x="490" y="53">App A</text>
+            <rect x="440" y="85" width="100" height="36" rx="6"/><text x="490" y="108">App B</text>
+            <rect x="440" y="140" width="100" height="36" rx="6"/><text x="490" y="163">App C</text>
+            <rect x="440" y="195" width="100" height="36" rx="6"/><text x="490" y="218">App D</text>
+            <rect x="680" y="55" width="120" height="36" rx="6"/><text x="740" y="78">Lighting</text>
+            <rect x="680" y="112" width="120" height="36" rx="6"/><text x="740" y="135">Publishing</text>
+            <rect x="680" y="169" width="120" height="36" rx="6"/><text x="740" y="192">Farm</text>
+          </g>
+          <g class="node shared"><rect x="570" y="96" width="80" height="64" rx="8"/><text x="610" y="124">Open</text><text x="610" y="142">format</text></g>
+          <g class="flow">
+            <path d="M540 48 L570 112"/><path d="M540 103 L570 120"/><path d="M540 158 L570 136"/><path d="M540 213 L570 148"/>
+            <path d="M650 112 L680 73"/><path d="M650 128 L680 130"/><path d="M650 144 L680 187"/>
+          </g>
+          <text class="sm" x="620" y="250" text-anchor="middle">4 + 3 = 7 connections</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 24.2</b>Direct integrations against an interchange hub. With real numbers the gap is wider; the drawing is kind to the left side.</figcaption>
+    </figure>
+
+    <p>I should be fair about the limits. An open format is a mixed blessing, the same one Chapter 3 described: it lowers the cost of leaving, and it moves some of the maintenance onto us. Every application reads and writes it slightly differently, and the corners where they disagree become our problem.</p>
+
+    <h2 id="built" data-short="What we built and what it cost">What we built, and what it cost</h2>
+
+    <p>None of the following is clever. Each helped, and each cost something.</p>
+
+    <p><em>An environment per show.</em> Here is the mechanism. When a show starts, we record which versions of which applications, plugins and libraries it uses; that record is the show's environment. When an artist launches an application, or a farm node picks up a task, the launcher reads the show's environment and sets everything up to match, resolved at the moment of launch. Nothing is installed in a shared place that someone might change on a Friday evening. A show pinned to last year's tools stays pinned, and a new show gets the new ones. This is the Foreword's fourth difference, every show is a new product, showing up as a version number: each show chooses its own tools, and we support the choice. The cost: the launcher is now critical, every pin is a promise to support something old, and a show that never moves is a show whose problems we'll meet again.</p>
+
+    <p><em>A thin layer, with leaks.</em> We kept the application-specific code small, and it still leaks, always in the same places: the user interface, undo, and selection. These are the parts where an application's behavior is least like anyone else's, and the parts artists notice most. We learned to budget for them and not to be surprised. The cost: those leaks need engineers who know the application well, and they are the hardest hires to make.</p>
+
+    <p><em>Headless smoke tests, per application, per release.</em> For each new version we launch it without a window, load a handful of scenes of the kind we see in production, publish them, and check what came out. It catches the loud breakages in minutes. It does not catch behavior that only shows up with real shots, which is why the multiple-cache failure got through. After that one, we added scenes with the awkward shapes: several caches, very long names, shots with odd frame ranges. The cost: a library of test scenes that itself needs upkeep, and a smug confidence if you forget what it can't see.</p>
+
+    <p><em>A support matrix, published.</em> We wrote down, in one table, what we officially support, what we support on a best-effort basis, and what is on its own. The argument that came with publishing it was the real cost. Nobody likes to find their favorite version in the last column. But the alternative was the unwritten matrix, in which everything was supported until it failed and then it was nobody's fault.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Tier</th><th>What it means</th><th>What you get</th></tr></thead>
+          <tbody>
+            <tr><td>Supported</td><td>The current version and the one before it</td><td>Tested every release, fixed within a day on a show in production</td></tr>
+            <tr><td>Best effort</td><td>An older version a show has pinned for its run</td><td>Fixed if we can; a bridge build if we must; no new features</td></tr>
+            <tr><td>On its own</td><td>Anything older, any local fork, any unlisted add-on</td><td>It may work. Nobody on our side will be paged for it</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 24.1</b>A sample support matrix (illustrative). The wording matters less than the fact that it is published, and enforced.</figcaption>
+    </figure>
+
+    <p><em>An upgrade calendar with a canary group.</em> No new version reaches everyone on the same day. It goes first to a small group of artists, a few from each department who volunteered, ideally on a show with some slack, and stays there for a couple of weeks. The canaries find what the tests didn't; the multiple-cache failure was found this way. Then it widens to a department, then to the site, and only then does it become the default. The cost: calendars need defending, and people on the late end of the rollout, rightly, ask why they have to wait.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Week</th><th>Step</th><th>Who</th></tr></thead>
+          <tbody>
+            <tr><td>0</td><td>Vendor release; spreadsheet opened</td><td>Pipeline engineering</td></tr>
+            <tr><td>1 to 3</td><td>Triage, smoke tests, fixes for critical plugins</td><td>Pipeline engineering</td></tr>
+            <tr><td>4 to 5</td><td>Canary group</td><td>About a dozen volunteers</td></tr>
+            <tr><td>6 to 7</td><td>One department, then one site</td><td>Opt-in, by show</td></tr>
+            <tr><td>8 to 9</td><td>Default for new shows; old version enters best effort</td><td>Everyone but pinned shows</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 24.2</b>An upgrade calendar (illustrative). The nine weeks of the opening story, laid out on purpose instead of by accident.</figcaption>
+    </figure>
+
+    <p>The show that couldn't move deserves a paragraph. One show was about sixty shots from delivery when a new major version became the default for everyone else. It had no slack, no appetite and no reason to change anything. We left it pinned for its whole run, and gave it a bridge build: the old application version with a small number of fixes backported for the specific problems it hit, such as a farm change that its old publish plugin didn't understand. It was not elegant. It cost an engineer about three weeks that I would rather have spent elsewhere, and it let the show finish untouched. I'd do it again.</p>
+
+    <p><em>Deprecation as a product.</em> Retiring a version needs a plan, a date and a replacement, or it never happens. We began publishing sunset dates when we added a version: this one is supported until this date, on this show's final delivery at the latest. The quiet success of this was how little drama it caused. An announced date is a boring thing, and boring is the point. The cost is the work of keeping every date, because the first time you quietly extend one, you've told everyone that dates are suggestions.</p>
+
+    <p>I'll say plainly what all of this cost in people. Roughly a third of the pipeline team's time, in a normal year, goes to keeping integrations alive, and in a year when two vendors ship majors it is more. The goodwill cost is harder to count. Every “no, that version isn't supported” is a small withdrawal from the account we keep with artists, and we make a lot of them.</p>
+
+    <h2 id="vendors" data-short="Vendors and open source">Vendors, open source and pressure</h2>
+
+    <p>Vendors have this problem from the other side, with more customers and fewer excuses, so I try to treat them as colleagues. The one habit that paid for itself was talking early. Where a vendor offers early roadmap conversations or beta access, we take them, and send someone to read the release notes before they are published, not after. Most breakages we found in beta were fixed on their side, because they would prefer to know too. The cost is a person's time and an occasional non-disclosure agreement.</p>
+
+    <p>Open standards are a partial answer to the leverage question. When the scene, the materials and the images travel in open formats, no one vendor holds all our data, and the cost of switching a department drops. But an open standard is also a project that somebody maintains, and if that somebody is partly us, some of the vendor's maintenance work has simply become ours. I think that's usually a good trade, and I should say it's a judgment, not a measurement. What we observed was that the effort did not disappear; it moved to a place where we had more control over it.</p>
+
+    <h2 id="footnote" data-short="What isn't solved">What isn't solved</h2>
+
+    <p>There is always one plugin nobody dares upgrade. Ours does something with cameras, was written by a person who left, and works. Everything near it has been rebuilt twice. I know where it lives, I know what it touches, and I have never found a week in which touching it seemed wiser than leaving it alone. It has become a kind of load-bearing mystery, and I'm not proud of it.</p>
+
+    <p>The matrix also never shrinks as fast as you wish. A deprecation removes a row, and a new show adds two. And a good integration is invisible, which means the people who keep them good are invisible too. Nobody thanks you when the upgrade goes unnoticed; the best result is a quiet Tuesday. I've spent a fair amount of effort trying to make that work visible, and I'm only partly succeeding.</p>
+
+    <div class="callout aside">
+      <span class="callout-label">A small estimator</span>
+      <p>Before agreeing to any new integration, write one line on a page: applications, times versions in use, times plugins, times upgrades a year. Four applications, three versions, ten plugins, two upgrades a year is 240 check-ups a year, before anyone is ill or leaves. If that number frightens you, good. It frightened me, and it was cheaper to be frightened on paper.</p>
+    </div>
+
+    <h2 id="stuck" data-short="What I'd tell my past self">What I'd tell my past self</h2>
+
+    <p>Back to the release announcement. When the next major version came, the sheet opened again, but this time it came with a calendar attached: dates, a canary group, a published support matrix and a name next to every row, including, I'm pleased to say, the orphan from Chapter 3, which now has an owner and a short document about what it does. The upgrade took seven weeks. Nothing nearly shipped broken. Nobody noticed, and that was the point.</p>
+
+    <p>I used to think my job was to write good plugins. It was to keep a promise about them, for years, to people who will never know the promise exists. The earlier I'd counted the combinations, the earlier I'd have understood that.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">What I'd tell my past self</span>
+      <p>Count the combinations before you count the features. And before the first line of any integration, ask what it will look like on the vendor's next major release.</p>
+    </div>
+
+    <p>Upgrades, at least, can be put on a calendar. Failures cannot. Chapter 25 is about what happens when the pipeline breaks while a show is at its busiest, and about the people who are in the building when it does.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

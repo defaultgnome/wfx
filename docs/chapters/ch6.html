@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What Did This Shot Actually Use? · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 6. A producer asks for an old shot to be re-rendered exactly as it was. Why that is a record you keep at the time, not a thing you reconstruct later.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch6">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part II · Assets and Data</p>
+    <p class="chap-num" aria-hidden="true">06</p>
+    <h1>What Did This Shot Actually Use?</h1>
+    <p class="dek">Dependency graphs, render manifests, and why the only honest answer to a producer's favorite question is the one you wrote down while it was happening.</p>
+    <p class="meta"><span>Chapter 6</span><span>Continues from: Chapter 5</span><span id="reading-time">16 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">The phone call came eighteen months after delivery. <em>“Can you just re-render the giant?”</em></p>
+
+    <p>The studio was cutting a trailer for the film's re-release, in a new format, and the giant's walk out of the mist was going to be in it. Our giant, the one from Chapter 1, final at about version 40. It had been approved, delivered, and archived, and by every measure we had, it was done. “Just re-render it” sounded like an afternoon.</p>
+
+    <p>It took two weeks. The new render came back looking almost right, which is the worst way to come back. Every pose matched, the mist matched, the feet were planted. But the shadow under his chin had a faint blue cast that had never been there, and nobody in the building could say why. The producer asked about it every morning. It is a fair question, and I had no answer for her until the second Thursday.</p>
+
+    <p>This chapter is about that Thursday, and about the question underneath it: <em>what did this shot actually use?</em> We'll build up the answer in layers, see where the layers lie to us, and end up with a record we should have been keeping all along.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>Here is what we believed: if we have the scene file, we have the shot. In Chapter 5 we saw that a scene is composed from many files, and the scene file is the thing that says which ones. Keep that file safe and, in principle, the shot can be rebuilt.</p>
+
+    <p>It's a lovely belief. A scene file is a very short summary of a very long story. It names the giant, the pines and the moss, and it says which versions of each to load. It does not say what the renderer did with them, which texture a script quietly fetched along the way, or which version of the color-handling software turned the numbers into pixels. It is a recipe that lists the ingredients and says nothing about the oven, the cook, or the week it was made.</p>
+
+    <p>I held this belief for several years, and I held it sincerely. When a producer asked in a kickoff meeting whether we could re-create any shot at any time, I said yes, cheerfully. Reproducibility is a very easy promise to make at a kickoff, when nothing has had time to change yet.</p>
+
+    <h2 id="graph" data-short="The graph nobody drew">The graph nobody drew</h2>
+
+    <p>Let's draw what the giant's shot really depended on, one layer at a time.</p>
+
+    <p>At the center is the shot itself, version 40. Directly beneath it sit the assets: the giant, the pines, the moss, each pinned to a specific version, as Chapter 4 taught us to do. Under the assets are their parts: textures, geometry, rigs. Alongside them are the caches from simulation, the animation data, the camera from tracking, and the scene layers that lighting assembled. Chapter 1's fan-out and fan-in are both on display. The shot fans in from a dozen places, and every one of those places fans out to hundreds of other shots.</p>
+
+    <p>That much is a graph a patient person could draw on a whiteboard, and some of ours did. But there's a second set of layers underneath, and nobody drew those. The renderer is a particular version. The color-handling software is another. Plugins, add-ons and studio scripts each have versions, and so do the operating system on the farm node and the settings in the render request. All of it is input. Change any of it and the output may change, and none of it appears in the scene file.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 420" role="img" aria-labelledby="g1t g1d">
+          <title id="g1t">The dependency graph of one shot</title>
+          <desc id="g1d">Shot version 40 at the top. Below it, three rows: declared inputs (giant, pines, moss, camera, animation, simulation cache), their parts (textures, rig), and the software environment (renderer, color plugin, farm operating system, settings). Solid arrows show declared dependencies. Red dashed arrows show dependencies that were observed at render time but never declared, including a texture fetched by a script and the color plugin.</desc>
+          <defs>
+            <marker class="ah" id="g1a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+            <marker class="ah-loop" id="g1l" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+
+          <g class="node">
+            <rect x="310" y="14" width="200" height="44" rx="8"/><text x="410" y="42">Giant · shot v40</text>
+          </g>
+
+          <g class="node">
+            <rect x="10" y="120" width="110" height="44" rx="8"/><text x="65" y="147">Giant</text>
+            <rect x="136" y="120" width="110" height="44" rx="8"/><text x="191" y="147">Pines</text>
+            <rect x="262" y="120" width="110" height="44" rx="8"/><text x="317" y="147">Moss</text>
+            <rect x="388" y="120" width="110" height="44" rx="8"/><text x="443" y="147">Camera</text>
+            <rect x="514" y="120" width="130" height="44" rx="8"/><text x="579" y="147">Animation</text>
+            <rect x="660" y="120" width="150" height="44" rx="8"/><text x="735" y="147" style="font-size:14px">Simulation caches</text>
+          </g>
+
+          <g class="node">
+            <rect x="10" y="220" width="110" height="44" rx="8"/><text x="65" y="247">Rig</text>
+            <rect x="136" y="220" width="110" height="44" rx="8"/><text x="191" y="247">Textures</text>
+            <rect x="262" y="220" width="110" height="44" rx="8"/><text x="317" y="247">Geometry</text>
+          </g>
+          <g class="node ghost">
+            <rect x="420" y="220" width="190" height="44" rx="8"/><text x="515" y="247" style="font-size:14px">A texture nobody listed</text>
+          </g>
+
+          <g class="node shared">
+            <rect x="10" y="350" width="140" height="44" rx="8"/><text x="80" y="377">Renderer</text>
+            <rect x="170" y="350" width="160" height="44" rx="8"/><text x="250" y="377" style="font-size:14px">Color plugin</text>
+            <rect x="350" y="350" width="160" height="44" rx="8"/><text x="430" y="377" style="font-size:14px">Farm OS image</text>
+            <rect x="530" y="350" width="140" height="44" rx="8"/><text x="600" y="377">Settings</text>
+            <rect x="690" y="350" width="120" height="44" rx="8"/><text x="750" y="377" style="font-size:14px">Studio scripts</text>
+          </g>
+
+          <g class="flow">
+            <path d="M360 58 C250 80 100 90 65 118" marker-end="url(#g1a)"/>
+            <path d="M380 58 C330 80 200 90 191 118" marker-end="url(#g1a)"/>
+            <path d="M395 58 C380 80 330 90 317 118" marker-end="url(#g1a)"/>
+            <path d="M420 58 V118" marker-end="url(#g1a)"/>
+            <path d="M440 58 C500 80 560 90 579 118" marker-end="url(#g1a)"/>
+            <path d="M470 58 C600 80 720 90 735 118" marker-end="url(#g1a)"/>
+            <path d="M65 164 V218" marker-end="url(#g1a)"/>
+            <path d="M191 164 V218" marker-end="url(#g1a)"/>
+            <path d="M317 164 V218" marker-end="url(#g1a)"/>
+          </g>
+
+          <g>
+            <path class="loop" d="M735 164 C735 200 640 250 520 262" marker-end="url(#g1l)"/>
+            <path class="loop" d="M510 58 C640 40 780 40 790 100 C800 240 790 300 760 348" marker-end="url(#g1l)"/>
+            <path class="loop" d="M410 58 C30 140 -10 250 20 348" marker-end="url(#g1l)"/>
+            <path class="loop" d="M300 58 C200 200 230 280 250 348" marker-end="url(#g1l)"/>
+            <path class="loop" d="M450 58 C470 200 440 280 430 348" marker-end="url(#g1l)"/>
+          </g>
+          <text class="say t" x="650" y="294">“Loaded by a script.”</text>
+        </svg>
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span><i></i>declared in the scene</span>
+        <span><i class="back"></i>used, but never declared</span>
+      </div>
+      <figcaption><b>Figure 6.1</b>One shot, drawn honestly. The solid edges are what the scene file knows. The dashed red edges are what actually happened.</figcaption>
+    </figure>
+
+    <p>Two vocabulary words will carry us from here. A <dfn>declared dependency</dfn> is something the scene says it needs: the artist or the tool wrote it down. An <dfn>observed dependency</dfn> is something the renderer actually opened while it ran. In a tidy world the two lists match. In ours they differed by about a tenth on a typical shot, and more on the busy ones.</p>
+
+    <p>Take the texture. A lighting artist, years earlier, had written a small script that looked at the moss and pulled in an extra detail map whenever the camera got close. It was a sensible shortcut. It also meant the map was loaded by name, at render time, from a shared folder, and appeared nowhere in the scene. When the map was later repainted, every shot that used the script changed a little, and no list anywhere could say which shots those were. (Chapter 23 names this pattern, the script nobody told us about, and gives it the attention it deserves. For now, just notice that the giant's shot was full of them.)</p>
+
+    <p>The deeper problem is that the declared graph is what people intend, and the observed graph is what the shot is made of. They only agree if nobody has ever been in a hurry.</p>
+
+    <h2 id="capture" data-short="Writing it down while it happens">Writing it down while it happens</h2>
+
+    <p>Once we saw the gap, the first fix we reached for was the obvious one: work out the full dependency list when an artist publishes the shot. We tried it for one show. It failed in a quiet and instructive way.</p>
+
+    <p>Publishing is a moment when the artist says what they believe the shot uses. It tells you about intent. But a render happens later, sometimes days later, on a machine the artist has never seen, with whatever versions of everything were installed that night. The facts that matter exist only at that moment, and a record made earlier is a guess about the future. So we moved the recording to the one place that actually knows: the render itself.</p>
+
+    <p>We call the result a <dfn>render manifest</dfn>. It is a short record, written by the task as it runs, and stored with the frames it produced. It holds a handful of kinds of facts.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 300" role="img" aria-labelledby="m1t m1d">
+          <title id="m1t">Anatomy of a render manifest</title>
+          <desc id="m1d">A card labeled manifest for one frame, split into five groups: resolved inputs, content fingerprints, software environment, settings, and machine class. An arrow shows the card traveling with the output frame.</desc>
+          <defs>
+            <marker class="ah" id="m1a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+          <g class="node shared">
+            <rect x="10" y="20" width="500" height="260" rx="12"/>
+            <text x="260" y="52" style="font-size:15px;font-weight:600">Manifest · giant, v40, frame 31, one layer</text>
+          </g>
+          <g class="node">
+            <rect x="30" y="72" width="220" height="44" rx="8"/><text x="140" y="99" style="font-size:14px">Resolved input versions</text>
+            <rect x="270" y="72" width="220" height="44" rx="8"/><text x="380" y="99" style="font-size:14px">Content fingerprints</text>
+            <rect x="30" y="130" width="220" height="44" rx="8"/><text x="140" y="157" style="font-size:14px">Renderer and plugin versions</text>
+            <rect x="270" y="130" width="220" height="44" rx="8"/><text x="380" y="157" style="font-size:14px">Farm image and settings</text>
+            <rect x="30" y="188" width="460" height="44" rx="8"/><text x="260" y="215" style="font-size:14px">Machine class · when it ran · what it actually opened</text>
+          </g>
+          <text class="say" x="260" y="258" style="text-anchor:middle">No schema here, just the kinds of facts.</text>
+          <g class="flow">
+            <path d="M512 150 H588" marker-end="url(#m1a)"/>
+          </g>
+          <g class="node done">
+            <rect x="590" y="110" width="200" height="80" rx="10"/>
+            <text x="690" y="145">Output frame</text><text class="sm" x="690" y="168">carries its manifest</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 6.2</b>What a manifest records. It is the shot's receipt, written while the money was being spent.</figcaption>
+    </figure>
+
+    <p>First, the <em>resolved</em> inputs: not “the latest giant” but the exact version of the giant that was actually loaded, which Chapter 4's identities make possible. Second, a fingerprint of the content of each file, so that “version 7” and “version 7, quietly overwritten” can be told apart. Third, the versions of the renderer, the plugins and any studio scripts. Fourth, the settings in the request and the identity of the farm image the node booted from. Fifth, the class of machine it ran on and what the process actually opened while it ran.</p>
+
+    <p>That last item is where honesty is required, because we got it from three imperfect sources. The scene-resolution step told us what was meant to load. The tools could report on themselves, politely and incompletely. And the file system's access log told us what had really been read, except when it hadn't: anything read through our network caches slipped past the log. For about a quarter of the early manifests, that meant the observed list was shorter than the truth. We knew it, we flagged those manifests as partial, and we fixed the gap one cache layer at a time over the following two shows. A manifest is evidence, not an oracle.</p>
+
+    <p>The cost was real. Every task writes a little extra data and spends a little extra time hashing. At a million tasks a night it adds up to storage we had to budget for, and a small tax on the farm that I argued about with myself for a while. There was also a human question that turned out to be harder than the technical one: when is a manifest <em>complete</em>? We settled on “complete enough to answer the questions we have been asked so far,” which is unsatisfying and, so far, has held.</p>
+
+    <p>One decision I'd defend loudly: the manifest lives on the output, as metadata, so it travels with the frame. If it lived in a separate database it would be one more thing to keep in sync, and one more thing that could be missing on the day it was needed. A frame that can say where it came from is more useful than a library that remembers on its behalf.</p>
+
+    <p>One distinction is worth stating plainly, because readers (and, for a long time, I) mix them up. <em>Versioning</em> records what exists: this version of the giant, that version of the moss. <em>Provenance</em> records what happened: this frame was made from those versions, with this software, on that night. Chapter 4 gave us the first. This chapter is about the second.</p>
+
+    <h2 id="queries" data-short="Forward and backward">Forward and backward</h2>
+
+    <p>A graph that records the past is only useful if you can ask it questions. There are really two, and they are the same graph read in opposite directions.</p>
+
+    <p>The backward question is <dfn>provenance</dfn>: given this frame, what fed it? That's the producer's question, and the one we started with. The forward question is <dfn>impact analysis</dfn>: given this thing, what did it feed? That's the question you ask when a texture turns out to be wrong.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 240" role="img" aria-labelledby="q1t q1d">
+          <title id="q1t">One graph, two questions</title>
+          <desc id="q1d">A bad texture on the left feeds three assets, which feed five shots on the right, two of which are marked delivered. A forward arrow runs left to right labeled impact analysis. A backward arrow runs right to left labeled provenance.</desc>
+          <defs>
+            <marker class="ah" id="q1a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+            <marker class="ah-loop" id="q1l" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+          <g class="node ghost"><rect x="10" y="88" width="120" height="44" rx="8"/><text x="70" y="115">Bad texture</text></g>
+          <g class="node">
+            <rect x="210" y="30" width="110" height="40" rx="8"/><text x="265" y="55">Moss</text>
+            <rect x="210" y="100" width="110" height="40" rx="8"/><text x="265" y="125">Forest floor</text>
+            <rect x="210" y="170" width="110" height="40" rx="8"/><text x="265" y="195">Giant</text>
+          </g>
+          <g class="node">
+            <rect x="420" y="14" width="100" height="32" rx="8"/><text x="470" y="35" style="font-size:13px">Shot A</text>
+            <rect x="420" y="58" width="100" height="32" rx="8"/><text x="470" y="79" style="font-size:13px">Shot B</text>
+            <rect x="420" y="102" width="100" height="32" rx="8"/><text x="470" y="123" style="font-size:13px">Shot C</text>
+            <rect x="420" y="146" width="100" height="32" rx="8"/><text x="470" y="167" style="font-size:13px">Shot D</text>
+            <rect x="420" y="190" width="100" height="32" rx="8"/><text x="470" y="211" style="font-size:13px">Shot E</text>
+          </g>
+          <g class="node done">
+            <rect x="620" y="58" width="130" height="32" rx="8"/><text x="685" y="79" style="font-size:13px">Delivered</text>
+            <rect x="620" y="146" width="130" height="32" rx="8"/><text x="685" y="167" style="font-size:13px">Delivered</text>
+          </g>
+          <g class="flow">
+            <path d="M130 100 L208 52" marker-end="url(#q1a)"/><path d="M130 110 L208 120" marker-end="url(#q1a)"/><path d="M130 120 L208 190" marker-end="url(#q1a)"/>
+            <path d="M320 50 L418 30" marker-end="url(#q1a)"/><path d="M320 52 L418 74" marker-end="url(#q1a)"/>
+            <path d="M320 120 L418 118" marker-end="url(#q1a)"/><path d="M320 190 L418 162" marker-end="url(#q1a)"/><path d="M320 195 L418 206" marker-end="url(#q1a)"/>
+            <path d="M520 74 H618" marker-end="url(#q1a)"/><path d="M520 162 H618" marker-end="url(#q1a)"/>
+          </g>
+          <path class="loop" d="M740 108 C560 108 360 232 70 232 C60 232 60 160 66 134" marker-end="url(#q1l)"/>
+          <text class="say t" x="400" y="238">provenance: what fed this?</text>
+        </svg>
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span><i></i>impact analysis: what did this feed?</span>
+        <span><i class="back"></i>provenance: what fed this?</span>
+      </div>
+      <figcaption><b>Figure 6.3</b>Same edges, two directions. In this sketch, five shots touched the bad texture, and two of them had already shipped.</figcaption>
+    </figure>
+
+    <p>The query that justified the whole system arrived at about three in the morning, on a show I won't describe further. A texture artist found that a skin map had been exported with a color-space mistake. It was subtle, the kind of thing you see only when you know. The fix was easy. The question was: <em>which shots used it, and which of those have already gone out?</em></p>
+
+    <p>Without a graph, the answer is a very long night of grepping and asking around, and a real chance of being wrong in the direction that matters, the one where you miss a delivered shot. With the graph, the answer was a list of seventeen shots in a few seconds, three of them delivered, and a message to the show's coordinator before the sun came up. Nobody thanked the graph. That is how infrastructure knows it worked. (When one bad frame turns up among a hundred thousand, the same manifests are where Chapter 20 starts looking.)</p>
+
+    <p>The scale made this harder than it sounds. A big show's graph runs to millions of edges: every frame, every layer, every input, over every version. We had first kept it all in one place, and that place got slow in the way databases do when the same people ask it three different kinds of question. We stopped storing it as one large graph. Today the manifests live with their outputs, a lighter index of “who used what” is built from them for the forward question, and the heavy detail is only read when somebody asks about a specific frame. It's a little less elegant and a good deal more responsive.</p>
+
+    <h2 id="again" data-short="Bringing a shot back">Bringing a shot back</h2>
+
+    <p>Let's return to the phone call. With the manifest idea in hand, what does it actually take to bring the giant back eighteen months later?</p>
+
+    <p>Three things. First, the inputs: every file the manifest names must be restored from the archive, which is a storage problem we take up in Chapter 7. Second, the software environment: the same renderer, the same plugins, the same operating system image, the same studio scripts. Third, you run it.</p>
+
+    <p>The second step is the hard one, and it's hard for dull reasons. Operating systems age out of support. A plugin vendor stops shipping the version you used. A license server for a tool you no longer use gets decommissioned, and with it the only legal way to start the tool. Eighteen months is not long, and the environment had already drifted.</p>
+
+    <p>Our partial answer is to treat the environment as an artifact, not a state. The farm image a task ran on is recorded in its manifest and kept, packaged so that it can be started again, and we pin the renderer and plugin versions per show rather than letting them float. This is the container idea, applied with some discipline, and it covers most of what we need. It does not cover everything. Packaged environments still depend on the hardware underneath, and some licensed tools simply won't run without their license servers. We keep a list of the show-critical ones and renew them long after we'd like to.</p>
+
+    <h3>What “the same” means</h3>
+
+    <p>It took me an embarrassingly long time to see that “the same shot” is not one promise. It's a ramp, and each step costs more than the one before.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Level</th><th>What stays the same</th><th>Relative cost</th><th>Our policy</th></tr></thead>
+          <tbody>
+            <tr><td>1. Same inputs</td><td>Every file, version and fingerprint</td><td><span class="pips" data-n="1"></span><span class="size">low</span></td><td class="who">Always guaranteed</td></tr>
+            <tr><td>2. Same software</td><td>Renderer, plugins, scripts, farm image</td><td><span class="pips" data-n="2"></span><span class="size">moderate</span></td><td class="who">Always guaranteed</td></tr>
+            <tr><td>3. Same hardware class</td><td>The kind of machine it runs on</td><td><span class="pips" data-n="3"></span><span class="size">high</span></td><td class="who">Delivered shows, while the hardware lasts</td></tr>
+            <tr><td>4. Same pixels</td><td>Every value in every frame</td><td><span class="pips" data-n="4"></span><span class="size">very high</span></td><td class="who m">Only on the same hardware class; not promised otherwise</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 6.1</b>The reproducibility ramp. Each step is a promise, and each promise has a bill.</figcaption>
+    </figure>
+
+    <p>The policy column is the part that matters, and it took us a couple of shows and a few awkward conversations to write down. Level 1 and level 2 we guarantee. Level 3 we try for on delivered shows, for as long as we still own that kind of hardware. Level 4, same pixels, we promise only when levels 1 to 3 hold, and we say so in writing. Nobody enjoys being told that “exactly the same” has terms and conditions. Everyone enjoys it more than learning it from a trailer.</p>
+
+    <p>Some differences are legitimate and shouldn't be hidden. Renderers that use random sampling can differ in the noise from one hardware generation to the next. A simulation that depends on timing can wander. Floating-point arithmetic doesn't promise the same last digit on every chip. These are real, small, and usually invisible, and Chapter 8 on the renderer and Chapter 10 on noise explain where they come from. Our habit is to record them in the manifest rather than pretend they don't exist, so that “different noise” is a note on file and not a mystery to rediscover.</p>
+
+    <h2 id="blue" data-short="The blue shadow">The blue shadow</h2>
+
+    <p>So, the blue. After two weeks we had ruled out the renderer, the textures, the simulation caches and the lighting setup, by the slow method of re-rendering with one thing swapped at a time. The giant's version 40 had a manifest only in the loosest sense, because we hadn't been writing them then. We were reconstructing from memory and from logs, which is the situation this chapter exists to avoid.</p>
+
+    <p>The answer came from a farm engineer who asked a dull question: had anything on the node image changed since delivery? It had. A color-handling plugin on the farm image had been set to update itself, and sometime after delivery it had moved to a newer release that changed a default for how shadow tints were handled. Nobody chose to change the giant. A default shifted under him, and the shadow turned slightly blue.</p>
+
+    <p>Here is the part I'd rather not tell. My own team had approved the auto-update, months earlier, because it fixed an unrelated bug and the update notes were reassuring. We reviewed it the way you review things you expect to be harmless. I spent two weeks as a detective hunting for a suspect I had personally signed for. A manifest would have listed the plugin version in a single line, and comparing that line to the one on the delivered frames would have taken five minutes. The mystery would have been a question, not a fortnight.</p>
+
+    <p>We pinned the version, re-rendered, and the shadow went back to the shade it had been at delivery. The trailer shipped on time, narrowly, and I had to explain to the producer that the shot had never been wrong. The world around it had moved.</p>
+
+    <h2 id="left-out" data-short="What we left out on purpose">What we left out on purpose</h2>
+
+    <p>A natural reaction to this story is to want to track everything. We didn't, and I think that was right.</p>
+
+    <p>We don't write manifests for scratch work, quick previews, or experiments an artist is running to see what happens. Those renders get thrown away within days, and a record of something nobody will ever ask about is a cost with no reader. We don't track every keystroke that led to a scene file; versions are enough. And we don't record the contents of the moment-to-moment state of a running tool, which would be gigabytes of detail for a question almost nobody asks.</p>
+
+    <p>There's a quieter reason, too. A graph that records everything is a graph nobody reads. The value of a manifest comes from being small enough that a human can open one and see the line that matters. We have a rule of thumb: if a fact has never answered a real question and we can't imagine the question, it probably doesn't belong.</p>
+
+    <p>I'll admit the line is not always clean. An experiment sometimes turns into a delivered shot without anyone noticing the moment it changed status, and then we have a final frame with no manifest and a lot of apologizing. We've tightened the promotion step to catch this. It still happens a few times a year.</p>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>Insisting on reproducibility was right. We were just late to pay for it. The manifest cost us extra storage, a little farm time and a few arguments, and we had to learn it by losing two weeks over a blue shadow rather than adopting it for free at the start. (Chapter 30 weighs how much of that was unavoidable. I suspect less than I'd like.)</p>
+
+    <p>Here is the test I use now, as a design review question for anything that touches a shot: <em>if somebody calls in eighteen months and asks us to bring this back exactly, what will we wish we had written down?</em> Then write that down, today, while it's happening, because it's the only moment you can.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">Takeaway</span>
+      <p>A pipeline's memory is a feature with a budget. The only honest answer to “what did this shot use?” is the one you wrote down while it was happening.</p>
+    </div>
+
+    <p>Remembering everything means keeping everything, and keeping it somewhere you can reach when the call comes. Every manifest we write points at files that have to exist, in the right version, eighteen months or eighteen shows later. That is a storage problem, and storage is where the next chapter begins.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anatomy of a Shot · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 1. Follow one two-and-a-half-second shot from raw footage to final frame, and meet the idea that shapes the rest of the book: a pipeline is not a line.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch1">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part I · The Shape of the Problem</p>
+    <p class="chap-num" aria-hidden="true">01</p>
+    <h1>Anatomy of a Shot</h1>
+    <p class="dek">One two-and-a-half-second shot, nine stages, about a dozen departments, and the idea that quietly shapes everything else in this book.</p>
+    <p class="meta"><span>Chapter 1</span><span>Continues from: Foreword</span><span id="reading-time">13 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">The shot was two and a half seconds long. <em>It took us eleven weeks.</em></p>
+
+    <p>You met him at the end of the Foreword. You've seen a shot like him a hundred times and never noticed. A huge, mossy giant walks out of a mist-filled pine forest, pauses, and turns his head toward the camera. Twenty-four frames a second for two and a half seconds makes sixty frames. Cut to the next scene. In a cinema it goes by in the time it takes to think <em>oh, there's the giant</em>, and nobody in the audience will give it another thought. If we've done our job, that is exactly the point.</p>
+
+    <p>Behind those sixty frames sat about a dozen departments, a few dozen people, hundreds of files, and a great many hours of computer time. The shot was made about forty times, each version an earnest attempt that somebody watched and answered with “not yet.” Nobody was slacking. Nothing especially dramatic went wrong. That is simply what a shot costs.</p>
+
+    <div class="callout">
+      <span class="callout-label">A note on the giant</span>
+      <p>He is a composite. I've blended several real situations so that nothing here is confidential and everything is typical. The numbers are illustrative orders of magnitude, not audited figures. We'll follow this one shot through the whole chapter, and he'll wander back in later whenever the book needs a reminder of how much is hiding behind sixty frames.</p>
+    </div>
+
+    <p>This chapter is a tour of how a shot travels from “we have some footage” to “it's in the movie.” Its job is to give you a map, because every later chapter on rendering, simulation, storage, or the render farm makes more sense once you know where it sits. If you come from web services, games, or data platforms, most of the vocabulary will be new, but I promise the problems will feel familiar. They have the same genes: too much data, too many dependencies, and users who change their minds.</p>
+
+    <p>A few words first, since I'll lean on them throughout. A <dfn>show</dfn> is one film or series being worked on; I save “film” for the thing the audience sees. A <dfn>shot</dfn> is one continuous piece of footage, from a couple of seconds to a few tens of seconds, and it is the unit we plan, track and bill by. A <dfn>department</dfn> is a team of specialists, such as animation or lighting, and a <dfn>TD</dfn> (technical director) is the person who bridges artists and code; I started as one. A <dfn>DCC</dfn> (digital content creation tool) is the application an artist works in. The <dfn>farm</dfn> is the shared cluster of machines that does the heavy computing. A <dfn>version</dfn> is one numbered attempt at a shot, a <dfn>retake</dfn> is another go after notes, and <dfn>final</dfn> is the version somebody finally approves.</p>
+
+    <p>One habit of this trade is worth flagging now, because Chapter 3 is built on it: every show is a new product. The giant's show had its own needs, its own deadlines and its own director, and last year's answers did not simply carry over. Hold that thought; we'll pay it off there.</p>
+
+    <p>There's also one idea I want to plant early, because I spent my first year failing to see it. We'll get there. First, the picture I carried in my head, which you probably carry too.</p>
+
+    <h2 id="belt" data-short="The belt we imagined">The belt we imagined</h2>
+
+    <p>When I joined my first VFX facility fourteen years ago, I assumed a pipeline was a conveyor belt. Footage goes on at one end. It rolls past a series of stations, each doing its job and handing the shot along, and at the far end a finished shot drops into a bin. Sushi-bar logic: plates go round, everyone takes what they need, nobody has to talk to anybody.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 840 140" role="img" aria-labelledby="f1t f1d">
+          <title id="f1t">The pipeline as a conveyor belt</title>
+          <desc id="f1d">Seven boxes in a row on a conveyor belt: footage, tracking, animation, simulation, lighting, compositing, and done, joined by arrows pointing left to right.</desc>
+          <defs>
+            <marker class="ah" id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+          <g class="node">
+            <rect x="10" y="34" width="100" height="48" rx="8"/><text x="60" y="63">Footage</text>
+            <rect x="130" y="34" width="100" height="48" rx="8"/><text x="180" y="63">Tracking</text>
+            <rect x="250" y="34" width="100" height="48" rx="8"/><text x="300" y="63">Animation</text>
+            <rect x="370" y="34" width="100" height="48" rx="8"/><text x="420" y="63">Simulation</text>
+            <rect x="490" y="34" width="100" height="48" rx="8"/><text x="540" y="63">Lighting</text>
+            <rect x="610" y="34" width="100" height="48" rx="8"/><text x="660" y="63" style="font-size:14px">Compositing</text>
+          </g>
+          <g class="node done"><rect x="730" y="34" width="100" height="48" rx="8"/><text x="780" y="63">Done ✓</text></g>
+          <g class="flow">
+            <path d="M110 58 H128" marker-end="url(#a1)"/><path d="M230 58 H248" marker-end="url(#a1)"/>
+            <path d="M350 58 H368" marker-end="url(#a1)"/><path d="M470 58 H488" marker-end="url(#a1)"/>
+            <path d="M590 58 H608" marker-end="url(#a1)"/><path d="M710 58 H728" marker-end="url(#a1)"/>
+          </g>
+          <rect class="belt" x="10" y="94" width="820" height="16" rx="8"/>
+          <circle class="wheel" cx="18" cy="102" r="10"/><circle class="wheel" cx="822" cy="102" r="10"/>
+          <g class="rivet"><circle cx="80" cy="102" r="2"/><circle cx="200" cy="102" r="2"/><circle cx="320" cy="102" r="2"/><circle cx="440" cy="102" r="2"/><circle cx="560" cy="102" r="2"/><circle cx="680" cy="102" r="2"/><circle cx="760" cy="102" r="2"/></g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 1.1</b>The pipeline I pictured. Tidy, linear, and mostly imaginary.</figcaption>
+    </figure>
+
+    <p>It's a lovely picture and I'd like it back. It is wrong in four ways, and each of them is responsible for a large share of the engineering in this book. But you can't appreciate how a belt catches fire until you know what's riding on it, so let's meet the stations.</p>
+
+    <h2 id="tour" data-short="A tour, in kitchen terms">A tour, in kitchen terms</h2>
+
+    <p>Think of a shot as a dish in a very busy restaurant. Not a burger: a tasting-menu plate, one of a thousand on the evening's list, touched by several cooks, and tasted by the head chef before it leaves the kitchen. The head chef sends it back more often than anyone would like. I'll use that picture to keep us oriented. There are nine stops.</p>
+
+    <ol class="stages">
+
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">1</span>
+        <h3>Turnover</h3>
+        <p class="kitchen">The order comes in</p>
+        <p>Editorial sends over the <dfn>plate</dfn>, which is the footage that was actually filmed, along with a description of what needs to be added. “Giant enters frame left, feet planted on the forest floor, mist continues behind him.” That description is the nearest thing a shot has to a requirements document, and it is often a conversation in a room that somebody types up afterwards.</p>
+        <dl>
+          <div><dt>Hands over</dt><dd>The footage, the edit information, and notes on intent.</dd></div>
+          <div class="trouble"><dt>Classic trouble</dt><dd>The note says “make him feel heavy.” Specs are a sentence and a feeling.</dd></div>
+        </dl>
+      </li>
+
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">2</span>
+        <h3>Tracking and layout</h3>
+        <p class="kitchen">Measuring the table</p>
+        <p>Before anything digital can sit convincingly in a real scene, someone has to work out where the real camera was and how it moved, frame by frame. This is recovered from the footage itself, a job called <dfn>matchmove</dfn>. Layout then blocks the shot out in rough 3D: where the giant stands, how big he is, which way he faces.</p>
+        <dl>
+          <div><dt>Hands over</dt><dd>A virtual camera and a rough staging of the scene.</dd></div>
+          <div class="trouble"><dt>Classic trouble</dt><dd>This is the earliest data in the chain, so every error is inherited by everyone downstream. Get the camera slightly wrong and the giant's feet slide on the ground. Nobody can say why it looks off, but everybody can tell.</dd></div>
+        </dl>
+      </li>
+
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">3</span>
+        <h3>Asset building</h3>
+        <p class="kitchen">Prep, the day before</p>
+        <p>The giant himself, the pines, the moss, the forest floor: all of it was built earlier, separately, and not for this shot. Modelers sculpt the shapes, texture artists paint the surfaces, and riggers build the digital skeleton and the controls animators will use to move him. Each of these is an <dfn>asset</dfn>, and one giant gets used in hundreds of shots.</p>
+        <dl>
+          <div><dt>Hands over</dt><dd>A ready-to-use character or environment package.</dd></div>
+          <div class="trouble"><dt>Classic trouble</dt><dd>On Tuesday someone improves the giant's shoulder. By Wednesday, every shot containing a shoulder has an opinion about it.</dd></div>
+        </dl>
+      </li>
+
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">4</span>
+        <h3>Animation</h3>
+        <p class="kitchen">Cooking the main course</p>
+        <p>Animators perform the giant. Weight, timing, the half-second hesitation before the head turn: it is acting, done through a skeleton. The result is not video but data, a set of curves describing how every control moves across the sixty frames.</p>
+        <dl>
+          <div><dt>Hands over</dt><dd>Animation data that drives the character.</dd></div>
+          <div class="trouble"><dt>Classic trouble</dt><dd>“The head turn feels too fast” is a perfectly valid reason to redo it, and it cannot be measured.</dd></div>
+        </dl>
+      </li>
+
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">5</span>
+        <h3>Character effects and simulation</h3>
+        <p class="kitchen">The sauce that takes forever to reduce</p>
+        <p>Anything that should move <em>because of</em> the performance and the laws of physics, rather than by hand, is computed. Moss swaying on his shoulders, hair, muscle rippling under skin, mist curling around his legs, loose bark falling away. (Cloth and clothing have their own chapter, Ch. 14.) This is <dfn>simulation</dfn>, it is slow, and it produces the heaviest data in the entire pipeline: per-frame snapshots, called <dfn>caches</dfn>, of millions of moving points.</p>
+        <dl>
+          <div><dt>Hands over</dt><dd>Enormous cache files describing the motion.</dd></div>
+          <div class="trouble"><dt>Classic trouble</dt><dd>Simulations are touchy. Nudge the animation slightly and you can get a completely different result.</dd></div>
+        </dl>
+      </li>
+
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">6</span>
+        <h3>Lighting</h3>
+        <p class="kitchen">Plating</p>
+        <p>This is where all the work finally meets. The lighting artist assembles the giant, the forest, and the mist into one scene, places digital lights to match the real light in the plate, and decides how the image will be split into layers for later. It is also where every upstream inconsistency announces itself, because the problems all arrive at once and usually at one person's desk.</p>
+        <dl>
+          <div><dt>Hands over</dt><dd>A fully assembled scene, ready to render.</dd></div>
+          <div class="trouble"><dt>Classic trouble</dt><dd>Everyone's loose ends turn up on the lighter's plate. Pun intended, apologies.</dd></div>
+        </dl>
+      </li>
+
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">7</span>
+        <h3>Rendering</h3>
+        <p class="kitchen">The oven</p>
+        <p>The scene becomes images. Each frame can take hours on a single machine, so the work is spread across the farm, thousands of machines. What comes out is not one picture per frame but a stack of them: separate layers for lighting components, depth, masks, and more. You can't hurry the oven, you can't peek inside, and opening the door at the wrong moment costs you the batch.</p>
+        <dl>
+          <div><dt>Hands over</dt><dd>Image layers for every frame.</dd></div>
+          <div class="trouble"><dt>Classic trouble</dt><dd>A bad render costs a night. A bad render nobody notices until Thursday costs a week. <span class="xref">Ch. 8</span></dd></div>
+        </dl>
+      </li>
+
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">8</span>
+        <h3>Compositing</h3>
+        <p class="kitchen">The final garnish</p>
+        <p>Compositors combine the rendered layers with the original plate. They match color, add atmosphere, grain, and lens effects, and fix whatever can be fixed more cheaply here than by rendering again. It is the last big creative lever, and the stage where the shot starts to look like a photograph.</p>
+        <dl>
+          <div><dt>Hands over</dt><dd>The finished image sequence.</dd></div>
+          <div class="trouble"><dt>Classic trouble</dt><dd>It is so good at patching problems that it can hide them for weeks. Quiet debt.</dd></div>
+        </dl>
+      </li>
+
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">9</span>
+        <h3>Review and delivery</h3>
+        <p class="kitchen">The head chef tastes</p>
+        <p>Each day the work is shown in a darkened room to the person with creative authority: a supervisor, and ultimately the director. This is <dfn>dailies</dfn>. The verdict is either “approved,” and the shot goes to final quality and into the film, or “notes,” and it goes round again. The review room gets its own treatment in Ch. 23.</p>
+        <dl>
+          <div><dt>Hands over</dt><dd>A decision.</dd></div>
+          <div class="trouble"><dt>Classic trouble</dt><dd>Sometimes the whole note is one word. Most of this book exists to make the “notes” branch survivable.</dd></div>
+        </dl>
+      </li>
+
+    </ol>
+
+    <p>Nine stops, and the belt picture carries you through the tour just fine. Now let's watch it fall apart.</p>
+
+    <h2 id="not-a-line" data-short="Except it isn't a line">Except it isn't a line</h2>
+
+    <p>Here is the real structure of our giant's shot. Same stations, but drawn the way the data actually moves.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 400" role="img" aria-labelledby="f2t f2d">
+          <title id="f2t">The pipeline as a graph with feedback</title>
+          <desc id="f2d">The same stages as before, now with parallel branches, dashed arrows carrying notes backwards from review, compositing and lighting to earlier stages, and a box of shared assets that feeds the shot and about three hundred other shots.</desc>
+          <defs>
+            <marker class="ah" id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+            <marker class="ah-loop" id="a2l" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+            <marker class="ah-dep" id="a2d" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+
+          <!-- shared assets and fan-out -->
+          <g class="node shared">
+            <rect x="120" y="20" width="190" height="44" rx="8"/>
+            <text x="215" y="38">Shared assets</text><text class="sm" x="215" y="55">giant, pines, moss</text>
+          </g>
+          <g class="node ghost">
+            <rect x="590" y="20" width="220" height="44" rx="8"/>
+            <text x="700" y="47" style="font-size:14px">…and ~300 other shots</text>
+          </g>
+          <path class="dep" d="M310 42 H588" marker-end="url(#a2d)"/>
+          <text class="say t" x="449" y="33">one change, hundreds of shots</text>
+          <path class="dep" d="M250 64 C250 94 300 90 300 118" marker-end="url(#a2d)"/>
+
+          <!-- forward flow -->
+          <g class="flow">
+            <path d="M110 212 H138" marker-end="url(#a2)"/>
+            <path d="M240 212 C262 212 258 142 278 142" marker-end="url(#a2)"/>
+            <path d="M240 212 C262 212 258 302 278 302" marker-end="url(#a2)"/>
+            <path d="M330 166 V276" marker-end="url(#a2)"/>
+            <path d="M380 142 C410 142 410 212 438 212" marker-end="url(#a2)"/>
+            <path d="M380 302 C410 302 410 212 438 212" marker-end="url(#a2)"/>
+            <path d="M540 212 H578" marker-end="url(#a2)"/>
+            <path d="M680 212 H708" marker-end="url(#a2)"/>
+          </g>
+
+          <!-- notes flowing backwards -->
+          <path class="loop" d="M760 238 C760 376 330 376 330 328" marker-end="url(#a2l)"/>
+          <path class="loop" d="M630 238 C630 292 490 292 490 238" marker-end="url(#a2l)"/>
+          <path class="loop" d="M490 186 C490 92 330 92 330 116" marker-end="url(#a2l)"/>
+          <text class="say" x="545" y="392">“Make him angrier.”</text>
+          <text class="say" x="560" y="314">“That shadow's wrong.”</text>
+          <text class="say" x="410" y="84">“His foot floats.”</text>
+
+          <!-- stages -->
+          <g class="node">
+            <rect x="10" y="188" width="100" height="48" rx="8"/><text x="60" y="209">Plate &amp;</text><text x="60" y="226">turnover</text>
+            <rect x="140" y="188" width="100" height="48" rx="8"/><text x="190" y="209">Tracking &amp;</text><text x="190" y="226">layout</text>
+            <rect x="280" y="118" width="100" height="48" rx="8"/><text x="330" y="147">Animation</text>
+            <rect x="280" y="278" width="100" height="48" rx="8"/><text x="330" y="307">Simulation</text>
+            <rect x="440" y="188" width="100" height="48" rx="8"/><text x="490" y="209">Lighting &amp;</text><text x="490" y="226">render</text>
+            <rect x="580" y="188" width="100" height="48" rx="8"/><text x="630" y="217" style="font-size:14px">Compositing</text>
+            <rect x="710" y="188" width="100" height="48" rx="8"/><text x="760" y="217">Review</text>
+          </g>
+        </svg>
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span><i></i>work handed forward</span>
+        <span><i class="back"></i>notes sent back</span>
+        <span><i class="dep"></i>shared assets</span>
+      </div>
+      <figcaption><b>Figure 1.2</b>The same stations, drawn as they actually behave. Real shots have more arrows than this. I ran out of room, and the reader would have run out of patience.</figcaption>
+    </figure>
+
+    <p>Four things change as soon as you draw it honestly.</p>
+
+    <h3>Feedback runs backwards</h3>
+
+    <p>Say we reach compositing in week six and the compositor notices that the giant's foot casts a shadow that disagrees with the plate. The fix isn't in compositing. It may be in lighting. Or the foot may be an inch or two above the ground, in which case it's an animation problem. Notes travel upstream at speed, and every stage they pass through triggers fresh work downstream. The belt runs backwards, in pieces, and several people are standing on it.</p>
+
+    <h3>Nobody waits politely</h3>
+
+    <p>Waiting is expensive. If lighting held off until animation was final, lighting would start in week seven and the film would arrive a year late. So lighters begin on stand-ins, such as a grey blob where the giant will be, or last week's animation. Compositors start on early renders. Everything gets swapped for the real thing as it arrives. This is efficient, and it's also why the data in any given scene is slightly out of date somewhere. One of the most underrated pipeline skills is knowing precisely which version of everything you're currently looking at. <span class="xref">Ch. 6</span></p>
+
+    <p>Our giant's feet are the proof. Around version 23, someone finally noticed they hovered about an inch above the forest floor, and had for six weeks, through three departments and two reviews. Everyone had been looking at the mist. I know because I was one of the people looking at the mist.</p>
+
+    <h3>Things fan out, and things fan in</h3>
+
+    <p>The giant appears in about three hundred shots, so a change to him potentially touches all of them. That's <em>fan-out</em>. Meanwhile our one shot pulls in work from about a dozen places, in different tools, formats, and versions. That's <em>fan-in</em>. A shot is a meeting point, a bit like a family dinner where everyone insists they were told a different time.</p>
+
+    <h3>Retakes are the main course</h3>
+
+    <p>The first complete version of a shot is a draft. A typical final sits a few dozen versions in (the giant took about forty), and that isn't because anyone is incompetent. A film is <em>discovered</em> while it's being made. The edit shifts, a director sees the giant in context and wants him taller, and “taller” turns out to have consequences for four departments. A pipeline that assumes work is done once, in order, gets ground down by this. One that expects it survives.</p>
+
+    <div class="callout aside">
+      <span class="callout-label">Aside</span>
+      <p>Every facility has a file called something like <code>final_final_v2_REALLYfinal.mov</code>, and ours had several. If yours doesn't, you either have excellent tooling or haven't been asked to ship yet.</p>
+    </div>
+
+    <p>Here is our giant's eleven weeks, laid out as a timeline.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 340" role="img" aria-labelledby="f3t f3d">
+          <title id="f3t">Eleven weeks in the life of the shot</title>
+          <desc id="f3d">A timeline with a row per stage. Bars overlap heavily: lighting and compositing begin on stand-ins before animation is finished. Review diamonds mark four rounds of notes, followed by red rework bars in animation, simulation, lighting and compositing, and a final approval at week ten and a half.</desc>
+          <defs>
+            <pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <rect class="hatch-bg" width="7" height="7"/><line class="hatch-ln" x1="0" y1="0" x2="0" y2="7" stroke-width="3"/>
+            </pattern>
+          </defs>
+
+          <!-- grid -->
+          <g class="grid">
+            <path d="M150 36V318"/><path d="M208 36V318"/><path d="M266 36V318"/><path d="M324 36V318"/><path d="M382 36V318"/><path d="M440 36V318"/>
+            <path d="M498 36V318"/><path d="M556 36V318"/><path d="M614 36V318"/><path d="M672 36V318"/><path d="M730 36V318"/><path d="M788 36V318"/>
+          </g>
+          <text class="rowl" x="10" y="24" style="font-size:12px;font-family:var(--mono);fill:var(--ink-3)">WEEK</text>
+          <g class="wk">
+            <text x="179" y="24">1</text><text x="237" y="24">2</text><text x="295" y="24">3</text><text x="353" y="24">4</text><text x="411" y="24">5</text><text x="469" y="24">6</text>
+            <text x="527" y="24">7</text><text x="585" y="24">8</text><text x="643" y="24">9</text><text x="701" y="24">10</text><text x="759" y="24">11</text>
+          </g>
+
+          <!-- row labels -->
+          <g class="rowl">
+            <text x="10" y="71">Review</text><text x="10" y="117">Turnover</text><text x="10" y="157">Layout</text><text x="10" y="197">Animation</text>
+            <text x="10" y="237">Simulation</text><text x="10" y="277">Lighting &amp; render</text><text x="10" y="317">Compositing</text>
+          </g>
+
+          <!-- bars -->
+          <rect class="bar" x="150" y="101" width="29" height="22" rx="4"/>
+          <rect class="bar" x="179" y="141" width="116" height="22" rx="4"/>
+          <rect class="bar" x="237" y="181" width="319" height="22" rx="4"/>
+          <rect class="bar redo" x="585" y="181" width="58" height="22" rx="4"/>
+          <rect class="bar" x="324" y="221" width="290" height="22" rx="4"/>
+          <rect class="bar redo" x="643" y="221" width="58" height="22" rx="4"/>
+          <rect class="bar stand" x="353" y="261" width="145" height="22" rx="4"/>
+          <rect class="bar" x="498" y="261" width="145" height="22" rx="4"/>
+          <rect class="bar redo" x="643" y="261" width="87" height="22" rx="4"/>
+          <rect class="bar stand" x="411" y="301" width="145" height="22" rx="4"/>
+          <rect class="bar" x="556" y="301" width="116" height="22" rx="4"/>
+          <rect class="bar redo" x="672" y="301" width="87" height="22" rx="4"/>
+
+          <!-- review diamonds -->
+          <g>
+            <path class="dia" d="M324 56l9 10-9 10-9-10z"/>
+            <path class="dia" d="M469 56l9 10-9 10-9-10z"/>
+            <path class="dia" d="M585 56l9 10-9 10-9-10z"/>
+            <path class="dia" d="M672 56l9 10-9 10-9-10z"/>
+            <path class="dia fin" d="M759 56l9 10-9 10-9-10z"/>
+          </g>
+          <g class="tick">
+            <text x="324" y="92">notes</text><text x="469" y="92">notes</text><text x="585" y="92">notes</text><text x="672" y="92">notes</text><text x="759" y="92" style="fill:var(--good);font-weight:600">final</text>
+          </g>
+          <text class="say" x="672" y="198" style="text-anchor:start">“Make him taller.”</text>
+        </svg>
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span><i class="sw stand"></i>working on stand-ins</span>
+        <span><i class="sw work"></i>work</span>
+        <span><i class="sw redo"></i>rework after notes</span>
+        <span><i class="sw fin"></i>approved</span>
+      </div>
+      <figcaption><b>Figure 1.3</b>Eleven weeks, one shot. Almost everything overlaps, and the last stretch is mostly rework. This is not a failure of planning; it is what the work looks like.</figcaption>
+    </figure>
+
+    <p class="pullquote">A shot is never finished in order, and it is never finished once.</p>
+
+    <p>I've come to think a pipeline isn't really about moving data from A to B. The belt does that, and the belt is easy. A pipeline is about <strong>keeping many people's work consistent with each other while all of it keeps changing</strong>. Almost every problem in this book, whether it concerns storage, rendering, scheduling, or tooling, is that sentence in a different costume.</p>
+
+    <h2 id="software" data-short="Why this is a software problem">Why this is a software problem</h2>
+
+    <p>The belt picture hides the questions that actually keep a pipeline team awake. Here they are, rephrased as a developer would ask them, with pointers to where we'll deal with each.</p>
+
+    <ul class="questions">
+      <li><span>How do you version data that is huge, binary, and tangled up with other data?</span><span class="xref">Ch. 4 · 6</span></li>
+      <li><span>How do you pass geometry, animation, and caches between tools that never agreed on a format?</span><span class="xref">Ch. 5</span></li>
+      <li><span>What happens when a million render tasks hit the same storage?</span><span class="xref">Ch. 7 · 19</span></li>
+      <li><span>Months later, how do you know exactly what went into a given frame?</span><span class="xref">Ch. 6</span></li>
+      <li><span>How do you build tools for people whose goal is art, not software?</span><span class="xref">Ch. 23</span></li>
+      <li><span>How do you change the system while a thousand people are using it?</span><span class="xref">Ch. 29</span></li>
+    </ul>
+
+    <p>One more thing is worth noticing before we move on: the data isn't uniform. The table below lists what each stage produces, roughly how big it is, and who or what makes it.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Stage</th><th>Main data</th><th>Size</th><th>Made by</th></tr></thead>
+          <tbody>
+            <tr><td>Turnover</td><td>Plate footage, editorial notes</td><td><span class="pips" data-n="3"></span><span class="size">large</span></td><td class="who">A camera</td></tr>
+            <tr><td>Tracking &amp; layout</td><td>Camera path, rough scene</td><td><span class="pips" data-n="1"></span><span class="size">tiny</span></td><td class="who">People + software</td></tr>
+            <tr><td>Assets</td><td>Models, textures, rigs</td><td><span class="pips" data-n="3"></span><span class="size">large, many files</span></td><td class="who">People</td></tr>
+            <tr><td>Animation</td><td>Motion curves</td><td><span class="pips" data-n="1"></span><span class="size">tiny</span></td><td class="who">People</td></tr>
+            <tr><td>Simulation</td><td>Per-frame caches of points and surfaces</td><td><span class="pips" data-n="4"></span><span class="size">enormous</span></td><td class="who m">Machines</td></tr>
+            <tr><td>Lighting</td><td>Assembled scene description</td><td><span class="pips" data-n="2"></span><span class="size">medium</span></td><td class="who">People</td></tr>
+            <tr><td>Rendering</td><td>Image layers for every frame</td><td><span class="pips" data-n="4"></span><span class="size">huge</span></td><td class="who m">Machines</td></tr>
+            <tr><td>Compositing</td><td>Combined final images</td><td><span class="pips" data-n="3"></span><span class="size">large</span></td><td class="who">People + machines</td></tr>
+            <tr><td>Review</td><td>Compressed review video</td><td><span class="pips" data-n="1"></span><span class="size">small</span></td><td class="who m">Machines</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 1.1</b>Rough size classes, not exact figures. Sizes vary enormously by show.</figcaption>
+    </figure>
+
+    <p>Look at the top and bottom of that size column. The smallest data, such as camera paths and animation curves, is made by people, and it is the most precious pound for pound. The largest data, simulation caches and rendered layers, is made by machines. Lose the first kind and you've lost someone's week. Lose the second and you've merely lost a bill. That asymmetry will quietly steer a lot of decisions later in the book: what to back up, what to cache, what to throw away, and what to simply recompute. <span class="xref">Ch. 7</span></p>
+
+    <aside class="scale">
+      <span class="callout-label">Scale snapshot</span>
+      <dl>
+        <div><dt>Shots delivered a year</dt><dd>about 10,000</dd></div>
+        <div><dt>The studio</dt><dd>about 1,000 staff, about 500 artists, two sites</dd></div>
+        <div><dt>Shows in flight at once</dt><dd>about 8</dd></div>
+        <div><dt>Shots in one show</dt><dd>roughly 800 – 2,000</dd></div>
+        <div><dt>Versions of a typical shot</dt><dd>dozens (the giant: about 40)</dd></div>
+        <div><dt>Data per show</dt><dd>a petabyte or more</dd></div>
+      </dl>
+      <small>Illustrative and approximate; they vary a great deal between productions. Farm and core-hour figures wait for Chapter 2, where we turn all this into arithmetic.</small>
+    </aside>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>On delivery day, the giant stepped out of the mist, paused, and turned his head, feet planted at last. Two and a half seconds. Drawn honestly, he is a graph of boxes, arrows and loops, and if you'd been in the cinema you'd have taken a sip of your drink.</p>
+
+    <p>For my first year I thought my job was to make the belt faster. It took me embarrassingly long to see that the belt was never the problem, since most of what happens to a shot happens <em>between</em> stops, in the loops. A pipeline team that makes those loops cheap, so that a note on Thursday costs hours rather than days, ends up doing more for the film than one that makes any single stage twice as quick.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">Takeaway</span>
+      <p>Don't build for the shot that goes through once. Build for the one that comes back.</p>
+    </div>
+
+    <p>If you'd like to read further, Appendix D collects books and papers worth your time. Now that we know what a shot is, let's talk about how much of <em>everything</em> there is: how many shots, how many files, how many machines, and what breaks first when you multiply the giant by a thousand.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

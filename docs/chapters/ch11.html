@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interactive Previews · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 11. How artists see something close to the final render in seconds, why two renderers always disagree, and how to make the disagreement visible instead of surprising.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch11">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part III · Rendering</p>
+    <p class="chap-num" aria-hidden="true">11</p>
+    <h1>Interactive Previews</h1>
+    <p class="dek">How artists see something close to the final image in seconds instead of hours, why the previewer and the final renderer will always disagree, and what to do about the gap.</p>
+    <p class="meta"><span>Chapter 11</span><span>Continues from: Chapter 10, Chapter 8</span><span id="reading-time">15 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">The lighter approved twelve decisions in about four minutes. <em>The final render disagreed with nine of them.</em></p>
+
+    <p>Not all nine were dramatic. Most were a shade here, a shadow there. But the shot was an interior with a large window, and in the previewer it looked right: warm lamp, cool daylight, a clean reflection of a bookshelf in the polished floor. Six hours later the final frames came off the <dfn>farm</dfn> with a reflection of something that wasn't in the room, and a window glowing a distinctly different color. It was a small act of independence on the window's part.</p>
+
+    <p>The lighter walked over to the pipeline desk, which in those days was mine, and asked, very politely, which one was lying. I wanted to say the previewer. I wanted to say the renderer. What I actually said was “let me look,” which is what you say when the honest answer is “both, a little, and nobody told you.”</p>
+
+    <p>This chapter closes Part III. Chapters 8 to 10 were about the final renderer: making it correct, making it fit in memory, and making it converge to an image an artist trusts. This one is about how to see something close to that image in seconds, and how to handle the gap that remains. It is also the book's first meeting between the film pipeline and game-style real-time technology, which gets its own proper visit in Chapter 17.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>I used to think a preview was just a cheaper render. Take the final renderer, turn the quality down until it's fast, and there's your previewer. Fewer rays, smaller images, simpler settings. A dial, not a design.</p>
+
+    <p>It's a lovely belief, and it survives right up to the point where you try to build it. Turning the dial down for a few seconds of feedback means dropping features, not just samples. Soft shadows become hard, indirect light disappears, hair becomes a rumor. By the time the thing is fast enough to feel interactive, “cheaper” has turned into “different,” and different things have opinions of their own. I spent a good part of one year discovering how many things hid inside the word “cheaper.”</p>
+
+    <h2 id="why" data-short="Why we wanted one">Why we wanted one</h2>
+
+    <p>The case for a preview is a case about iteration. A lighting artist makes a judgment by looking at an image: the key light is too hot, the fill is flat, the window needs more bloom. Each judgment needs a picture to look at. If the picture takes hours, the artist makes a handful of judgments a day and hopes they were the right handful. If it takes seconds, they make hundreds, and the bad ones are cheap to throw away.</p>
+
+    <p>You've seen this in Chapter 1: a shot goes round the review loop dozens of times, and every lap costs time (the review loop itself gets its own chapter, <span class="xref">Ch. 23</span>). A good preview doesn't shorten the lap. It lets the artist run most of the laps privately, before anyone else sees them. Without one, artists did what artists always do. They rendered tiny crops, a hundred pixels square, of just the part they were worried about. They rendered every fifth frame at a quarter size. They kept a mental table of how much to correct for, passed along like folk medicine: “the previewer's too bright in the shadows, knock it down a stop.”</p>
+
+    <p>A good previewer changes three things. Artists explore more, because trying something costs nothing. They are braver, because undoing it costs nothing either. And fewer test renders reach the farm, which is not a small matter at the scale of Chapter 2. A test frame that would have been a quarter of a core-hour burned on a guess is a test frame nobody has to wait for, and across a studio where about five hundred artists are guessing all day, the saving shows up on the bill. <span class="xref">Ch. 22</span></p>
+
+    <p>Here is the scale I ended up carrying around in my head. The numbers are orders of magnitude, not benchmarks; they depend entirely on the scene and the machine.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Kind of preview</th><th>Time to first image</th><th>What it's good for</th></tr></thead>
+          <tbody>
+            <tr><td>Viewport</td><td>Instant, a fraction of a second</td><td>Layout, camera, posing, rough staging</td></tr>
+            <tr><td>Real-time look preview</td><td>About a second, then it updates as you drag</td><td>Look-dev, light placement, color and mood</td></tr>
+            <tr><td>Progressive final-quality</td><td>Seconds to a first rough image; minutes to settle</td><td>Lighting sign-off, checking reflections, shadows and glass</td></tr>
+            <tr><td>Test frame on the farm</td><td>Minutes to an hour, depending on the queue</td><td>One frame the artist will actually believe</td></tr>
+            <tr><td>Overnight final</td><td>Hours per frame, a night per sequence</td><td>Delivery</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 11.1</b>The latency scale. Each step down the list trades speed for honesty, and each supports a different kind of decision.</figcaption>
+    </figure>
+
+    <p>The point of the scale is that no single row is the answer. An artist moves down it as their decisions get more expensive to be wrong about. You pose in the viewport, light in the preview, and check the expensive things on the farm. The craft is in knowing which row to trust for which question.</p>
+
+    <h2 id="designs" data-short="Two designs, two kinds of lie">Two designs, two kinds of lie</h2>
+
+    <p>There are two broad ways to build a previewer, and each one lies in its own characteristic way.</p>
+
+    <p>The first is a <strong>separate real-time renderer</strong>. It runs on the GPU, uses the rasterization-flavored techniques that games have refined for a quarter of a century, and is built to draw a frame in a fraction of a second. It is fast, it is interactive, and it is a second implementation of everything. Every light, every material, every way of bending a surface has to exist twice: once in the final renderer, once here. The two implementations are written by different people, at different times, to different constraints. Its disagreement with the final is <em>structural</em>: it takes shortcuts the final doesn't, so it is wrong in the same places every time.</p>
+
+    <p>The second is a <strong>progressive version of the final renderer</strong>. Same code, same physics, but it shows you the image as it forms: a rough, grainy first guess that sharpens the longer you wait. This is perfectly honest, because it is the final renderer, only impatient. The cost is that it is slow to feel interactive. Drag a light and the whole image restarts, noisy again. Its disagreement with the final is <em>noise</em>, and as Chapter 10 explained, noise is something an artist can learn to read.</p>
+
+    <p>Progressive rendering is good for lighting and awkward for animation. Lighting is a series of small stationary decisions, and a sharpening image rewards patience. Animation is motion, and a picture that needs two seconds to resolve is a picture you can't scrub through. A progressive preview of a walk cycle is a slideshow of grain.</p>
+
+    <h3>The order we tried them</h3>
+
+    <p>We got this wrong in a sensible order. We began with a separate GPU previewer, because it was the only one that felt alive. Within two shows we regretted the two-implementations tax. Every new material the look-dev team wrote had to be written again for the previewer, and the second copy was always a few weeks behind. Then we tried a progressive version of the final renderer, which was beautifully honest and too slow for layout; people in layout stopped opening it. We settled on a hybrid. The GPU preview serves layout and look-dev, where speed matters more than fidelity. Progressive final-quality serves lighting sign-off, where fidelity matters more than speed. Both read the same scene description, which is how we kept them from drifting too far apart. <span class="xref">Ch. 5</span></p>
+
+    <p>On that last point, the hybrid cost something. Two paths still means two sets of things to maintain, and we reduced the burden mostly by generating one from the other wherever we could. A material is written once, in a form both renderers can read, and translated for each. More on that shortly.</p>
+
+    <p>We also ran Chapter 3's criteria again, briefly, on whether to build the GPU previewer or adopt one. The exit-cost question was sharp here: a previewer is tightly bound to the scene description and to the material system, which are the two things we cared about most. Adopting an off-the-shelf real-time engine would have given us a lovely viewport on day one and a permanent translation problem forever after. We built a thin layer on top of public GPU technology, borrowed what we could, and accepted that we would own the seams. I'd make the same call again, but I'd budget more people for it.</p>
+
+    <h2 id="field-guide" data-short="A field guide to disagreement">A field guide to disagreement</h2>
+
+    <p>Two renderers, each convinced it is correct, will disagree the way two witnesses to a small accident do: honestly, confidently, and about different things. Over several years we catalogued the ways ours disagreed, and they sorted themselves into six families. Almost all of the causes were boring, and the boring ones are the good news, because boring causes have boring fixes.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Family</th><th>Why it happens</th><th>What the artist says</th></tr></thead>
+          <tbody>
+            <tr><td>1. Lighting model</td><td>The previewer fakes shadows, bounce light and reflections with shortcuts. The final traces them.</td><td>“There's a reflection in the final that wasn't there.”</td></tr>
+            <tr><td>2. Materials</td><td>One material description, interpreted by two implementations that round things differently.</td><td>“The floor is shinier in the final.”</td></tr>
+            <tr><td>3. Geometry</td><td>Subdivision, displacement, instancing and level-of-detail are implemented slightly differently.</td><td>“There's a crack in the wall.” Or: “The rock is lumpy.”</td></tr>
+            <tr><td>4. Color</td><td>One path applies a color step the other forgot.</td><td>“The window is the wrong color.”</td></tr>
+            <tr><td>5. Features</td><td>Volumes, hair, depth of field and motion blur are faked or skipped in the preview.</td><td>“The fog isn't in my view.” Or: “Where did the blur go?”</td></tr>
+            <tr><td>6. Scale</td><td>The full scene doesn't fit in GPU memory, so the preview shows a reduced one.</td><td>“A whole row of trees is missing.”</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 11.2</b>Six families of disagreement, with the sentence an artist would actually say.</figcaption>
+    </figure>
+
+    <p>Take them in an order that suits the story, starting with the humblest.</p>
+
+    <h3>Color: the missing step</h3>
+
+    <p>Our lighter's glowing window was a color problem, and it was the least impressive bug I ever had to explain. The cause was a step that one path performed and the other didn't. A little context first, for readers who haven't met this.</p>
+
+    <div class="callout aside">
+      <span class="callout-label">Color management, in one paragraph and a half</span>
+      <p>Color management is agreeing which numbers mean which colors on which screen. An image is a grid of numbers, and those numbers only mean something relative to an agreement: the numbers a renderer computes are one kind of thing (physical light, loosely), the numbers a monitor needs are another, and the numbers a cinema projector needs are a third. Between each pair sits a conversion, and each conversion is a step somebody has to remember to do.</p>
+      <p>A preview that skips one step doesn't look broken. It looks plausible and slightly off, like a photograph printed on the wrong paper. The window glows the wrong color, the shadows are a touch too deep, and the artist spends an hour adjusting a light that was fine. We name the idea here and leave the depth to the standards that exist for it. What matters in this chapter is that color is the simplest case of the whole problem: a missing step, easy to fix, hard to notice.</p>
+    </div>
+
+    <p>In our case the previewer applied the display conversion twice to one kind of light source, an emissive window, while the final applied it once. The fix took a single afternoon. Finding it took two weeks, because for the first week nobody believed the cause could be so small. We had checked the lights, the materials and the camera. We hadn't checked whether the window was being converted twice, because nobody checks for the thing that is too stupid to be true.</p>
+
+    <h3>Geometry: the cracks</h3>
+
+    <p>Subdivision turns a coarse cage into a smooth surface by splitting it into smaller and smaller pieces. Displacement then pushes those pieces in and out to add detail, such as stone, bark, or the creases in an old coat. Both renderers do this. They do it with slightly different rules at the edges, so the same wall can come out with a hairline crack in one and a faint bulge in the other. Instancing, which means placing ten thousand pines from a handful of originals, hits the same snag: the preview often swaps in simpler stand-ins for distant trees, and the swap happens at a different distance than in the final. A tree appears or disappears as you zoom. The difference is rarely large. It is nearly always <em>noticed</em>.</p>
+
+    <h3>Materials: one description, two readings</h3>
+
+    <p>A material is a recipe: how rough, how metallic, how much light passes through. Hand the same recipe to two cooks and you will get two dishes. They'll be similar, and a trained eye will separate them. We learned that the cheapest cure is also the least glamorous: <strong>write the material once</strong>, in a single shared definition, and generate both versions from it. When every new material was written twice by hand, we averaged a few weeks before the second copy caught up with the first, and a few differences that never did. After we switched to one definition feeding both paths, a new material was available everywhere on the day it was written, and the disagreement shrank to genuine implementation differences instead of copying errors.</p>
+
+    <h3>Lighting, features and scale</h3>
+
+    <p>The lighting-model family is the reflection that wasn't there. A real-time renderer approximates reflections of things it can't see on screen, and the shortcut that fakes a reflection of a bookshelf may fake one of a thing that was never in the room. A ray tracer, which actually follows the light, doesn't invent anything. This is also where real-time ray tracing has narrowed the gap considerably. It hasn't closed it, because the final renderer still follows far more rays, through far more bounces, in far more detail, and no amount of clever hardware makes that free.</p>
+
+    <p>The features family covers the things that are expensive to do honestly: volumes such as fog and smoke, hair, depth of field, and motion blur. The previewer fakes or skips them, which is sensible, and we'd tell the artist so. The scale family is the one you saw coming from Chapter 9. The high-memory pool on the farm can hold a scene of several hundred gigabytes. A GPU holds a few tens. Anything bigger has to be reduced for the preview: lower-resolution textures, fewer instances, simpler geometry. The previewer is then showing a smaller version of the world, and its first honest act is to say so.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 250" role="img" aria-labelledby="f111t f111d">
+          <title id="f111t">A preview and a final, annotated</title>
+          <desc id="f111d">Two frames of the same room side by side. Numbered markers on the final point to a reflection that is absent in the preview, a window of a different color, a crack in a wall, and a missing row of trees outside.</desc>
+          <g class="node">
+            <rect x="20" y="30" width="360" height="190" rx="8"/><text x="200" y="22">Preview, about one second</text>
+            <rect x="440" y="30" width="360" height="190" rx="8"/><text x="620" y="22">Final, about six hours</text>
+          </g>
+          <g class="node shared">
+            <rect x="70" y="60" width="90" height="70" rx="6"/><text x="115" y="100">window</text>
+            <rect x="490" y="60" width="90" height="70" rx="6"/><text x="535" y="100">window</text>
+          </g>
+          <g class="node ghost">
+            <rect x="220" y="150" width="130" height="50" rx="6"/><text x="285" y="180">floor</text>
+            <rect x="640" y="150" width="130" height="50" rx="6"/><text x="705" y="180">floor + reflection</text>
+          </g>
+          <text class="say" x="535" y="52">4</text>
+          <text class="say" x="705" y="144">1</text>
+          <text class="say" x="760" y="60">3</text>
+          <text class="say" x="460" y="212">6</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 11.1</b>The same room in the preview and the final. Numbers match Table 11.2. 1: the reflection that wasn't there (lighting). 3: the hairline crack (geometry). 4: the window glow (color). 6: the missing row of trees (scale). A sketch, not a render.</figcaption>
+    </figure>
+
+    <h2 id="agree" data-short="Making them agree">Making them agree</h2>
+
+    <p>Agreement doesn't mean pixel-identical. That's neither achievable nor useful. It means <em>the same decisions</em>: if an artist approves a look in the preview, the final should not surprise them. A shade of difference in the shadow is fine. A window of another color is not. Once we phrased the goal that way, the problem stopped being impossible and became a matter of measurement.</p>
+
+    <p>Four habits made the gap measurable.</p>
+
+    <p><strong>Reference scenes.</strong> We kept a small library of test scenes, a few dozen, each built to stress one family: a hall of mirrors for reflections, a field of instanced grass for geometry, a room lit only by a window for color. Every night, both renderers drew every scene, and an automated comparison scored the difference. The result was a plain pass-or-fail grid on a wall monitor, one square per scene and renderer pairing. It looked like a quilt. When a square went red, somebody's change had moved the gap, and the morning conversation started from a fact.</p>
+
+    <p><strong>Tolerances, agreed in the room.</strong> “Close enough” has to be a number, and it has to be a number artists believe. We set one per feature family: this much difference in shadow depth is fine, beyond it is a bug. Two lighters and a look-dev lead sat in the design reviews for the previewer, which is the reason the tolerances held up. They knew which differences they'd notice and which they'd shrug at, and they said so before a line was written. The tolerances we'd guessed on our own, early on, were wrong in both directions. I cite this again in Chapter 30, because it is one of the few decisions we got right early. <span class="xref">Ch. 30</span></p>
+
+    <p><strong>Single-source definitions.</strong> The shared material is the best example, but the idea runs wider. One light description, one camera model, one set of color settings, each feeding both paths. Wherever two paths disagree, ask first whether they could be reading the same source. The scene description from Chapter 5 is the contract that makes this possible: both renderers read it, so a disagreement can be traced to interpretation rather than input. That narrows the hunt from “everywhere” to “one of two readers.” <span class="xref">Ch. 5</span></p>
+
+    <p><strong>A page in the artist's own words.</strong> We published a single page called “What the preview fakes.” It was written with the lighters, in their vocabulary rather than ours: “fog is approximated, hair has no depth of field, the far trees are simpler than they look.” It was short enough to read in a minute. It was also the first document we produced that artists actually opened. I'm not sure what that says about my documentation habits.</p>
+
+    <h3>Who owns a disagreement</h3>
+
+    <p>When a square turns red, whose is it? The previewer team? The renderer team? The person who built the asset? This is the lane problem from Chapter 4 wearing a different coat: who owns which fact about an asset, and here, which side owns the disagreement. We settled on a rule that was slightly unfair but worked. The asset builder looks first, because most disagreements turn out to be an asset using a feature the previewer approximates or a value one path reads differently. If the asset is fine, the case goes to whichever team's implementation is wrong, and the nightly grid usually says which. <span class="xref">Ch. 4</span></p>
+
+    <p>The rule didn't make us popular with asset builders. It did make the first hour of a bug a lot shorter, and it stopped two teams from each politely waiting for the other to pick it up.</p>
+
+    <h2 id="seams" data-short="Showing the seams">Showing the seams</h2>
+
+    <p>A fully tested previewer still lies a little. The final step is to make it admit so, in the interface, where the artist is looking.</p>
+
+    <p>We added three things. A <strong>badge</strong>: when a scene contains an effect the previewer approximates, a small label appears in the corner of the view, reading something like “reflections approximated.” A <strong>toggle</strong>: one click switches the view from the fast preview to progressive final-quality, so the artist can check the doubtful part without leaving the tool. And a <strong>send-a-test-frame button</strong>: one click sends the current frame to the farm with exactly the settings the final will use, and drops the result back into the artist's view when it arrives.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 190" role="img" aria-labelledby="f112t f112d">
+          <title id="f112t">The honest interface</title>
+          <desc id="f112d">A mock of a preview window with a badge reading reflections approximated, a toggle between fast preview and final quality, and a button labeled send test frame to farm.</desc>
+          <g class="node">
+            <rect x="20" y="20" width="560" height="150" rx="8"/><text x="300" y="100">Preview view</text>
+          </g>
+          <g class="node done">
+            <rect x="36" y="32" width="190" height="30" rx="6"/><text x="131" y="52" style="font-size:13px">reflections approximated</text>
+          </g>
+          <g class="node shared">
+            <rect x="610" y="32" width="190" height="44" rx="8"/><text x="705" y="59" style="font-size:14px">Fast  |  Final quality</text>
+            <rect x="610" y="96" width="190" height="44" rx="8"/><text x="705" y="123" style="font-size:14px">Send test frame to farm</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 11.2</b>The seams, shown. A badge for what is approximated, a switch to a more honest view, and a way to ask the farm for the real answer.</figcaption>
+    </figure>
+
+    <p>You might think telling the artist the preview is approximate would make them trust it less. It did the opposite. It's the same lesson as Chapter 10: trust is not a property of being right, it's a property of not being surprised. An artist who knows the previewer fakes the fog treats it as a sketch and plans accordingly. An artist who doesn't know discovers the fog problem at six in the morning, concludes the previewer lies, and stops using it.</p>
+
+    <p>That last outcome is the real cost of getting this wrong. A previewer that artists no longer believe is worse than none, because it has the maintenance bill of a tool and the usefulness of a rumor. They go back to waiting. We had a stretch of about two shows, before the badges, when lighters quietly returned to rendering overnight and checking in the morning. We didn't notice from any dashboard. We noticed because the farm's test-frame count crept up and nobody could say why.</p>
+
+    <h2 id="footnote" data-short="The honest footnote">The honest footnote</h2>
+
+    <p>Three problems are still open, and I'd rather list them than leave the impression the nightly grid is a finish line.</p>
+
+    <p>Complex scenes still never fit. As scenes grow, the reduced version shown in the preview drifts further from the real one, and every year the team decides again which corners to cut. The long tail of features approximated forever is also long: each is cheap to ignore on its own, and each shows up in somebody's shot. And two codebases drift apart whenever the team is busy, which is to say always. The grid catches the drift, but catching a drift is not preventing one.</p>
+
+    <p>I'll plant two questions here for the end of the book. One: could the real-time and final paths converge on a single renderer someday, with the same code running at different speeds? It's possible, but not assured, and I'll treat it with appropriate suspicion in Chapter 31. Two: could a learned model produce a preview that looks like the final, faster than either of our designs? We asked that question and didn't answer it. The interesting part isn't whether the images would look good. It's whether artists would trust them to be within tolerance, and tolerances, as we've seen, are only worth something when the artists have agreed to them. <span class="xref">Ch. 31</span></p>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>Some months after the window episode, the same lighter opened a similar interior. The preview showed a small badge: “reflections approximated.” They looked at it, made their dozen choices in a few minutes, and, before approving anything, clicked the button to send one frame to the farm. Thirty-five minutes later it came back. The reflection was a little different, the lighter nudged one light, and approved. The final matched.</p>
+
+    <p>It wasn't a dramatic scene, which is what I like about it. Nobody asked who was lying, because neither of them was.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">What stuck</span>
+      <p>The previewer doesn't need to be right. It needs to be honest about how wrong it is.</p>
+    </div>
+
+    <p>That closes Part III. Four chapters, one theme: a renderer that is correct, fits, converges and previews honestly, and the pattern under all of it is that trust is built by never surprising the artist. Rendering showed us what the world looks like. Part IV asks how it moves, burns, floods and falls apart, and Chapter 12 starts with water, fire and destruction.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Failure as the Normal Case · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 20. At a million tasks a night, failure is weather, not an incident. How to make it cheap, make it visible, and find the one bad frame among a hundred thousand good ones.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch20">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part VI · The Farm and the Cloud</p>
+    <p class="chap-num" aria-hidden="true">20</p>
+    <h1>Failure as the Normal Case</h1>
+    <p class="dek">A thousand failures before breakfast, a taxonomy of weather, and the unglamorous craft of finding the one bad frame among a hundred thousand good ones.</p>
+    <p class="meta"><span>Chapter 20</span><span>Continues from: Chapter 19</span><span id="reading-time">15 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">Let me start with a number that ruined my optimism: on a busy night, our farm runs somewhere north of a million tasks. If one in a thousand fails, that's a thousand failures before breakfast. And one in a thousand is a <em>good</em> day.</p>
+
+    <p><span class="xref">Ch. 19</span> got the work onto the machines, roughly 4,000 jobs of about 240 tasks each, every night. This chapter is about what the machines do with it. Some of it goes wrong, constantly, and that is not an incident. It is a property of the system, like the tide.</p>
+
+    <p>I did not believe that for a long time. The first time I really looked at the nightly failure count, I treated it as a bug in the farm and set out to fix it. We gave the effort a name, which was a mistake, because a name makes it feel like a project with an end. We called it "zero". It ran six weeks. The graph dipped by about a third, which felt wonderful, and then something odd happened: every failure we removed was replaced by a different one. A storage timeout that had been hiding politely behind the older errors moved into every gap we opened. By about week seven we had stopped saying "zero" in meetings. Nobody remembers who stopped first.</p>
+
+    <p>None of these are bugs, exactly. They're weather.</p>
+
+    <p>You can't prevent weather. You can build a better roof and read a good forecast, and that is what the rest of this chapter is about. The goal is not fewer failures. The goal is <em>cheap</em> failures, <em>visible</em> failures, and the ability to find the one bad frame among a hundred thousand good ones.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>The belief goes like this: a failure is a defect. Find the cause, fix it, and the failure is gone for good. It's a lovely belief and it works very well for a program that runs on one machine.</p>
+
+    <p>We kept a spreadsheet called "Known Issues". Every failure signature that showed up more than a few times got a row, an owner and a status. For a while the spreadsheet was a source of pride. Then I noticed that it grew faster than it shrank, and that some rows had been "in progress" since before two of the people on the list had joined the studio. The spreadsheet wasn't wrong. It was just describing a climate with a to-do list.</p>
+
+    <p>The arithmetic explains why. Recall the giant from <span class="xref">Ch. 1</span>: about 40 versions, 1,800 images each, some 72,000 images over the shot's life. That is 72,000 chances for the one-in-a-thousand to apply, for a single 2.5-second shot, so about 70 failures somewhere along its life that nobody planned for. Multiply by the shots in flight and the thousand-a-night figure stops looking like a rate and starts looking like a fact of nature.</p>
+
+    <p>It gets worse the moment tasks depend on each other. If one task succeeds 99.9 percent of the time, a chain of 240 dependent tasks, which is one job, finishes cleanly only about 79 percent of the time. A chain of 500 manages about 61 percent. A chain of a thousand is closer to 37. Success rates don't add, they multiply, and a pipeline made of long chains of reliable steps is, overall, not very reliable.</p>
+
+    <p>Length matters too. A task that runs three minutes has three minutes to meet bad luck. A simulation that runs 40 hours has 800 times as long, and it will, sooner or later, meet some.</p>
+
+    <h2 id="weather" data-short="A field guide to weather">A field guide to weather</h2>
+
+    <p>Error messages are a poor way to sort failures, because the same message can come from five different places. What helped us was sorting by <em>where the fault lives</em>, since that tells you who has to act. There are six places.</p>
+
+    <p>The <strong>machine</strong>: a memory module going bad, a full local disk, a node that overheated. The <strong>network and storage</strong>: a timeout, a stale file handle, a file server that is busy rather than broken. The <strong>software</strong>: a renderer that crashes on one rare combination of inputs. The <strong>data</strong>: a corrupt texture, a missing frame, a cache written halfway. The <strong>human</strong>: the wrong version submitted, a path renamed an hour before a render started. And the <strong>neighbor</strong>: another task on the same node that ate the memory and left yours to be killed for it. The neighbor is my favorite, because the task that dies is innocent.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Where the fault lives</th><th>What it usually looks like</th><th>Does a retry help?</th><th>Who needs to know</th></tr></thead>
+          <tbody>
+            <tr><td>Machine</td><td>Crashes or odd output clustered on one node</td><td>Yes, on another node</td><td>Farm operations</td></tr>
+            <tr><td>Network and storage</td><td>Timeouts, stale handles, in bursts across many nodes</td><td>Usually, after a pause</td><td>Storage team</td></tr>
+            <tr><td>Software</td><td>Same crash, same place, any node</td><td>No</td><td>Tool or renderer owner</td></tr>
+            <tr><td>Data</td><td>Same failure on every attempt, tied to one file or shot</td><td>No</td><td>The artist or asset owner</td></tr>
+            <tr><td>Human</td><td>Fails at the start, or renders the wrong thing perfectly</td><td>No</td><td>The submitter, gently</td></tr>
+            <tr><td>Neighbor</td><td>Killed for memory, only on busy nodes</td><td>Yes, on a quieter node</td><td>The scheduler's owners</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 20.1</b>A field guide to weather. Sorted by where the fault lives, not by what the log says.</figcaption>
+    </figure>
+
+    <p>Cutting across those six is the distinction that the entire retry argument rests on. A <dfn>transient</dfn> failure goes away if you run the task again. A <dfn>deterministic</dfn> failure never will, however many times you ask. The cheap test for telling them apart is to run the task again on a <em>different</em> machine. If it passes, it was weather. If it fails the same way, it's climate, and retrying is just a slower way of failing.</p>
+
+    <p>Then there is the third kind, the one that kept me up at night: the <dfn>silent failure</dfn>. The task exits cleanly, reports success, and writes a frame that is wrong. Early on, a texture server quietly began serving an old version of one file. Hundreds of frames rendered on schedule, with green checks all the way down, showing a costume that had been redesigned a week earlier. Nothing crashed and nothing alerted. The farm, to its credit, was extremely efficient at being wrong.</p>
+
+    <h2 id="cheap" data-short="Making failure cheap">Making failure cheap</h2>
+
+    <p>If you can't stop failures, you can make each one cost very little. Picture a 40-hour simulation that dies at hour 39. The failure itself is trivial, a machine hiccuping. The cost is 39 hours of a high-memory node, plus the day the artist loses waiting to see whether the rerun survives. Everything that follows is a way of shrinking that bill.</p>
+
+    <h3>Retries, with limits and a memory</h3>
+
+    <p>The obvious tool is the retry, and the obvious version of it is dangerous. A good retry has four habits. It goes to a <em>different</em> machine, since the machine is the most common suspect. It stops after a fixed number of attempts, because a deterministic failure retried forever is just a slow way to fail. It backs off, waiting longer each time, so a struggling file server isn't hit by every failed task at once. And it remembers: which machines keep appearing in the failure list, and which tasks have already failed twice.</p>
+
+    <p>Without the backing off we met the <em>retry storm</em>. A file server slowed down, tasks timed out, the timed-out tasks retried immediately, the retries made the server slower, and more tasks timed out. One slow disk became a farm-wide event in about ten minutes. The cost of retries, honestly stated: they hide problems. A farm that retries well looks healthy while quietly burning capacity, so retries have to be counted and shown, not just performed.</p>
+
+    <h3>Tasks that can run twice</h3>
+
+    <p>The single most useful property a task can have is that it is <dfn>idempotent</dfn>: running it twice does no harm and gives the same result as running it once. Retries, preemption, a scheduler that restarts something it thought was dead, an artist who resubmits out of impatience, all of them quietly assume it.</p>
+
+    <p>Our tasks did not start out that way. Some wrote straight to their final filenames, so a task killed halfway left a truncated frame that looked, to the next stage, like a real one. The fix was two small rules. A task writes to a temporary name and renames to the real name only when it is completely done, so a frame either exists or doesn't. And outputs are named so that a rerun lands in the same place rather than beside the old one. It took the better part of a quarter to nudge every tool onto those rules. Idempotency is cheap to describe and expensive to retrofit; that's its whole trade-off.</p>
+
+    <h3>Checkpoints, when they're worth it</h3>
+
+    <p>A <dfn>checkpoint</dfn> is a saved moment from which a task can resume. For the 40-hour simulation it means that dying at hour 39 costs the time since the last save rather than the whole run. This chapter owns the mechanics; <span class="xref">Ch. 12</span> keeps only what is specific to simulation, which runs forward in time and can't skip ahead.</p>
+
+    <p>The rule of thumb that served us is a comparison of two costs: what it costs to save, in time and storage, against what it costs to lose, which is the work since the last save multiplied by how likely a failure is. A three-minute task isn't worth checkpointing; rerunning it is cheaper than the bookkeeping. A multi-hour task usually is. We saved the long simulations every hour or so, and every checkpoint is a large file written to a shared file system that other things are also trying to use. Checkpointing isn't free. It moves the cost from the unlucky night to every night.</p>
+
+    <h3>Chunking, from the other side</h3>
+
+    <p>Smaller tasks make every failure cheaper, because less is lost when one dies. <span class="xref">Ch. 19</span> looked at the same trade-off from the scheduler's side: smaller tasks mean more scheduling overhead. Failure pushes the optimum down, toward smaller chunks than a pure throughput argument would choose. We settled on tasks sized so that most of them finish in minutes, with an exception list for the things that can't be split.</p>
+
+    <h3>Quarantine</h3>
+
+    <p>The last tool is the simplest: take a machine out of service when it starts to misbehave. We learned this from one node that was responsible for roughly one in five of a night's failures. It had not crashed. It was just wrong about one task in ten, which meant it kept accepting work, kept failing it, and kept returning to the queue looking eager. It took three days for anyone to connect the dots, because the failures were spread across a dozen shows and each show's owner assumed the problem was theirs. Somewhere in there the node had decided to become a very expensive space heater.</p>
+
+    <p>Now the farm counts failures per machine. A node that fails a few tasks in a short window is drained, meaning it finishes what it has and takes nothing new, then tested, then either returned or sent to a person with a screwdriver. The cost is that a healthy node occasionally gets benched for a bad afternoon. We'd rather bench a hundred good ones than let one bad one eat a night.</p>
+
+    <h2 id="visible" data-short="Making failure visible">Making failure visible</h2>
+
+    <p>Cheap failures still have to be seen, and at a thousand a night nobody can read the logs. I tried, in the early weeks, and the experience is like trying to understand a city by reading every license plate.</p>
+
+    <p>What worked was reading <dfn>signatures</dfn>. Take the error, strip out the parts that vary, such as paths, frame numbers, machine names and timestamps, and what's left is a short stable text. Group by that text and count. A thousand failures become, typically, about six causes, with a long tail of oddities. That is a morning report a person can read in five minutes, and it is the thing I'm proudest of in this chapter, which says something about how modest our ambitions became.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>#</th><th>Signature</th><th>Count</th><th>Kind</th><th>Owner</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Storage timeout reading texture</td><td>312</td><td>Transient</td><td>Storage</td></tr>
+            <tr><td>2</td><td>Killed: out of memory (shared node)</td><td>221</td><td>Transient</td><td>Scheduler</td></tr>
+            <tr><td>3</td><td>Renderer crash, same scene element</td><td>158</td><td>Deterministic</td><td>Renderer team</td></tr>
+            <tr><td>4</td><td>Input file not found</td><td>96</td><td>Mixed</td><td>Several, see text</td></tr>
+            <tr><td>5</td><td>Node-local disk full</td><td>74</td><td>Transient</td><td>Farm operations</td></tr>
+            <tr><td>6</td><td>License unavailable</td><td>41</td><td>Transient</td><td>Tools and licensing</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 20.2</b>A morning report, illustrative. Six causes cover about nine in ten of last night's failures; the rest is a long tail.</figcaption>
+    </figure>
+
+    <p>The report taught us to distrust our own signatures. "Cannot read input file", number 4 above, turned out to be four unrelated causes sharing one error message: a full disk on a handful of nodes, a stale file handle, an artist's renamed texture, and a licensing hiccup. Splitting it turned one frightening number into four boring ones, each with an owner. Boring is the goal.</p>
+
+    <p>The second change was alerting on <em>rates and shifts</em> instead of events. "Task 4,812,339 failed" is noise; at this volume something fails every second. "The failure rate for this show doubled in the last hour" is a signal. We also learned to separate "the farm is unhealthy" from "this show is unhealthy". A single show submitting a broken scene can make the farm-wide graph look dreadful while every other show is fine, and a farm-wide fault can hide inside one show's complaints.</p>
+
+    <p>One warning, and it's an echo of <span class="xref">Ch. 7</span>. A farm that retries well can look green while wasting a large share of its capacity on work it has to do twice. Count the retries, not just the final failures.</p>
+
+    <h2 id="needle" data-short="One bad frame in 100,000">One bad frame in 100,000</h2>
+
+    <p>Now the hard case, and the one this chapter is really for. A frame finishes. It passes every automated check. And it looks wrong.</p>
+
+    <p>Here is the case as it happened, told as one story though it's a composite. An artist was reviewing a long sequence, and she said, quietly, that a frame near the middle had a faint flicker in the shadows. One frame among the 100,000 in that sequence. No alert had fired. The task had succeeded, the file existed and the size was right. If the giant's walk had dropped one of its 60 frames, the whole room would have seen it; one in a hundred thousand is the kind of thing a person catches by luck and a tired eye misses on a Friday.</p>
+
+    <p>We did what I now call the method, which is boring and works. First, reproduce: re-render the frame and see whether it is still wrong. It wasn't, which told us the fault was in the circumstances rather than in the scene, and that pointed straight at weather. Second, narrow. Which machine rendered it, which software build, which inputs, and when.</p>
+
+    <h3>What provenance buys</h3>
+
+    <p>This is where <span class="xref">Ch. 6</span> paid for itself. That chapter began with an old shot that re-rendered differently, and the lesson was to record what went into every output. Because we had, the frame carried its own history: the node, the renderer build, the input versions, the start and end times. The most valuable question provenance lets you ask is not "what happened to this frame?" but "what else did that machine render that night?"</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Record for every task</th><th>Why it earns its place</th></tr></thead>
+          <tbody>
+            <tr><td>Machine name</td><td>Exposes the flaky node</td></tr>
+            <tr><td>Software builds, including the renderer</td><td>Exposes a bad update</td></tr>
+            <tr><td>Exact input versions</td><td>Exposes the stale texture and the wrong submission</td></tr>
+            <tr><td>Start and end times</td><td>Lets you correlate with an incident elsewhere</td></tr>
+            <tr><td>Attempt number and the machines tried before</td><td>Shows what the retries were hiding</td></tr>
+            <tr><td>Output size and a few image statistics</td><td>Feeds the automated checks below</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 20.3</b>The short list. Record these for every task and a bad frame stops being a mystery and becomes a query.</figcaption>
+    </figure>
+
+    <p>The bisection was then mechanical. Of the machines that had rendered the sequence, only one had also touched the neighboring frames with similar flicker, once we knew to look. We split by time and by build and the build cleared; we split by machine and one node lit up. It had a flaky memory module, wrong every so often in a way that didn't crash anything, and over a few nights it had touched about 300 frames. We re-rendered all of them the same morning. Nobody had complained about 299 of them. They would have.</p>
+
+    <p>That leads to the rule I'd tattoo somewhere if I were that sort of person: when the cause is a machine or a build, find <em>all</em> the affected frames before you fix the one. The artist's frame was a symptom and the node was the disease. Fixing the symptom first would have felt productive and been a mistake.</p>
+
+    <h3>What catches the usual suspects</h3>
+
+    <p>After a few of these we added automated checks. The ones that earn their keep are the dullest. <em>Expected-file checks</em> confirm every frame in the range exists, at a plausible size, with a complete file. <em>Neighbor comparison</em> looks at each frame next to the ones around it, and flags any that differ more than the motion in the shot can explain; it caught most of our flickers. Single-frame image statistics, such as an average brightness or a count of pixels that are not-a-number or pure white, are mostly merely comforting. They catch the dramatic failures, which were never the problem.</p>
+
+    <p>What still slips through, and I want to be plain about this: a wrong-but-plausible frame whose neighbors are equally wrong, as with the stale texture, where every frame agreed with every other. Only a person, or a comparison against a trusted earlier render, catches that.</p>
+
+    <h3>The people loop</h3>
+
+    <p>The last piece isn't software. An artist who says "frame 1,047 looks odd" is giving us the most sensitive detector we own, and what matters is how fast that sentence becomes a cause. In the early days it took a day or two, a game of telephone between the artist, the shot support person and whoever owned the farm. We made it a single button that attaches the frame's history to a ticket, and the trip from "looks odd" to a named suspect usually takes under an hour now. Appendix C lists "time to diagnose a bad frame" as a metric, and this is what it measures.</p>
+
+    <p>Most of these cases end with a flaky component found by patient narrowing, not by insight. That is unglamorous, and I've come to find it reassuring.</p>
+
+    <h2 id="footnote" data-short="The honest footnote">The honest footnote</h2>
+
+    <p>Plenty is unsolved. Silent failures remain my biggest fear, and the checks above only shrink the space they hide in. Retries can mask a real regression for weeks: a renderer update that fails 2 percent of tasks looks, to a farm that retries, like a slightly slower farm. We found one of those only because someone noticed the retry count creeping up on a graph that nobody had asked for.</p>
+
+    <p>And some frames are simply declared acceptable. There is a genuine trade-off between checking everything and finishing the night. Every check costs time, and at some point a frame in a crowd shot with a tiny speck in the corner gets waved through by a human who has looked at it and judged that the cost of a rerun isn't justified. I don't love that, but I'd love it less if we hadn't been honest that we were doing it.</p>
+
+    <h2 id="stuck" data-short="What I'd tell my past self">What I'd tell my past self</h2>
+
+    <p>Go back to the thousand failures before breakfast. They're still there. What changed is the angle. On a good morning I read a ranked list of six causes in five minutes, find that four of them already have owners and one is new, and go and get my coffee. We never announced a failure rate we were proud of. The number I'd put on a slide is five minutes.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">What I'd tell my past self</span>
+      <p>Stop trying to prevent weather. Build a better roof and a good forecast, and when one frame in a hundred thousand goes wrong, make sure you can ask what else that machine touched.</p>
+    </div>
+
+    <p>One question remains. What if the farm itself isn't big enough for the crunch, and the weather arrives on someone else's machines? On to the cloud.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

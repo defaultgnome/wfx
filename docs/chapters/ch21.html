@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Going to the Cloud Mid-Production · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 21. Renting more farm in the last six weeks of a show: data gravity, three ways to move the data, matching frames, security, the bill and the exit.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch21">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part VI · The Farm and the Cloud</p>
+    <p class="chap-num" aria-hidden="true">21</p>
+    <h1>Going to the Cloud Mid-Production</h1>
+    <p class="dek">The cloud is not more computers. It is the same problem with three new constraints: distance, price and trust.</p>
+    <p class="meta"><span>Chapter 21</span><span>Continues from Chapter 20</span><span id="reading-time">15 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">The calendar had six weeks left on it, and the red bar on the forecast was about a fifth of the farm tall.</p>
+
+    <p>It was a streaming series, the last block of episodes, and the farm was already full. We had checked the usual escape hatches. Lower-priority work was already waiting. Artists were already queuing renders overnight. A hardware delivery that should have landed in the spring had slipped to autumn, which is to say after the show. The forecast showed, week by week, how many machines we owned and how many we needed, and for the final six weeks the second number sat well above the first. Roughly a thousand nodes short, at the worst of it.</p>
+
+    <p>Somebody said the sentence that started the project. It wasn't an engineer. It was a producer's coordinator, who had been quietly watching the same chart for a week, and she said it the way you'd mention that there's a spare chair: <em>“What if we rented some?”</em></p>
+
+    <p>I think it was taken seriously precisely because she wasn't selling anything. Nobody in that room, me included, knew what a rented machine would do to a pipeline that had spent nine years assuming everything was in the next rack. We said yes anyway. This chapter is what that yes cost, what it bought, and which parts we're still not sure about. I'll keep to concepts and leave out providers and prices, and the numbers are from one illustrative case. It is not a ruling on cloud versus owned. I don't have one.</p>
+
+    <h2 id="why" data-short="Why you go, and why you don't">Why you go, and why you don't</h2>
+
+    <p>The argument for going is the one from <span class="xref">Ch. 2</span>: our workload is a mountain range, not a plain. Ten quiet months, then six crushing weeks around delivery. If you own enough machines for the peak, they sit idle most of the year. If you own enough for the average, you are miserable exactly when it matters most. Renting for the spike, usually called <dfn>bursting</dfn>, looks like the obvious third option.</p>
+
+    <p>There are other legitimate reasons. A new generation of GPUs shows up and you want to try it before you buy a rack of them. A show arrives on short notice. A refresh slips, as ours had. Any one of these is enough to start the conversation.</p>
+
+    <p>And there are good reasons not to go, which a fair chapter should list. You may have a steady load that owned machines serve more cheaply. Your content owners may be uncomfortable with it. Your data may be too big to move in the time you have. Your team may be too small to run a second place. Your software may assume a fast shared filesystem so deeply that no amount of effort will fix it in six weeks. We had some of each of these worries. We went anyway, because the alternative was telling a director that the last episode would be late.</p>
+
+    <h2 id="belief" data-short="The three-box diagram">The three-box diagram</h2>
+
+    <p>The first architecture diagram I drew had three boxes and an arrow. Studio on the left, cloud on the right, an arrow between them labeled “jobs.” I was rather proud of it. The cloud, in my head, was an infinite and interchangeable farm: add a few thousand machines, point the scheduler at them, go home early.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 840 250" role="img" aria-labelledby="g1t g1d">
+          <title id="g1t">The three-box diagram, and the real one</title>
+          <desc id="g1d">Top: three boxes, studio, an arrow, and cloud. Bottom: the same, with the arrow replaced by a chain of steps: sync scenes and textures, license check, security gateway, render, collect results, bring results home.</desc>
+          <defs>
+            <marker class="ah" id="g1a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+          <g class="node">
+            <rect x="10" y="20" width="150" height="44" rx="8"/><text x="85" y="47">Studio farm</text>
+            <rect x="680" y="20" width="150" height="44" rx="8"/><text x="755" y="47">Cloud farm</text>
+          </g>
+          <g class="flow"><path d="M160 42 H678" marker-end="url(#g1a)"/></g>
+          <text class="say" x="420" y="34">“jobs”</text>
+          <text x="10" y="100" style="font-size:12px;font-family:var(--mono);fill:var(--ink-3)">WHAT I DREW ABOVE · WHAT WAS THERE BELOW</text>
+          <g class="node">
+            <rect x="10" y="130" width="110" height="44" rx="8"/><text x="65" y="157" style="font-size:13px">Studio farm</text>
+            <rect x="150" y="130" width="110" height="44" rx="8"/><text x="205" y="150" style="font-size:12px">Sync scenes</text><text x="205" y="165" style="font-size:12px">&amp; textures</text>
+            <rect x="290" y="130" width="100" height="44" rx="8"/><text x="340" y="157" style="font-size:13px">Licenses</text>
+            <rect x="420" y="130" width="110" height="44" rx="8"/><text x="475" y="150" style="font-size:12px">Security</text><text x="475" y="165" style="font-size:12px">gateway</text>
+            <rect x="560" y="130" width="100" height="44" rx="8"/><text x="610" y="157" style="font-size:13px">Render</text>
+            <rect x="690" y="130" width="140" height="44" rx="8"/><text x="760" y="150" style="font-size:12px">Results back,</text><text x="760" y="165" style="font-size:12px">checked, filed</text>
+          </g>
+          <g class="flow">
+            <path d="M120 152 H148" marker-end="url(#g1a)"/><path d="M260 152 H288" marker-end="url(#g1a)"/>
+            <path d="M390 152 H418" marker-end="url(#g1a)"/><path d="M530 152 H558" marker-end="url(#g1a)"/>
+            <path d="M660 152 H688" marker-end="url(#g1a)"/>
+          </g>
+          <text class="say" x="420" y="215">The arrow was the product.</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 21.1</b>The diagram I drew, and the one we built. Each box in the lower row is a system somebody had to run.</figcaption>
+    </figure>
+
+    <p>The diagram was not wrong so much as dishonest by omission. Every thing I had not drawn lived on that arrow. Which brings us to the first law of the chapter.</p>
+
+    <h2 id="gravity" data-short="Why the arrow was the problem">Why the arrow was the problem</h2>
+
+    <p>Compute is rentable by the minute. Data is not movable by the minute. That sentence took me about three weeks to absorb.</p>
+
+    <p>Take one forest shot from the series, a mist-heavy one a lot like the giant's. These numbers are invented for the story, but they are in the right neighborhood. Its scene, textures, simulation caches and assets added up to about 1.5 TB of inputs. Over the link we had, after protocol overhead and the fact that nobody gets the advertised speed, we could sustain around 2 gigabits a second. That puts the transfer at close to an hour and three quarters. The render itself, spread across sixty cloud machines, took about forty-five minutes. The results, sixty frames of about thirty layers each, came to roughly 90 GB, and coming home took another six minutes or so.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 220" role="img" aria-labelledby="g2t g2d">
+          <title id="g2t">One shot, local versus cloud</title>
+          <desc id="g2d">Two horizontal bars on a shared time axis. Local: forty-five minutes of rendering only. Cloud: about one hundred and five minutes moving inputs, forty-five minutes rendering, and six minutes moving results back.</desc>
+          <g class="grid"><path d="M150 40V190"/><path d="M290 40V190"/><path d="M430 40V190"/><path d="M570 40V190"/><path d="M710 40V190"/></g>
+          <g class="wk"><text x="150" y="28">0</text><text x="290" y="28">40 min</text><text x="430" y="28">80</text><text x="570" y="28">120</text><text x="710" y="28">160</text></g>
+          <g class="rowl"><text x="10" y="86">Local</text><text x="10" y="156">Cloud</text></g>
+          <rect class="bar" x="150" y="70" width="158" height="26" rx="4"/>
+          <rect class="bar redo" x="150" y="140" width="368" height="26" rx="4"/>
+          <rect class="bar" x="518" y="140" width="158" height="26" rx="4"/>
+          <rect class="bar redo" x="676" y="140" width="21" height="26" rx="4"/>
+          <text class="say" x="334" y="185">moving in</text>
+          <text class="say" x="597" y="185">rendering</text>
+        </svg>
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span><i class="sw work"></i>rendering</span>
+        <span><i class="sw redo"></i>moving data</span>
+      </div>
+      <figcaption><b>Figure 21.2</b>One illustrative shot. In the cloud, the machines were fast and the shot was slow, because most of the time was spent getting there.</figcaption>
+    </figure>
+
+    <p>So for that shot, the inputs took more than twice as long to move as to render. The cloud was not slow. The cloud sat idle, waiting for its own groceries.</p>
+
+    <p>The second surprise was the line item people don't expect. Compute was cheap and, once we had the units straight, predictable. Results leaving the cloud were not. Cloud providers charge for data going out, because data going out is a way to stop being their customer, and ours was a lot of data: every version of every shot, thirty layers a frame, coming home for review. The bill for that, which I will get to, was the largest gap between the forecast and the invoice.</p>
+
+    <p>The reframe that finally helped the team was a small one. <em>Think of a cloud task as a letter, not a phone call.</em> A phone call is chatty: it asks for a file, waits, asks for another. A letter leaves with everything it needs, is read in one go, and comes back with the answer. A task that behaves like a phone call across a long-distance link is a task that spends most of its day waiting for replies. That was the <span class="xref">Ch. 7</span> lesson about shared filesystems and small reads, now stretched across a continent, and it was no more forgiving.</p>
+
+    <p>It also gave us a test for which work belongs in the cloud. Four questions, asked of any task before it goes.</p>
+
+    <ul class="questions">
+      <li><span>Inputs. How many gigabytes must arrive before the first frame can start, and can they be reused by the next task?</span><span class="xref">size</span></li>
+      <li><span>Runtime. Is the task long enough that the transfer is a small fraction of it?</span><span class="xref">ratio</span></li>
+      <li><span>Outputs. How much comes back, and does anyone actually need all of it today?</span><span class="xref">egress</span></li>
+      <li><span>Licenses. Does a tool in the chain need to reach a license server, and can it from there?</span><span class="xref">reach</span></li>
+    </ul>
+
+    <p>Self-contained, compute-heavy tasks with small inputs pass easily: a long simulation from a small setup, a heavy render of a shot with few unique assets. Tasks with huge inputs and short runtimes fail the second question loudly. A quick preview render that reads a terabyte of textures is the cloud's worst customer.</p>
+
+    <h2 id="patterns" data-short="Three ways to move the data">Three ways to move the data</h2>
+
+    <p>We ended up considering three patterns, and we used all three at different times, which I mention so you don't think there was a grand plan.</p>
+
+    <p><em>Sync ahead of time.</em> Copy what a shot will need to the cloud before anyone asks to render it. It is predictable, since the data is simply there when the task starts. It is also wasteful, because you move things nobody ends up using, and it is hard to keep current. Notes arrive on Thursday, a texture changes, and now the copy in the cloud is stale in a way that looks, to the renderer, exactly like a correct one.</p>
+
+    <p><em>Fetch on demand and cache.</em> Leave the data at home. When a cloud task asks for a file, fetch it, and keep it close for the next task. This moves only what is needed, which is its great virtue. The first tasks of any shot are slow while the cache fills. And the cache is a new system, with its own failure modes, its own capacity planning and its own on-call page.</p>
+
+    <p><em>Extend the storage.</em> Present a cached view of the on-premises storage inside the cloud, so that software sees the same paths it always has. The great gift is transparency: no tool had to change. The cost is that latency now hides inside every file open, and the symptom is not an error but a mysterious slowness, which is the hardest kind to debug because nothing is broken.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Pattern</th><th>Good for</th><th>Bad for</th><th>What surprised us</th></tr></thead>
+          <tbody>
+            <tr><td>Sync ahead</td><td>Predictable, repeatable work with stable inputs</td><td>Shots still receiving notes; anything that changes daily</td><td>Stale copies rendered perfectly and were wrong</td></tr>
+            <tr><td>Fetch and cache</td><td>Sparse use of big scenes; shots sharing assets</td><td>The first hour of a new shot</td><td>The cache needed more care than the renders</td></tr>
+            <tr><td>Extend the storage</td><td>Unmodified tools, quick adoption</td><td>Chatty tools, small reads, many files</td><td>Slowness with no error to point at</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 21.1</b>Three ways to move the data. None was free; each moved the cost somewhere else.</figcaption>
+    </figure>
+
+    <p>The scheduler needed a new idea to make any of this work. Until now it had known about machines, priorities and fairness, as we saw in <span class="xref">Ch. 19</span>. Across two places it also needed to know <em>where the data was</em>. A task whose inputs were already in the cloud cache should go there. A task whose inputs were at home should usually stay home, even when the cloud had idle machines, because the idle machines weren't actually free. This was a surprisingly large change to a system that had never had to think about location.</p>
+
+    <p>We sent boring work first. The earliest tasks were long, self-contained simulations and renders of shots that were close to final, with few moving parts and unambiguous results. If they failed, they failed in uninteresting ways. If they succeeded, we had learned the plumbing worked. We measured, widened the set slowly, and only then let anything urgent go.</p>
+
+    <h2 id="same-frame" data-short="Same frame, different machine">Same frame, different machine</h2>
+
+    <p>The part of this chapter I find hardest to write is the part where the answer is “probably.”</p>
+
+    <p>Mid-production changes everything about the cloud. There is no clean slate. Existing shots depend on existing results, a new frame has to be edited next to an old one, and a viewer must not be able to tell which machine drew which. So the requirement is not <em>a</em> good frame. It is <em>the same</em> frame.</p>
+
+    <p>The first step is the dull one: make the software environment match exactly. Same versions of the tools, same plugins, same libraries, same everything, and every one pinned, because “latest” on Tuesday is not “latest” on Thursday. This is the reproducibility problem from <span class="xref">Ch. 6</span>, and the silent-failure problem from <span class="xref">Ch. 20</span>, with a new twist: now the machines are in a place we don't control and can't walk over to. We found, as we always do, one dependency nobody had listed. A small helper script on every home machine, installed years ago by someone who had since moved teams, that quietly adjusted a color setting before every render. The cloud machines didn't have it. (That kind of hidden dependency recurs across this book, and later it gets a proper name. For now, it was a Tuesday.)</p>
+
+    <p>The second step is deciding what “the same” means. There are three honest answers. <em>Bit-identical</em>: every pixel value matches exactly. <em>Visually identical</em>: a person cannot tell, even in a darkened room. <em>Within tolerance</em>: a measured difference below an agreed threshold. Bit-identical is wonderful and often impossible, since different processor generations legitimately round some floating-point operations differently. We settled on within-tolerance, with the threshold agreed by the lighting supervisors, not by the engineers. They are the ones who have to defend the frame in the review room.</p>
+
+    <p>Then the day came that tolerance was not enough. A frame of a forest shot rendered in the cloud had a faint sparkle in the mist. Not much. You could miss it on a laptop. A lighting artist spotted it in about ten seconds on the big screen. The same frame at home was clean.</p>
+
+    <p>We had two suspects. The cloud machines had a different processor generation from ours, and their math libraries had been built slightly differently. We never proved which was responsible. We pinned both: the same library build everywhere and, where we could, the same processor class for that show. The sparkle went away. If you want a confident root cause, I haven't got one. The honest ending is <em>probably</em>, and I'd rather give you that than a tidy story. Readers who remember the blue shadow from <span class="xref">Ch. 6</span> will recognize the shape. That one we eventually traced to a plugin update. This is its unresolved cousin, and it still sits in my notes under “don't ask me to swear to it.”</p>
+
+    <p>One piece of luck from earlier chapters paid off here. Cloud providers sell cheaper machines that can be taken away at short notice. Call this <dfn>interruptible capacity</dfn>. A farm that treats failure as the normal case, as <span class="xref">Ch. 20</span> insisted ours must, can use these happily: a task that dies is a task that retries, and nobody is surprised. A farm that doesn't can't, because every lost machine becomes a human problem. We used a lot of interruptible capacity and only noticed the preemptions in the logs. It was the cheapest benefit of the whole project, and we hadn't built it for this.</p>
+
+    <h2 id="security" data-short="The security conversation">The security conversation</h2>
+
+    <p>The people who own the content asked fair questions. Their unreleased work is worth a great deal and a leak is a disaster, so before and during production they want evidence that the work is protected. I won't describe any studio's specifics, partly because they differ and partly because describing them in public would be bad security manners. The themes, though, are universal.</p>
+
+    <p>They want <em>isolation</em>: our cloud environment separated from everyone else's. They want <em>encryption</em> of the data in transit and at rest. They want <em>access control and logging</em>: only named people, only what they need, and a record of every touch. They want <em>nothing left behind</em>: when a task ends, its data is gone. And they want an <em>audit trail</em> to show all of the above to someone who wasn't there.</p>
+
+    <p>We turned a page of requirements into an architecture, which mostly meant a narrow, monitored gateway for data in and out, short-lived credentials, a clean-up step that ran after every task and was verified, and a rule that no human logged into cloud machines unless there was a ticket and a reason. That was the work engineers can do.</p>
+
+    <p>The calendar was the harder part. Security review is a process with people, queues and follow-up questions, and it took weeks. Our deadline was already inside those weeks. Several times the technical build was waiting on an approval, not the other way round, and I came to believe a security review can take longer than the project it reviews. That's not a complaint. A process that moved faster would be one I trusted less.</p>
+
+    <p>It also has an honest cost, and it falls on the artists and engineers. The safest setup for the content was not the most convenient for the people doing the work. Debugging a cloud task meant filing a request rather than opening a terminal. And a few things we simply decided not to send. The final textures for one unreleased creature stayed home, on purpose, because the review would have outlasted the shot. We worked around it, rendered that creature locally, and accepted a slower week at home. Not everything that could go should.</p>
+
+    <p>If you're ever the one explaining this to a security reviewer, here is what I'd prove: where every copy of the data lives; who can reach it; that it is encrypted wherever it rests or travels; that every access is logged and the logs can't be altered by the people being logged; and that when the work ends, nothing remains. Those five answers, in plain language, shortened our second review considerably.</p>
+
+    <h2 id="bill" data-short="The bill and the exit">The bill and the exit</h2>
+
+    <p>Now the invoice. The forecast had been, as forecasts are, a document of hope. In the event, compute came in a little over, which I could live with. Transfer came in at about three times what we'd predicted, mostly results leaving. Storage in the cloud, for caches that nobody remembered to expire, was nearly double. And machines that sat powered on waiting for data, the idle time from Figure 21.2, were paid for like machines that were working. Compute, the thing I had spent weeks worrying about, was the smallest surprise.</p>
+
+    <p>That bill had a second effect, which is more interesting than the first. For a few days it was unclear who in the studio was meant to feel it. The people causing the cost, the shows requesting renders, never saw it, and the people seeing it never chose it. Making a bill visible to the people who incur it is a topic of its own, and the next chapter, <span class="xref">Ch. 22</span>, takes it up.</p>
+
+    <p>The other question I asked early, and have been glad I asked, was about leaving. If the contract ended tomorrow, how long would it take us to get back to normal? <span class="xref">Ch. 3</span> argued that the price which matters most is the price of leaving, and this was a lease with an exit fee in exactly that sense, though the fee was mostly engineering time. I drew it as the same steps.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Step down</th><th>What leaving would take</th><th>Illustrative time</th></tr></thead>
+          <tbody>
+            <tr><td>Stop sending new work</td><td>Scheduler change; renders stay home</td><td>An afternoon</td></tr>
+            <tr><td>Bring results home</td><td>Move and verify what lives only in the cloud</td><td>About a week</td></tr>
+            <tr><td>Retire the cache and gateway</td><td>Remove what we built to make it work</td><td>A few weeks</td></tr>
+            <tr><td>Unlearn the habits</td><td>Capacity planning, tooling and expectations that assumed the extra farm</td><td>A show or two</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 21.2</b>The exit ladder, borrowed from Ch. 3. The first rungs are cheap. The last one is people, not machines.</figcaption>
+    </figure>
+
+    <p>So was it cheaper than owning? I honestly can't tell you. It depends on how you count the engineers, how you count the delay avoided, and how many months you ask the question over. One case, told honestly, doesn't make a rule. What I can say is that it was <em>possible</em>. The last episode shipped on the date, and that was the point.</p>
+
+    <div class="callout">
+      <span class="callout-label">Questions to ask before committing</span>
+      <p>Where is the data, and how long does it take to move? What comes back, and what does leaving cost? Do the licenses reach there? Will a frame from there match a frame from here, and who decides? What does the security review need, and how long will it take? What will you not send? And if it ended tomorrow, how long to get back to normal?</p>
+    </div>
+
+    <h2 id="stuck" data-short="What I'd tell my past self">What I'd tell my past self</h2>
+
+    <p>On delivery, the red bar was shorter than the forecast had said it would be, and nobody noticed. That is the best review a pipeline team ever gets. Nobody asked me how the last episode got finished, and I was happy to leave it that way.</p>
+
+    <p>Compute is rentable by the minute and data is not movable by the minute, and everything difficult about the chapter, the egress bill, the cache, the sparkle in the mist, the security calendar, follows from the second half of that sentence. The cloud isn't more computers. It is the same problem with a new set of constraints: distance, price and trust.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">What I'd tell my past self</span>
+      <p>Ask where the data is before you ask where the machines are. And draw the arrow last, because it is the whole system.</p>
+    </div>
+
+    <p>Compute is now rentable and, for the first time, visible on an invoice. The next question is how to make that invoice visible to the people who spend it, which is a question about money and, as it turns out, about electricity.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

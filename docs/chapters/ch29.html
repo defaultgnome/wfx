@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Technical Debt With No Downtime · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 29. In a pipeline with no downtime, debt cannot be paid in a lump sum. It has to be paid in installments, in the open, while the building is occupied.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch29">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part VIII · Hard-Won Lessons</p>
+    <p class="chap-num" aria-hidden="true">29</p>
+    <h1>Technical Debt With No Downtime</h1>
+    <p class="dek">You can’t close the restaurant to fix the kitchen.</p>
+    <p class="meta"><span>Chapter 29</span><span>Continues from: Chapter 28</span><span id="reading-time">15 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">There is a file in our pipeline that nobody touches, and everybody knows its name.</p>
+
+    <p>New hires hear about it on their first day, in the tone you'd use for a stove: it's fine, it's useful, just don't put your hand there. It's the tool from <span class="xref">Ch. 3</span>, the one that began as a ten-line script to rename delivery files and grew until it quietly handed work between half the departments in the building. It is now nine years old. Its author left a long time ago, and the person who last understood it left after that.</p>
+
+    <p>Here is the twist, and it's the reason this chapter exists. It sits on the critical path for every shot we deliver. Replacing it would have cost, by the most honest estimate we ever made, six months of two engineers, plus a freeze window that appeared on no show's calendar and never would. That is the exit fee <span class="xref">Ch. 3</span> promised, a delivery month at the very least. Meanwhile the tool cost nothing to run, which is exactly how stoves get their reputations.</p>
+
+    <p>The thesis is short. <em>In a pipeline with no downtime, debt cannot be paid in a lump sum. It has to be paid in installments, in the open, while the building is occupied.</em> You can't close the restaurant to fix the kitchen.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>“We'll clean it up after delivery.” I have said this sentence, with feeling, perhaps a hundred times, and I'd like to look at it fondly for a moment. It is a sincere promise, made by a tired person, to a future version of themselves who will be less tired.</p>
+
+    <p>The trouble is that after delivery comes another delivery. With about eight shows in flight (<span class="xref">Ch. 2</span>), there is no after. There is a lull on the calendar, and it lasts until someone finds a problem in a shot that was supposed to be done. The quiet period we keep scheduling cleanups for has been, for nine years, a place on the map we've heard good things about.</p>
+
+    <p>I should say plainly that none of the debt I'll describe came from carelessness. Nearly every shortcut saved a delivery, and a delivery is a real thing: a client, a date, a few hundred people who'd like to go home. What happened afterward is the part we got wrong.</p>
+
+    <h2 id="sources" data-short="Where pipeline debt comes from">Where pipeline debt comes from</h2>
+
+    <p>Product teams accumulate debt too, but ours grows faster, and the reasons are specific. Our deadlines are fixed by someone else. Our shows start and end, so a tool built for one show's odd needs is orphaned the day it wraps. And the fixes that matter most tend to ship at two in the morning (<span class="xref">Ch. 25</span>), which is not when anyone writes a careful design.</p>
+
+    <p>The first source is the crunch shortcut that became a feature. A script written to rescue one sequence works, so the next show asks for it by name. By the third show it has users, and by the fourth it has opinions, and nobody remembers that it was supposed to last until Friday. Our temporary fixes have anniversaries now. We don't celebrate them, though one did get a card.</p>
+
+    <p>The second is the per-show hack that quietly became the default, which is the bolt-on trap from <span class="xref">Ch. 3</span> again. Each show arrives with its own look and its own deadline, and each takes the nearest working thing and bends it a little. Bend the same thing eight times and you have a tool with eight personalities and no spec.</p>
+
+    <p>The third is integration glue, which ages whether or not anybody touches it. Every upgrade to an artist's application breaks something at the seams (<span class="xref">Ch. 24</span>), and every repair is a small loan against the next upgrade. The fourth is data conventions that outlived their reasons: a naming rule from the early days, a file layout that made sense for one storage system (<span class="xref">Ch. 4</span>, <span class="xref">Ch. 5</span>). The reason is gone, the rule stays, and a thousand scripts have learned to depend on it.</p>
+
+    <p>The fifth is the quietest: knowledge debt. It's the thing exactly one person understands (<span class="xref">Ch. 26</span>). It doesn't show up in any code review, because the code is fine. The risk lives in someone's head, and heads, as a rule, go on vacation and then to other companies.</p>
+
+    <p>What all five share is that you can measure the cost in people's time. Artists who have learned to click things in a particular order, to rerun a step twice, to avoid a certain button on Thursdays: that habit of working around the problem is the interest payment. It is paid daily, in small amounts, by people who never signed the loan.</p>
+
+    <h3>Loans and accidents</h3>
+
+    <p>Over the years I've come to sort debt into two kinds, and they need different handling. A <em>loan</em> is a shortcut taken on purpose, with a written plan to repay it: we'll hard-code this for the premiere, and here is the ticket, the owner and the week we revisit it. An <em>accident</em> is a loan nobody noticed taking. The only record of it is a comment that says “temporary,” signed by someone who has since moved to the other site.</p>
+
+    <p>The test is blunt. If someone wrote down the plan to repay it, it was a loan. If the only evidence is a comment, it was an accident. Loans get scheduled. Accidents have to be found first, and that's a different job.</p>
+
+    <p>Not all debt deserves a payment, either. Some of it is merely ugly: an awkward structure, an odd name, a module written in a style nobody would choose today. Ugly debt that works and doesn't hurt anyone can wait forever. I ask three questions of any candidate. Does it slow people down? Does it scare people? Does it break things? If the answer to all three is no, we leave it alone and go find something that actually costs us.</p>
+
+    <h2 id="nostop" data-short="Why you can't stop the world">Why you can't stop the world</h2>
+
+    <p>On paper, the answer to debt is to stop, fix it and start again. That's what most software teams do, and it works when you can announce a maintenance window on a Sunday. We can't.</p>
+
+    <p>About a thousand people work here, roughly five hundred of them artists, across two sites, and the farm runs a million tasks a night (<span class="xref">Ch. 2</span>, <span class="xref">Ch. 19</span>). Every hour of every day is somebody's deadline. A quiet window for one site is a crunch hour for the other, and a window for both lands on a show that's delivering. There is no Sunday. There is only a different team's Monday.</p>
+
+    <p>For an artist, “the tool changed” is not an inconvenience. It's a work stoppage. Someone who has spent six hours on a lighting setup doesn't want a surprise in how it saves, even a better one, even one announced by email, which was read by nobody, because artists have shots to finish.</p>
+
+    <p>And the economics lean against us. A regression costs hundreds of people an afternoon, loudly, with a chat channel to prove it. A refactor that quietly prevents one pays back slowly and invisibly; nobody throws a party for the outage that didn't happen. If you don't make that asymmetry visible, you'll lose every argument about it, and you'll deserve to.</p>
+
+    <h2 id="occupied" data-short="Changing things while occupied">How we change things while people are using them</h2>
+
+    <p>The rollout and rollback mechanics belong to <span class="xref">Ch. 24</span> and <span class="xref">Ch. 25</span>, and I won't repeat them. What I want to show is how they bend when the thing being changed is old, ugly and load-bearing.</p>
+
+    <p>The first habit is to ship the new code dark. It goes out, it's installed everywhere, and it does nothing until a switch says so. Then we turn it on for one show, one shot type or one group of volunteers, never everyone at once. There is always a “friendly show,” a production whose supervisor has agreed, in exchange for a small bribe in the form of attention, to go first. A good friendly show is worth a month of testing, and it's the only kind of test that includes real artists doing real, unreasonable things.</p>
+
+    <p>The second is shadow running. The new code computes the answer alongside the old code and writes down any difference, and nobody sees it. We did this for a rewrite of the delivery manifest: for six weeks both versions ran on every shot, and a daily report listed where they disagreed. About a fifth of the disagreements were bugs in the new code. Another fifth were bugs in the old code, which had been wrong for years, quietly, in ways nobody had complained about because they were consistent. That was an awkward week. Fixing them would have changed the output, so each one became a decision rather than a fix.</p>
+
+    <p>The third is characterization before change. Before touching the old behavior, we record what it does on real inputs, and that recording is the specification. As in <span class="xref">Ch. 28</span>, the existing behavior is the specification. It doesn't matter whether the behavior is right. It matters that it's what the pipeline has been depending on. The same compare-both-ways habit from <span class="xref">Ch. 5</span> and <span class="xref">Ch. 8</span> applies, and provenance (<span class="xref">Ch. 6</span>) gives us the proof: re-run an old shot through the new path, compare the output, and either nothing changed or we know exactly what did.</p>
+
+    <p>The fourth is carving one behavior at a time off the old path. People call this the strangler pattern, after a vine that grows around a tree until the tree has nothing left to do. We build the new path around the old one, move a single responsibility across, watch it for a while, and move the next. The old tool never has a last day. It just notices, one spring, that it has no duties.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Week</th><th>Share of work on the new path</th><th>What moved</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>0%</td><td>New path installed, switch off, shadow running</td></tr>
+            <tr><td>4</td><td>5%</td><td>One friendly show, one behavior</td></tr>
+            <tr><td>8</td><td>25%</td><td>Second show; first behavior now default</td></tr>
+            <tr><td>14</td><td>70%</td><td>Three more behaviors carved off</td></tr>
+            <tr><td>20</td><td>95%</td><td>Old path kept only as the way back</td></tr>
+            <tr><td>26</td><td>100%</td><td>Old path unplugged, then deleted a month later</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 29.1</b>A strangler in numbers (illustrative). The curve is slow at the start on purpose; the early weeks are for learning what the old code really does.</figcaption>
+    </figure>
+
+    <p>The last habit is the one that's easiest to fake: always keep the door open. A rollback that has never been run is a wish. Ours is rehearsed (<span class="xref">Ch. 20</span> on why failure is the normal case), and for every change on this path someone has flipped the switch back, on purpose, before the day it's needed. Twice that rehearsal found a rollback that didn't work. Both times, the finding was the best thing that happened to us that quarter.</p>
+
+    <p>All of this is slower than a rewrite, and it has to be. The trade-off is that the work is boring. There are no launch parties, only a run of small releases that each change one thing, under the same versioning and testing discipline we apply to rigs (<span class="xref">Ch. 18</span>). I've come to think that a boring release is the highest compliment a pipeline can be paid.</p>
+
+    <h2 id="visible" data-short="Making debt visible">Making debt visible, and paying for it</h2>
+
+    <p>Technique is half of it. The other half is organizational, and it starts with admitting what you owe. We keep a debt ledger: one line per item, with an owner, a count of people affected, an estimate of artist-hours lost each month, and a rating we call “touch it at your peril.” It isn't precise. The hours are a guess made by someone who asked three artists how often it bites. But a rough number beats a feeling, especially in a meeting.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Item</th><th>Owner</th><th>People affected</th><th>Hours lost per month</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>The delivery-file rename tool (<span class="xref">Ch. 3</span>)</td><td>Pipeline, named</td><td>Everyone, indirectly</td><td>Near zero; risk is the cost</td><td>Fenced, not rewritten</td></tr>
+            <tr><td>Per-show texture naming exceptions</td><td>Asset team</td><td>About 120</td><td>About 200</td><td>Strangler, week 8</td></tr>
+            <tr><td>Hand-edited submission settings</td><td>Farm team</td><td>About 40</td><td>About 60</td><td>Scheduled</td></tr>
+            <tr><td>Legacy export option for one report</td><td>Unassigned</td><td>Unknown</td><td>Unknown</td><td>Needs a brown-out</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 29.2</b>A corner of the ledger (illustrative). The last row is the most honest one: the cost of not knowing is itself a line item.</figcaption>
+    </figure>
+
+    <p>The ledger earns its keep by making the interest visible. When the people who approve schedules see that a small annoyance costs two hundred artist-hours a month, they stop calling it small. That's the language that carries upward: artist-hours, risk to delivery, and cost (<span class="xref">Ch. 22</span> on making cost visible). “The code is ugly” has never moved a budget. “This costs us roughly one full-time artist, every month, forever” has.</p>
+
+    <p>Then comes the harder question, which is how to pay. The honest answer is a protected budget, fixed in advance, because anything not fixed in advance is eaten by the next crunch. The one time it held through a crunch, it was a flat ten percent of each engineer's week, written into the show's plan before the show started. It survived because a producer defended it, and she defended it because she liked the ledger. It had numbers in it.</p>
+
+    <p>Timing matters too, because the show cycle is the only calendar we have. The gaps between shows are the sole semi-quiet time, and they are short, perhaps two or three weeks at one site while the other is mid-delivery. We use them for the changes that need real quiet, such as flipping a default, and we spend the rest of the year on small, switchable steps that need none.</p>
+
+    <h2 id="delete" data-short="When to delete">When to delete</h2>
+
+    <p>Some debt is best paid by removing the thing. There are features with three users, tools replaced twice over, compatibility shims for software that nobody has run in years. Fixing these would be careful work on something that should not exist. Declaring bankruptcy is sometimes the cheapest honest move.</p>
+
+    <p>The danger is deleting the wrong thing, so we have a sunset habit with four steps. Announce it. Warn people, repeatedly, in the places they actually look. Then run a brown-out: break it briefly on purpose, for an hour or a morning, and see who writes in. Only after that do we remove it. The brown-out is the step people skip, and it's the one that finds your most loyal users, who turn out to be the ones you didn't know you had. There's something dry about discovering your fans by switching something off. (Deprecation as a product habit is <span class="xref">Ch. 24</span>'s; this is the version for debt.)</p>
+
+    <p>I learned this the expensive way. We once cleaned up an “unused” export option. Nothing in our logs called it. It turned out to feed one department's nightly report, a quiet job that ran at four in the morning for a team two floors away. We found out at seven, from a very polite email, which is worse than a rude one. A brown-out the week before would have cost us a single confused phone call.</p>
+
+    <h2 id="footnote" data-short="The honest footnote">The honest footnote</h2>
+
+    <p>Some debt stays. A few stoves remain, and we chose to leave them, which is different from neglecting them. The criteria are the three questions again: it doesn't slow people, doesn't scare them, and doesn't break things, or the cost of changing it is bigger than the cost of living with it. What matters is that the decision is written down in the ledger with a date. A stove you've chosen to keep, and labeled, is a kitchen feature. A stove nobody mentions is a hazard.</p>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>Back to the file nobody touches. We never rewrote it. We fenced it in. A test harness now records what it does on a sample of real deliveries and compares every change against that record. An owner is named in the ledger, a person with a phone number, who is not the one who left. And at the top of the file there is a small plaque, in the form of a comment, explaining what it is, why it's still here and who to ask. It still runs on every shot, a million tasks a night of other people's work flowing around it.</p>
+
+    <p>Nine years of tools like this one have taught me that the goal isn't a clean pipeline. A clean pipeline is what you have right before the next show starts. The goal is a pipeline where you know where the mess is.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">What stuck</span>
+      <p>You can't close the restaurant to fix the kitchen, so keep the mess visible, owned and fenced, and pay it down in installments while the doors stay open.</p>
+    </div>
+
+    <p>That's the practice. The next chapter asks the harder question this one only raised: if we'd kept the mess visible from the start, what else would we now do differently?</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

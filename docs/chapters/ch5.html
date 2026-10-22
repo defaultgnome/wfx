@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scene Description Wars · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 5. A shared scene format is easy to praise and hard to adopt. The format was the small part; the migration was the project.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch5">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part II · Assets and Data</p>
+    <p class="chap-num" aria-hidden="true">05</p>
+    <h1>Scene Description Wars</h1>
+    <p class="dek">What a scene actually is, why every tool keeps its own idea of one, and the migration that taught us the format was the small part.</p>
+    <p class="meta"><span>Chapter 5</span><span>Continues from: Chapter 4</span><span id="reading-time">16 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">The set arrived at lighting with a flattened hierarchy, no materials, and one light too many. <em>Nobody had added the light.</em></p>
+
+    <p>It was a building interior, modeled in one tool, passed through layout, and handed to lighting a few weeks before a delivery. Somewhere along the way the neat tree of rooms, furniture and props had collapsed into one long list of objects. The materials were gone, replaced by a grey that everyone politely called “placeholder.” And in the ceiling, where the plan called for one lamp, there were two, stacked exactly on top of each other, making the room look as though it were lit by a mild religious experience.</p>
+
+    <p>Finding the cause took most of a day. Seven departments had, over the years, each written a small private script to repair what they received. Layout had one that rebuilt the hierarchy. Lighting had one that reassigned materials by guessing from object names. The doubled lamp turned out to be the product of two of these fixers, each one cheerfully repairing the other's output. Several of the fixers were as old as the pipeline itself, nine years, and had been labeled “temporary” on the day they were written. Nobody had done anything wrong. Seven teams had each solved their own problem, sensibly, and together they had built a machine for making a second lamp.</p>
+
+    <p>This chapter is about why that machine existed, what it took to replace it, and why the replacement took about two and a half years. It is the book's main example of “adopt” from <span class="xref">Ch. 3</span>: we chose to take a shared format rather than keep building our own. We were right to. The estimate was the mistake.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>When we decided to move to a shared scene format, the plan fit on one slide. Pick the standard. Write converters for the tools we already used. Move the shows over, one by one. Done by the end of the year, with a modest celebration involving cake.</p>
+
+    <p>I know the slide fit on one page because I made it. The schedule on it was a clean horizontal bar with a small flag at the end, and I'd like to describe it as a work of fiction, except that fiction at least tries to be believable. The bar was missing one thing. We hadn't yet counted who, and what, depended on the old format. We would count them eventually, one surprise at a time.</p>
+
+    <h2 id="languages" data-short="Why every tool speaks its own language">Why every tool speaks its own language</h2>
+
+    <p>First, a definition, because the whole chapter hangs on it. A <dfn>scene</dfn> is the complete description of what's in a shot: the geometry (the shapes), the materials (what the surfaces are made of), the lights, the cameras, and the hierarchy that says what belongs to what. A renderer reads a scene and produces images. A lighting tool reads one, edits it, and writes it back. Think of it as the recipe card for a dish, as opposed to the dish itself.</p>
+
+    <p>Every content-creation tool stores scenes in the shape of its own mental model. A modeling tool thinks in meshes and construction history. An animation tool thinks in rigs and time. A lighting tool thinks in lights and layers. None of them is wrong; each stores what it needs to do its own job well, and each has years of habit baked into how it saves a file.</p>
+
+    <p>Then facilities add their own formats on top. Ours did. Years ago, nobody had a tool that could hold a forest of ten million leaves, or let two people work on the same set without stepping on each other, so we built formats that did. They were good, and they solved real problems at the time. It would be easy to look back and call them foolish, and that would be unfair. They were the right answer to a question that has since changed.</p>
+
+    <p>The trouble is what happens at the handoffs. If six tools each speak their own language, then every pair that needs to talk requires a translator, and translators don't work both ways for free. With <em>n</em> tools you need about <em>n</em> times <em>n</em> minus one converters. Six tools need thirty. Ten tools need ninety. And each converter is written by someone with a deadline, who decides which features matter and quietly drops the rest.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 300" role="img" aria-labelledby="f51t f51d">
+          <title id="f51t">Point-to-point converters versus one shared format</title>
+          <desc id="f51d">On the left, six tools connected to each other by a tangle of fifteen lines, standing for thirty one-way converters. On the right, the same six tools each connected only to a central box labeled shared format, using six lines.</desc>
+          <g class="flow" style="stroke-width:1.2;opacity:.55">
+            <path d="M120 40L200 70"/><path d="M120 40L80 130"/><path d="M120 40L200 190"/><path d="M120 40L120 250"/><path d="M120 40L40 220"/>
+            <path d="M200 70L80 130"/><path d="M200 70L200 190"/><path d="M200 70L120 250"/><path d="M200 70L40 220"/>
+            <path d="M80 130L200 190"/><path d="M80 130L120 250"/><path d="M80 130L40 220"/>
+            <path d="M200 190L120 250"/><path d="M200 190L40 220"/><path d="M120 250L40 220"/>
+          </g>
+          <g class="node">
+            <circle cx="120" cy="40" r="22"/><circle cx="200" cy="70" r="22"/><circle cx="80" cy="130" r="22"/>
+            <circle cx="200" cy="190" r="22"/><circle cx="120" cy="250" r="22"/><circle cx="40" cy="220" r="22"/>
+          </g>
+          <text class="say t" x="120" y="290" style="text-anchor:middle">30 one-way converters</text>
+          <g class="flow" style="stroke-width:1.5">
+            <path d="M560 40L650 130"/><path d="M740 70L670 125"/><path d="M500 130L630 140"/><path d="M740 190L675 150"/><path d="M590 250L650 160"/><path d="M510 220L635 155"/>
+          </g>
+          <g class="node">
+            <circle cx="560" cy="40" r="22"/><circle cx="740" cy="70" r="22"/><circle cx="500" cy="130" r="22"/>
+            <circle cx="740" cy="190" r="22"/><circle cx="590" cy="250" r="22"/><circle cx="510" cy="220" r="22"/>
+          </g>
+          <g class="node shared"><rect x="610" y="115" width="80" height="50" rx="10"/><text x="650" y="145">Shared</text></g>
+          <text class="say t" x="620" y="290" style="text-anchor:middle">6 converters, one per tool</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 5.1</b>The same six tools, before and after. The hub doesn't make the tools agree; it gives them one place to disagree.</figcaption>
+    </figure>
+
+    <p>That picture is the whole argument for an interchange format. It is also, as we found out, about ten percent of the work.</p>
+
+    <h2 id="gives" data-short="What an interchange format gives you">What an interchange format gives you</h2>
+
+    <p>I'll skip the syntax, which you can look up. What matters are four ideas, and every one of them has a counterpart in the shot's real life.</p>
+
+    <p><em>Layers.</em> Picture a stack of transparencies on an old overhead projector. The bottom sheet shows the whole picture. The next sheet adds a few marks, and where it has marks they win. The sheet on top wins over both. A scene works this way: a base layer from the asset team, a layer of changes from the shot, a layer from lighting, and the final image is what you see looking down through the stack. The crucial property is that nobody has to erase anyone else's sheet.</p>
+
+    <p><em>References and composition.</em> Rather than copying the forest into every shot, a shot says “the forest is over there, use that.” The scene is assembled from parts that stay where they are. This is the same instinct as <span class="xref">Ch. 4</span>'s pins, applied one level down: not just which version of the forest, but how it arrives in the scene without being duplicated.</p>
+
+    <p><em>Lazy loading.</em> You can open a scene containing millions of leaves without reading every leaf, in the way you can open a library without reading every book. The tool loads the shelves it needs. For a shot where the camera never turns toward the far hillside, the far hillside is never read at all.</p>
+
+    <p><em>Variants and non-destructive overrides.</em> One asset can carry several looks: the giant dry, the giant wet, the giant after he's walked through the stream. And a lighter can adjust a single material in a shot without copying the asset and breaking its link to the original. When the asset team fixes the giant's shoulder on Tuesday, the shot still receives the fix on Wednesday, with the lighter's adjustment intact. A copy would have kept the old shoulder forever.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 250" role="img" aria-labelledby="f52t f52d">
+          <title id="f52t">A stack of layers resolving to one result</title>
+          <desc id="f52d">Three layers stacked top to bottom: a light override, a shot override, and the base asset. An arrow on the right points to the final result, where the topmost layer that mentions a value wins.</desc>
+          <g class="node">
+            <rect x="60" y="20" width="360" height="52" rx="8"/><text x="240" y="43">Light override</text><text class="sm" x="240" y="61">one lamp softer</text>
+            <rect x="40" y="88" width="400" height="52" rx="8"/><text x="240" y="111">Shot override</text><text class="sm" x="240" y="129">giant placed, wet look chosen</text>
+            <rect x="20" y="156" width="440" height="52" rx="8"/><text x="240" y="179">Base asset</text><text class="sm" x="240" y="197">shapes, materials, hierarchy</text>
+          </g>
+          <g class="flow"><path d="M480 114H560" marker-end="url(#a51)"/></g>
+          <defs><marker class="ah" id="a51" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker></defs>
+          <g class="node done"><rect x="570" y="76" width="220" height="76" rx="10"/><text x="680" y="108">What the renderer sees</text><text class="sm" x="680" y="130">top layer wins, where it speaks</text></g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 5.2</b>Nobody erased anything, and everyone's work is still there to be changed later.</figcaption>
+    </figure>
+
+    <p>It's also worth knowing that a scene format rarely travels alone. There's a family of related open projects, each owning one kind of data: image files, material descriptions, geometry caches, volumes. The one for scene composition has become the public, de facto choice across the industry, and its name is USD. I'll use the name once and move on. It's a word you'll meet anywhere, not a recommendation, and nothing in this chapter depends on it being that one. The ideas above apply to any format that offers them. Appendix D lists further reading on open scene and image formats.</p>
+
+    <h2 id="migration" data-short="The migration we underestimated">The migration we underestimated</h2>
+
+    <p>This migration started first, before the renderer work in <span class="xref">Ch. 8</span>, and the two overlapped for a while. The plan was a year and a handful of engineers. It took about two and a half years, and at its busiest involved most of the pipeline team and someone from nearly every department. Here is what we missed.</p>
+
+    <h3>The census we should have taken first</h3>
+
+    <p>We knew about the big readers: the renderer, the lighting tool, the asset publisher. We did not know about the small ones. When we finally built a census of everything that opened the old format, by logging every read for a month, the list was three times longer than the one in the plan. There were review tools, a report generator that Finance used, a batch of cleanup utilities, and a script that one department ran each Friday for reasons no current employee could explain.</p>
+
+    <p>My favorite entry was a tool that lived in a single artist's home folder. It had been written years earlier, copied by hand to a few colleagues, and was now load-bearing for a whole show's lookdev. The owner didn't think of it as a tool. She thought of it as <em>how you do that</em>. (<span class="xref">Ch. 23</span> tells the full story of scripts like this.) The lesson is blunt: inventory your hidden users before you set the schedule, not after. A format migration's real scope is the number of things that read the format, and nobody has that number on day one.</p>
+
+    <h3>The long coexistence</h3>
+
+    <p>You cannot switch a studio overnight, so for a long stretch both formats lived at once. We wrote converters in both directions, and, learning from the doubled lamp, every converter produced a short report of what it had dropped, changed or guessed. A converter that silently loses something is a lamp-doubling machine. One that says “I couldn't carry this light's custom falloff” is a to-do item.</p>
+
+    <p>We planned a six-month overlap. It lasted fourteen. Each month of it we asked a version of the same question, usually in the weekly meeting and usually with some heat: <em>which one is right?</em> When a scene looked different through the two paths, which was the truth? The honest answer, for a long time, was “the one the artist approved,” which is a human answer to a technical question and the right one.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 230" role="img" aria-labelledby="f53t f53d">
+          <title id="f53t">Scene format migration: planned versus actual</title>
+          <desc id="f53d">Two timelines in months. The plan shows six months of building and a six-month overlap, ending at month twelve. The actual shows ten months of building, a fourteen-month overlap shaded as coexistence, and six more months hunting the last users, ending at month thirty.</desc>
+          <g class="grid"><path d="M120 40V200"/><path d="M320 40V200"/><path d="M520 40V200"/><path d="M720 40V200"/></g>
+          <g class="wk"><text x="120" y="28">0</text><text x="320" y="28">10 months</text><text x="520" y="28">20</text><text x="720" y="28">30</text></g>
+          <g class="rowl"><text x="10" y="76">Plan</text><text x="10" y="156">Actual</text></g>
+          <rect class="bar" x="120" y="62" width="120" height="24" rx="4"/>
+          <rect class="bar stand" x="240" y="62" width="120" height="24" rx="4"/>
+          <rect class="bar" x="120" y="142" width="200" height="24" rx="4"/>
+          <rect class="bar stand" x="320" y="142" width="280" height="24" rx="4"/>
+          <rect class="bar redo" x="600" y="142" width="120" height="24" rx="4"/>
+          <g class="tick"><text x="180" y="108">build</text><text x="300" y="108">overlap, 6 months</text><text x="220" y="188">build, 10</text><text x="460" y="188">overlap, 14 months</text><text x="660" y="188">last users, 6</text></g>
+        </svg>
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span><i class="sw work"></i>build</span>
+        <span><i class="sw stand"></i>both formats alive</span>
+        <span><i class="sw redo"></i>finding the last users</span>
+      </div>
+      <figcaption><b>Figure 5.3</b>One year planned, about two and a half taken. The overlap was where the time went.</figcaption>
+    </figure>
+
+    <h3>Beautiful, and slower</h3>
+
+    <p>The new format was lovely and, for the first real scenes, about thirty percent slower to open. We had adopted lazy loading in principle and then written our early integrations in a way that quietly read everything up front, out of caution. Artists noticed on day one. Nothing sours a migration like a tool that is more elegant and takes longer to start. We spent several weeks tuning how scenes were opened until the new path matched, then beat, the old one. It was a useful reminder that a good format can be undone by an eager integration.</p>
+
+    <h3>The light that was wrong in the right way</h3>
+
+    <p>The surprise that hurt most came from lighting. The old format had a quirk in how it handled the intensity of one kind of light. It wasn't a documented behavior; it was simply how the old code had always done it, and one show's lighters had learned, over two years, to compensate by hand. They dialed each light a little lower than it should have been, without thinking about it.</p>
+
+    <p>When the show's scenes came through the new format, the intensity was computed <em>correctly</em>. The scenes looked blown out. To the people who knew that show best, the correct result looked wrong, and they were right to say so: it didn't match what they had spent two years approving. We had migrated their scenes faithfully and ruined their calibration.</p>
+
+    <p>The fix was neither to bring the quirk back everywhere nor to tell the lighters they were mistaken. We kept it as a documented, show-scoped setting, so that show, and only that show, gets the old behavior, with a note explaining why. It's a small switch with a long explanation next to it, and I'm fond of it.</p>
+
+    <h3>What finally worked</h3>
+
+    <p>Three decisions turned the slog into progress. We migrated by <em>show and by department</em> rather than by tool, so each move had a small, named group of people who could tell us whether it was right. We built a fidelity test suite out of real shots, which I'll describe in a moment. And we adopted a rule: <em>nothing is retired until its last user has been found.</em> The final six months of the schedule, shown in Figure 5.3, were mostly spent honoring that rule. We turned the old format off, quietly, to see who shouted. Four people did. That was a good number.</p>
+
+    <p>One small thing made the whole period less painful, and it wasn't technical. The base layer for our environments needed a name, and nobody could agree on an official one, so for months everyone called it “the sandwich,” because it had a layer of this, a layer of that, and a different layer of this again. The name was never approved. It is in the documentation now, in quotation marks, because by then it was the only name anyone knew.</p>
+
+    <h2 id="fidelity" data-short="Fidelity you can measure">Fidelity you can measure</h2>
+
+    <p>For the first few months we judged the migration by eye. Someone would open a scene both ways, squint, and say it looked fine, which is a method that works right up to the moment it doesn't. Eyes are tired on Fridays, forgiving about things they've seen before, and unable to spot a two percent shift in a shadow.</p>
+
+    <p>So we made <dfn>round-trip fidelity</dfn> a number. The test takes a real shot, renders it through the old path and through the new one, and compares the two images, pixel by pixel, summarizing the difference as a single score per shot. We ran it nightly across a library of a few hundred shots chosen to cover the awkward cases: heavy foliage, glass, fur, volumes, odd cameras. A mock-up of the report we looked at each morning is below.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Shot type</th><th>Sample shots</th><th>Working tolerance</th><th>Result</th></tr></thead>
+          <tbody>
+            <tr><td>Hard-surface props</td><td>40</td><td>Essentially identical</td><td class="who m">Pass</td></tr>
+            <tr><td>Foliage and instancing</td><td>60</td><td>Very small differences</td><td class="who m">Pass</td></tr>
+            <tr><td>Glass and reflections</td><td>35</td><td>Small, reviewed by eye</td><td class="who">Pass, 3 flagged</td></tr>
+            <tr><td>Fur and hair</td><td>30</td><td>Small, reviewed by eye</td><td class="who">2 failing, tracked</td></tr>
+            <tr><td>Volumes and mist</td><td>25</td><td>Looser, noise-limited</td><td class="who">Pass, 1 flagged</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 5.1</b>A mock-up of the nightly fidelity report. Tolerances are working agreements, not scientific truths.</figcaption>
+    </figure>
+
+    <p>The tolerance column is the interesting one. When light is involved, “the same” doesn't mean bit-for-bit identical, because a renderer that uses randomness will never produce the same noise twice. We set a working tolerance per shot type: tight for hard surfaces, looser for mist, where noise dominates. <span class="xref">Ch. 10</span> returns to what counts as “the same image” for noise in detail. Here we only needed a line to draw, and a rule that a failure above the line blocked the move.</p>
+
+    <p>We also wrote down the differences we accepted on purpose. A few features in the old format had no equivalent, and rather than hide the gaps we kept a list: this is what changes, this is why, this is who agreed. At the end of the migration that list was about two pages long. I was a little proud of it, and a little ashamed that it had taken us this long to start one.</p>
+
+    <h2 id="standards" data-short="Open standards, honestly">Open standards, honestly</h2>
+
+    <p>I'd make the same decision again, and I'd still like to be fair about what it cost.</p>
+
+    <p>The benefits are real. You share tooling with the rest of the industry rather than maintaining everything yourself. You can hire people who already know the format, and that's worth more than it sounds. Vendors support it, so a new tool arrives already speaking your language. And in <span class="xref">Ch. 3</span>'s terms, your exit cost falls: if you ever want to leave a tool, your scenes aren't held hostage inside its files.</p>
+
+    <p>The costs are real too. You become a participant. When the specification changes, you track it, and you decide whether to follow. Anything you extend today is tomorrow's migration, because your private addition will eventually collide with the public one. And “interchangeable” is never total. Each tool has features the standard doesn't model, so every tool exports a little less than it knows, and some of the old fixers came back in new clothes, smaller and better-behaved, but still fixers.</p>
+
+    <p>It also bears repeating that the format was the easy part. A format is a document. A <em>library</em> is code that reads and writes it. A <em>convention</em> is the shared agreement about how to use it: what to name things, which layer owns which decision, where the lighter's changes go. We spent about one-tenth of our effort on the format, a third on the library, and the rest on conventions and people. The cross-case lessons of this migration, set beside four others that nearly went wrong, live in <span class="xref">Ch. 28</span>.</p>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>We didn't migrate a file format. We migrated every assumption that had been quietly stored in it: the habits, the scripts, the compensations, the doubled lamp. A format is a contract between people, and the contract is mostly unwritten. The job is to find the unwritten parts before you change the written one.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">Takeaway</span>
+      <p>Before you set the schedule, count the readers. The format is the small part.</p>
+    </div>
+
+    <p>A scene can now be described, layered and assembled from many files, which is a great relief to everyone who used to write fixers. It also creates a question. When a render reads from dozens of places, how do we know afterwards exactly what it pulled in? That's <span class="xref">Ch. 6</span>.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

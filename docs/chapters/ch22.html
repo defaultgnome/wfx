@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cost and Energy Accounting · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 22. Who knows what the farm costs? Attribution, the metrics that backfire, what visibility changes, and the electricity behind it all.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch22">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part VI · The Farm and the Cloud</p>
+    <p class="chap-num" aria-hidden="true">22</p>
+    <h1>Cost and Energy Accounting</h1>
+    <p class="dek">Compute feels free to the person who submits it. What happened when we made it visible, which numbers backfired, and the electricity behind all of it.</p>
+    <p class="meta"><span>Chapter 22</span><span>Continues from: Chapters 19 and 21</span><span id="reading-time">15 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">The first time we attributed farm usage to individual shots, one line of the report made me put my coffee down.</p>
+
+    <p>A single test render, set to repeat by a script someone had forgotten, had taken about a twelfth of a Saturday night's compute. It had spread across roughly 3,000 of our 5,000 nodes. It had also been doing this, quietly, for most of a month. Nobody was at fault. The artist who wrote the script had moved to another sequence and assumed it had stopped. The farm ran it because the farm runs what it is given. And no screen anywhere showed that this one thing was big, because no screen showed <em>things</em> at all. It showed nodes, queues and a green light.</p>
+
+    <p>For years the farm had been a shared pool, and a shared pool is where nobody can see themselves. Chapter 21 ended with an invoice, a number large enough that people finally asked where it came from. This chapter is about the answer, which turned out to be less about money than about being able to see.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>I used to think cost control was a finance problem. Get a number, set a budget, enforce it, done. Our first attempt was a spreadsheet, and it was a lovely spreadsheet. It had a row per show, a column per department and a confident formula that multiplied core-hours by a rate. It rested on one assumption, stated nowhere because nobody thought it needed stating: that every task on the farm knew whom it belonged to.</p>
+
+    <p>A <dfn>core-hour</dfn> is one processor core working for one hour, and it is the basic unit of farm accounting. The facility burns a few hundred million of them a year, and one big show alone uses tens of millions. At that scale, a spreadsheet with a hole in its first assumption is not a rounding error. It is a work of fiction, and I mean that more literally than this book usually does.</p>
+
+    <h2 id="attribution" data-short="You can't charge what you can't attribute">You can't charge what you can't attribute</h2>
+
+    <p>When we tried to fill in the spreadsheet, we found out how many tasks belonged to nobody in particular. A script submitted on behalf of an artist ran under a service account. A shared login, left over from some long-ago show, still fed a handful of nightly jobs. A single simulation task might serve a dozen shots at once. And a number of legacy tools, written before anyone asked the question, submitted work with no description at all. Of the million or so tasks a night, a startling fraction could be traced to a machine and a time, and not to a reason.</p>
+
+    <p>The fix was dull, which is usually a good sign. We decided on the smallest set of tags that would make usage attributable: <em>user</em>, <em>show</em>, <em>shot</em>, <em>department</em> and <em>purpose</em>, where purpose is one of test, review or final. Five fields. We argued for a week about adding a sixth and were right to lose.</p>
+
+    <p>The more important decision was where the tags come from. They are never typed by hand. The submission tools fill them in from the context an artist is already working in: the open scene knows its shot, the shot knows its show, the login knows the user. This is the same provenance trail that <span class="xref">Ch. 6</span> built for a different reason, to explain how a frame came to exist. It turned out that a record of how a frame was made is also a record of whom it was made for. Anything optional gets skipped, and I'll say more about that lesson in <span class="xref">Ch. 23</span>, where it takes a different shape.</p>
+
+    <p>Even so, a remainder was left over. Some work could not be traced, because the tool was old, or the task served too many shots, or the script predated the rules. Our first instinct, I'm slightly embarrassed to say, was to hide it inside a line called "overhead" until we could shrink it. The engineer who built the attribution reports talked us out of that. She put the unattributed slice on the front page, in its own color, with its percentage next to it. At the start it was large enough to be uncomfortable. It shrank every month, mostly because everyone could see it shrinking.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 300" role="img" aria-labelledby="a1t a1d">
+          <title id="a1t">From total farm hours to attributed use, with an unattributed slice</title>
+          <desc id="a1d">A single bar labeled total farm hours splits into four bands: show A, show B, other shows, and an unattributed slice. Below it, one show band splits by department and then by purpose: test, review and final.</desc>
+          <g font-family="Inter, sans-serif" font-size="13">
+            <text x="20" y="28" font-weight="600" fill="currentColor">All farm hours, one week (illustrative)</text>
+            <rect x="20" y="40" width="300" height="44" fill="#c0502a" opacity=".85"/><text x="30" y="67" fill="#fff">Show A</text>
+            <rect x="320" y="40" width="190" height="44" fill="#d98a62" opacity=".9"/><text x="330" y="67" fill="#fff">Show B</text>
+            <rect x="510" y="40" width="190" height="44" fill="#8c8478" opacity=".75"/><text x="520" y="67" fill="#fff">Other shows</text>
+            <rect x="700" y="40" width="100" height="44" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="5 4"/><text x="710" y="67" fill="currentColor">Unattributed</text>
+            <path d="M20 84 L40 130 M320 84 L300 130" stroke="currentColor" stroke-width="1" fill="none" opacity=".5"/>
+            <text x="20" y="122" font-weight="600" fill="currentColor">Show A by department</text>
+            <rect x="40" y="136" width="120" height="40" fill="#c0502a" opacity=".6"/><text x="48" y="161" fill="currentColor">Lighting</text>
+            <rect x="160" y="136" width="90" height="40" fill="#c0502a" opacity=".45"/><text x="168" y="161" fill="currentColor">Effects</text>
+            <rect x="250" y="136" width="50" height="40" fill="#c0502a" opacity=".3"/><text x="256" y="161" fill="currentColor" font-size="11">Other</text>
+            <text x="20" y="208" font-weight="600" fill="currentColor">Lighting by purpose</text>
+            <rect x="40" y="222" width="50" height="40" fill="#8c8478" opacity=".5"/><text x="46" y="247" fill="currentColor">Test</text>
+            <rect x="90" y="222" width="30" height="40" fill="#8c8478" opacity=".7"/><text x="92" y="247" fill="currentColor" font-size="10">Rev.</text>
+            <rect x="120" y="222" width="40" height="40" fill="#c0502a" opacity=".8"/><text x="125" y="247" fill="#fff">Final</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 22.1</b>Every hour on the farm goes to a show, a department and a purpose, or to a visible slice that says "we don't know yet."</figcaption>
+    </figure>
+
+    <h2 id="measuring" data-short="Measuring a core-hour">Measuring a core-hour</h2>
+
+    <p>Even with every task tagged, the unit itself is slippery. A core-hour on a machine bought six years ago is not the same quantity of work as one on this year's hardware; the newer core may finish a frame in two-thirds of the time. We normalize to a reference machine, so a "core-hour" in a report means an hour on a standard core, scaled for the node that actually ran it. The scaling is a benchmark, and benchmarks are honest about one workload and approximate about all the rest. We say so on the dashboard. The error is a few percent, not a few times, and that is good enough to steer by.</p>
+
+    <p>Core-hours are also not the only thing a task consumes. It holds memory (on the standard 512 GB nodes, or the 1 TB high-memory pool, where a fat task can strand cores it cannot use). It occupies storage and moves data across the network. It takes a license seat, which for some tools is scarcer than the cores. And behind all of it is electricity, which I'll get to. We track the first few; we estimate the last; and we resist the urge to roll them all into a single dollar figure before we understand each one.</p>
+
+    <p>Then there is the natural-sounding metric, cost per frame, and its cousin, cost per shot. They are tempting because they are simple, and simple numbers travel. But a frame is not a unit of cost. A frame of misty forest at full resolution with volumetrics costs many times more than a clean-up pass on a plain background. A shot's cost includes every failed attempt before the good one, which means an unlucky shot looks "expensive" for reasons nobody chose. And the cost of an artist's thirty-first version is a very different thing from the cost of a pipeline fault that threw away the first thirty.</p>
+
+    <p>That last distinction is the one that matters most, so we separated waste into two kinds. Work thrown away because we changed our minds is <em>iteration</em>. It is the job. Work thrown away because something broke, such as a task killed by preemption (<span class="xref">Ch. 19</span>), a retry that duplicated a finished result, or a render that ran to completion on a bad input (<span class="xref">Ch. 20</span>), is <em>waste</em>. We only ever tried to reduce the second.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Metric</th><th>What it tells you</th><th>How it misleads</th></tr></thead>
+          <tbody>
+            <tr><td>Core-hours, normalized</td><td>Where the compute went</td><td>Hides memory, license and data costs; the benchmark is only approximate</td></tr>
+            <tr><td>Cost per frame</td><td>Rough price of an image</td><td>Falls when you render fewer or easier frames; ignores failed attempts</td></tr>
+            <tr><td>Cost per shot</td><td>Which shots are heavy</td><td>Punishes shots with hard notes; rewards giving up early</td></tr>
+            <tr><td>Farm utilization</td><td>Whether machines are busy</td><td>Rises if you run useless tasks; 100% is a queue, not a success</td></tr>
+            <tr><td>Wasted-final ratio</td><td>Finals rendered, then replaced for a fixable reason</td><td>Needs honest labels; shrinks if nobody labels anything</td></tr>
+            <tr><td>Unattributed share</td><td>How much we can't explain</td><td>Can be driven down by guessing; we count only traced work</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 22.1</b>Six numbers we watched, and how each can mislead. Appendix C keeps the long version.</figcaption>
+    </figure>
+
+    <p>One more measurement deserves a sentence. An idle machine is on and costing power while doing nothing, and a farm sized for the last week of a show is mostly idle in the first. We will come back to what we did about it.</p>
+
+    <h2 id="visibility" data-short="Visibility changes behavior">Visibility changes behavior</h2>
+
+    <p>This is the part I most wanted to write, because it is where I was most wrong.</p>
+
+    <p>We started with <em>showback</em>: showing people what they used, with no bill attached. The first dashboards went up in three flavors, because we'd learned that one dashboard serves no one. Artists got a page that answered "what did my last render cost?" Supervisors got "where is my show's budget going?" And the facility got "what is the farm doing, and who is it doing it for?" It was striking how differently each group used theirs. Artists mostly glanced and moved on. Supervisors read theirs every morning, and within a month two of them had quietly rescheduled heavy simulation work away from the evening rush because they could finally see it was crowding out their own reviews.</p>
+
+    <h3>The estimate before you submit</h3>
+
+    <p>The most effective thing we did was also the cheapest. We put a rough estimate beside the submit action: "this will use about this much, and take about this long." Not after the fact, but before. It was a small number in a small font.</p>
+
+    <p>What it changed was not the amount of work but its shape. People who saw that a full-resolution run of a hundred frames would take most of an afternoon often chose to preview a handful first. Cheaper low-resolution defaults, and the previews of <span class="xref">Ch. 11</span>, did the rest. No one was told to do anything. The number made the better option the visible one, and the better option got picked.</p>
+
+    <h3>The backfire</h3>
+
+    <p>Then I got clever, and I got it wrong. If an estimate before submit works, I reasoned, a cost shown after each render, next to the button that launched it, ought to work better. We shipped it. For about two weeks it looked fine.</p>
+
+    <p>Then a lighting supervisor mentioned, casually, in a meeting about something else, that some of her artists had stopped test-rendering. The numbers confirmed it. Test submissions on that show were down by about a third, and wasted finals were up. People had looked at a cost on every test, concluded that tests were the expense, and economized on the one thing that protects against expensive mistakes. We had put a price on caution.</p>
+
+    <p>We pulled the per-render cost display, and I rewrote the goal. A test is cheap insurance against an expensive final; the thing worth counting is the final that was rendered, thrown away, and could have been caught earlier. We began measuring <em>wasted finals</em> and stopped reporting on tests at all. Test volume recovered in about a month. The cheapest shot is the one nobody looked at, and that is not a shot anyone wants.</p>
+
+    <h3>Three ways a metric goes wrong</h3>
+
+    <p>I have set enough metrics now to recognize the pattern. When a measure becomes a target, people (rationally, and without any malice) find the cheapest way to move it. Here are the three I contributed.</p>
+
+    <p>Cost per frame improved dramatically on one show, for a while. It turned out the frames had not become cheaper; the show had moved its heaviest work into earlier cached stages that the metric did not count, so the number no longer compared like with like. Nobody was hiding anything. I had asked the number to mean something it could not.</p>
+
+    <p>Farm utilization, which I proudly pushed above the low nineties, improved partly because a few teams learned that a queued task is a safe task. Some of them submitted speculative work to keep their place in line. The machines were busy, the dashboard was happy, and some of the busyness was nothing anyone needed.</p>
+
+    <p>And the waste report taught the best lesson of all. We introduced a "waste" label for failed or abandoned work, and for a while the amount of work labeled as waste fell steeply. It had not fallen. People had learned that the label drew questions, and had stopped applying it. The dashboard that was meant to reduce waste had instead taught people to hide it. We fixed that by having the system, not the person, decide what was waste, from task outcomes. That is less nuanced than a human label. It is also not gameable by the people being measured, and that mattered more.</p>
+
+    <h3>When the money got real</h3>
+
+    <p>Showback alone moved supervisors. It did not move departments. For that, the studio eventually started charging each department's budget for its farm use, a model called <em>chargeback</em>.</p>
+
+    <p>I won't pretend this is simply better. It worked: budgets became real and so did attention to them. It also changed the politics of the queue in ways we hadn't planned. Departments began to negotiate for priority and for off-peak windows, which is the fairness argument from <span class="xref">Ch. 19</span> with a price tag on it. Some of those negotiations were healthy. Some were two departments trading favors while a third, with no one to speak for it, got what was left. Showback is gentle and is easy to ignore. Chargeback is effective and is easy to turn into a fight. We kept both, and we try to keep the dashboards honest enough that the fights are about facts.</p>
+
+    <div class="callout aside">
+      <span class="callout-label">What we protect</span>
+      <p>Iteration is the work. We never set a target for fewer versions, fewer tests or fewer notes. If a cost number ever makes an artist think twice about looking at their own shot, we have measured the wrong thing.</p>
+    </div>
+
+    <h2 id="energy" data-short="Energy: the room that gets warm">Energy: the room that gets warm</h2>
+
+    <p>Everyone who has walked into our machine room knows what compute costs, because you can feel it. It is warm and it is loud, and the temperature is the farm's honest answer to the question this chapter keeps asking. As <span class="xref">Ch. 20</span> put it, a farm is a very expensive space heater that sometimes also makes pictures, and the machine room was the proof. For a long time it was a number on the electricity bill that no artist ever saw and no show ever paid for directly.</p>
+
+    <p>What can we actually measure? Power per rack, directly, from the equipment that feeds it. Power per task, we cannot. A task shares a node with others, and the node shares a rack, so per-task energy is an estimate: the node's draw, divided by what its tasks were doing and for how long. Every dashboard that shows a task-level figure carries a footnote saying so. I insist on this, because an estimate presented as a measurement is the kind of number that later gets quoted in a meeting by someone who never saw the footnote.</p>
+
+    <p>I'll also stay in general terms about the footprint. Electricity has an environmental cost that depends on where and when it is generated, and we have limited visibility into that. We do not publish a carbon figure per shot. Doing so would imply a precision we don't have.</p>
+
+    <p>There are levers, and they run from cheap to costly:</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Lever</th><th>Cost to us</th><th>What we noticed</th></tr></thead>
+          <tbody>
+            <tr><td>Switch off idle nodes overnight</td><td>Cheapest; a small automation</td><td>A visible slice of the bill saved; one morning of complaints about cold starts</td></tr>
+            <tr><td>Shift flexible work to off-peak hours</td><td>Cheap; needs willing departments</td><td>Works for caches and test sweeps; not for review-driven work</td></tr>
+            <tr><td>Stop frames at "good enough" noise</td><td>Moderate; needs the renderer team</td><td>The biggest single lever; see <span class="xref">Ch. 10</span></td></tr>
+            <tr><td>Choose where cloud work runs</td><td>Moderate; contract and data-movement limits</td><td>Region choice matters, but see <span class="xref">Ch. 21</span> for what it costs to move data</td></tr>
+            <tr><td>Refresh hardware</td><td>Expensive; years to pay back</td><td>More work per watt, on a schedule nobody controls</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 22.2</b>Energy levers, from the cheapest to the most expensive. Illustrative.</figcaption>
+    </figure>
+
+    <p>Switching off idle nodes taught me my favorite small lesson. A machine that has been off takes minutes to come back, and the first artist to submit a heavy job at eight in the morning waited longer than usual. We got one morning of understandable complaints. We fixed it by warming a small pool ahead of the usual start time, which cost almost nothing. The bill got visibly lighter. The complaint went away. That is the best kind of trade.</p>
+
+    <p>The biggest lever remains the renderer's sampling budget (<span class="xref">Ch. 10</span>): a frame that stops when it is clean enough, rather than when a fixed budget runs out, uses less of everything. It is also the one that most needs an artist's agreement, since "good enough" is an aesthetic call.</p>
+
+    <p>And here is the honest tension. More efficient rendering has not meant less energy used. When a frame got cheaper, artists didn't bank the savings; they spent them on denser forests, softer mist and one more bounce of light. That isn't a failure. It's what creative work does with any budget it is given, and I'd rather work in a place where that happens. But anyone who promises that efficiency work will shrink the electricity bill should be asked what happens to the saved time.</p>
+
+    <h2 id="footnote" data-short="The honest footnote">The honest footnote</h2>
+
+    <p>Plenty is still unsolved. Shared assets and caches are hard to attribute: a cache built for one shot and reused by five belongs to whom? We still have no single trustworthy "cost of a shot," only several partial ones. Comparing the energy of our own machines with cloud capacity honestly is difficult, because the information we'd need isn't ours to see.</p>
+
+    <p>And there is a risk I think about more than the technical ones. A good dashboard can slide into being a performance review that nobody asked for. A page that shows what each person's renders cost is, to some, a page that shows what each person cost. We keep the artist view private to the artist, we show departments in aggregate, and we try to say, every time we publish a number, one sentence about how it can mislead. That sentence is the habit I most want you to take away, more than any single metric.</p>
+
+    <h2 id="past-self" data-short="What I'd tell my past self">What I'd tell my past self</h2>
+
+    <p>The weekend test render still happens, in a way. Someone, somewhere, still leaves a script running. But now it shows up in Monday's report before anyone's coffee, and the person who owns it gets a friendly message, not a lecture. Nobody is embarrassed. A forgotten script is weather.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">What I'd tell my past self</span>
+      <p>The goal is not a smaller number. It is a number someone can act on. And publish the unattributed slice on day one.</p>
+    </div>
+
+    <p>That closes Part VI. The farm is a system of machines and policies, but it is the people who use it who decide whether any of it works. <span class="xref">Ch. 23</span> starts with the tools artists actually touch, the review room where their work is judged, and the lesson I promised: anything optional gets skipped.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

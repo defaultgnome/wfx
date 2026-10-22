@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build vs. Buy vs. Bolt-On · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 3. Build or buy is the wrong question: there are four doors, the right one changes over time, and the cost that matters most is the cost of leaving.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch3">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part I · The Shape of the Problem</p>
+    <p class="chap-num" aria-hidden="true">03</p>
+    <h1>Build vs. Buy vs. Bolt-On</h1>
+    <p class="dek">“Build or buy” is the wrong question. There are four doors, the right one changes over time, and the price that matters most is the price of leaving.</p>
+    <p class="meta"><span>Chapter 3</span><span>Continues from Chapter 2</span><span id="reading-time">15 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">“Why don't we just use X?” It's the most dangerous sentence in engineering, <em>and it's usually asked by the smartest person in the room.</em></p>
+
+    <p>I've sat in that meeting more times than I can count. It was a planning meeting for the next show, and someone, with real authority and a perfectly good point, asked why we were discussing a custom solution when X existed. Heads nodded. A pause followed. I knew from scars that the honest answer was “we might use X, and we might regret it,” but that is an unsatisfying thing to say to a room that wants to go to lunch.</p>
+
+    <p>The X in question was meant to replace something none of us remembered deciding to build. Years ago, someone wrote a ten-line script to rename delivery files for one show. It was convenient, so the next show used it, and then someone gave it a config file. Three shows ago it began to check colors, then to notify the review room, then to write the delivery manifest. Nine years on, that script, by then a few thousand lines, quietly handed work between half the departments in the building. It had no owner, no documentation, and no name beyond the file it lived in. Its author had left long ago. It had simply accumulated, like a coral reef.</p>
+
+    <p>So when the smartest person in the room asked why we didn't just use X, the honest answer was “we might, and the exit fee is a delivery month.” We'll come back to that tool, and to that fee.</p>
+
+    <p>This chapter is about how to decide which software to write, which to buy, and which to quietly regret. It's also where Part I ends: we know what a pipeline is and how large it gets, and now we need to ask what, exactly, we're going to own. And since every show arrives with its own look and its own deadline, the answer turns out to be a question we ask over and over.</p>
+
+    <h2 id="belief" data-short="The two-door slide">The two-door slide</h2>
+
+    <p>Every planning document I have ever seen contains a slide with two boxes. One says <strong>Build</strong> and the other says <strong>Buy</strong>. There are arrows, a few bullet points on cost, and a recommendation in green. It's a lovely slide, and I've made several.</p>
+
+    <p>The trouble is that real life has more doors than that, and the green box is rarely the one you end up living in. Software you buy changes under you. Software you build needs a household to maintain it. And the most common option of all, the quiet third path where you stitch things together with a bit of glue, never appears on the slide, because nobody plans to choose it.</p>
+
+    <h2 id="doors" data-short="Four doors, not two">Four doors, not two</h2>
+
+    <p>I think of it as four options. Each has a clear upside and a bill that arrives later.</p>
+
+    <div class="doors wide">
+
+      <div class="door">
+        <span class="tag">Door 1</span>
+        <h3>Buy</h3>
+        <dl>
+          <div><dt>Gives you</dt><dd>Speed, support, and a roadmap you don't have to pay to build.</dd></div>
+          <div><dt>Costs you</dt><dd>Control, price changes, and someone else's priorities on your schedule.</dd></div>
+        </dl>
+        <p class="regret">“We waited eight months for a fix we could describe in two days.”</p>
+      </div>
+
+      <div class="door">
+        <span class="tag">Door 2</span>
+        <h3>Adopt</h3>
+        <dl>
+          <div><dt>Gives you</dt><dd>Open source: transparency, a community, and the freedom to fix things yourself.</dd></div>
+          <div><dt>Costs you</dt><dd>You become a maintainer, whether you meant to or not.</dd></div>
+        </dl>
+        <p class="regret">“We forked it for one patch, and now we own the fork.”</p>
+      </div>
+
+      <div class="door">
+        <span class="tag">Door 3</span>
+        <h3>Bolt on</h3>
+        <dl>
+          <div><dt>Gives you</dt><dd>The fastest start and the least disruption: extend or wrap what already exists.</dd></div>
+          <div><dt>Costs you</dt><dd>A growing pile of glue that outlives its reason.</dd></div>
+        </dl>
+        <p class="regret">“It was supposed to be temporary.”</p>
+      </div>
+
+      <div class="door">
+        <span class="tag">Door 4</span>
+        <h3>Build</h3>
+        <dl>
+          <div><dt>Gives you</dt><dd>Exactly what you need, and the freedom to evolve it as your needs change.</dd></div>
+          <div><dt>Costs you</dt><dd>Everything else, for years.</dd></div>
+        </dl>
+        <p class="regret">“We built a very good thing that nobody else could maintain.”</p>
+      </div>
+
+    </div>
+
+    <p>None of these is a mistake in itself. Each is right in some situation and each has a favorite way of going wrong. The skill is in telling which situation you're in, and it helps to ask a few questions before anyone gets attached to the answer.</p>
+
+    <h2 id="decides" data-short="What actually decides">What actually decides</h2>
+
+    <p>After enough years of being wrong in both directions, I've boiled it down to six questions. None of them is a formula, but together they make the conversation a lot more honest.</p>
+
+    <ol class="stages">
+
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">1</span>
+        <h3>Is it core to how the work looks?</h3>
+        <p class="kitchen">The “would a competitor's images change” test</p>
+        <p>Some software shapes the pictures themselves: how light behaves, how hair moves, how a face reads. Other software is just plumbing. The first deserves your best people and tight control. The second deserves a sensible shrug and a credit card.</p>
+        <dl>
+          <div><dt>Ask yourself</dt><dd>If a rival studio had exactly this tool, would their images look the same as ours?</dd></div>
+        </dl>
+      </li>
+
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">2</span>
+        <h3>How quickly does the need change?</h3>
+        <p class="kitchen">Stable needs suit products; shifting needs suit control</p>
+        <p>Something that has behaved the same way for as long as anyone can remember, like turning a calendar date into a deadline, is happily bought. Something that changes with every show, such as how we describe a particular kind of environment, is a poor fit for any vendor's roadmap.</p>
+        <dl>
+          <div><dt>Ask yourself</dt><dd>Will we want something meaningfully different of this a year from now?</dd></div>
+        </dl>
+      </li>
+
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">3</span>
+        <h3>Where does our scale break theirs?</h3>
+        <p class="kitchen">A promise made at someone else's size</p>
+        <p>This one comes straight from <span class="xref">Ch. 2</span>: five thousand nodes, a million tasks a night. Most tools are built for a typical customer, and we are not typical. A product that works perfectly at ten thousand objects can fall over politely at ten million.</p>
+        <dl>
+          <div><dt>Ask yourself</dt><dd>What is the vendor's largest user, and how does ours compare, in objects, in people, in peak load?</dd></div>
+        </dl>
+      </li>
+
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">4</span>
+        <h3>How many other things must it talk to?</h3>
+        <p class="kitchen">Integration is the quiet bill</p>
+        <p>A tool that stands alone is cheap to adopt and cheap to drop. A tool that has to exchange data with a dozen other systems has a dozen places to break. The integration cost is usually larger than the license and nearly always forgotten in the meeting.</p>
+        <dl>
+          <div><dt>Ask yourself</dt><dd>How many other systems will need to learn its language, and who will teach them?</dd></div>
+        </dl>
+      </li>
+
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">5</span>
+        <h3>Who else can maintain it?</h3>
+        <p class="kitchen">The bus-factor question</p>
+        <p>Everything custom is a bet on a few people. If only one engineer understands it, what you own is not software but a dependency on a human being. Meanwhile the hiring market has opinions: you can usually find someone who knows the popular tool, and almost never someone who knows yours.</p>
+        <dl>
+          <div><dt>Ask yourself</dt><dd>If our best engineer on this takes a long holiday, or a better job, what happens?</dd></div>
+        </dl>
+      </li>
+
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">6</span>
+        <h3>What does it cost to leave?</h3>
+        <p class="kitchen">The question almost nobody asks on day one</p>
+        <p>Every choice is a lease with a hidden exit fee. Day one is the only moment you can inexpensively learn how large that fee is. Data formats, lock-in, how much other software has learned to depend on this one: those decide whether changing your mind in year four costs an afternoon or a delivery month.</p>
+        <dl>
+          <div><dt>Ask yourself</dt><dd>If we had to replace this in three years, what exactly would we have to move?</dd></div>
+        </dl>
+      </li>
+
+    </ol>
+
+    <p>If you plot a pipeline's components against the first two questions, you get something like this. It's a starting point for an argument, not a verdict.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 440" role="img" aria-labelledby="h1t h1d">
+          <title id="h1t">Where common pipeline components tend to land</title>
+          <desc id="h1d">A two-by-two grid. The horizontal axis runs from a stable need to a need that keeps changing, and the vertical axis from commodity to core to the look. Top left: adopt standards, such as file formats and color management. Top right: build, such as the renderer and look-development tools. Bottom left: buy, such as ticketing and storage hardware. Bottom right: bolt on, such as per-show scripts and dashboards.</desc>
+
+          <rect class="q-teal" x="120" y="20" width="340" height="180"/>
+          <rect class="q-acc" x="460" y="20" width="340" height="180"/>
+          <rect class="q-tint" x="120" y="200" width="340" height="180"/>
+          <rect class="q-gold" x="460" y="200" width="340" height="180"/>
+          <path class="qline" d="M120 200H800M460 20V380"/>
+
+          <text class="q-title q-teal-t" x="144" y="52">ADOPT AND INVEST</text>
+          <text class="q-item" x="144" y="90">File formats</text>
+          <text class="q-item" x="144" y="120">Scene description</text>
+          <text class="q-item" x="144" y="150">Color management</text>
+
+          <text class="q-title q-acc-t" x="500" y="52">BUILD</text>
+          <text class="q-item" x="500" y="90">The renderer</text>
+          <text class="q-item" x="500" y="120">Look-development tools</text>
+          <text class="q-item" x="500" y="150">Simulation frameworks</text>
+
+          <text class="q-title q-tint-t" x="144" y="252">BUY</text>
+          <text class="q-item" x="144" y="290">Ticketing</text>
+          <text class="q-item" x="144" y="320">Storage hardware</text>
+          <text class="q-item" x="144" y="350">Calendars and chat</text>
+
+          <text class="q-title q-gold-t" x="500" y="252">BOLT ON</text>
+          <text class="q-item" x="500" y="290">Per-show scripts</text>
+          <text class="q-item" x="500" y="320">Dashboards</text>
+          <text class="q-item" x="500" y="350">Glue between tools</text>
+
+          <circle class="hub" cx="460" cy="200" r="38"/>
+          <text class="hub-t" x="460" y="205">it depends</text>
+
+          <text class="mono" x="120" y="408">THE NEED IS STABLE</text>
+          <text class="mono" x="800" y="408" text-anchor="end">THE NEED KEEPS CHANGING</text>
+          <path class="axis" d="M290 404H620" marker-end="url(#ax)"/>
+          <defs><marker class="ah" id="ax" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker></defs>
+          <text class="mono" transform="translate(58 380) rotate(-90)">COMMODITY</text>
+          <text class="mono" transform="translate(58 20) rotate(-90)" text-anchor="end">CORE TO THE LOOK</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 3.1</b>Where components often land. The ones near the middle are the ones that cause meetings.</figcaption>
+    </figure>
+
+    <p>A word on what you <em>don't</em> see here: the big content-creation tools that artists use all day. We buy those, almost without discussion, and I've never regretted it. Nobody should be building a modelling package for fun. The interesting decisions sit in the layer around them. And a quiet shift is worth noticing: open standards and shared libraries for images, scene description, color and volume data have become part of the pipeline, which is why the top left corner is as crowded as it is. We'll meet scene description properly in <span class="xref">Ch. 5</span>.</p>
+
+    <h2 id="shows" data-short="Every show re-tests it">Every show re-tests the answer</h2>
+
+    <p>Here is the part the planning slide never shows. A new show arrives with its own look, its own tools and its own deadline, and each one quietly reopens the decisions made for the last. A buy that was fine for a quiet show strains under a heavy one. A bolt-on that served one show becomes the next show's “standard,” because it was there.</p>
+
+    <p>I watched the same question get two different right answers in one year. At the start of a small series, “do we need our own tool to track versions of environment assets?” was easily answered with no: a shared spreadsheet and a naming rule were plenty. Six months later a film with five times the shots asked the same question, and the same spreadsheet turned out to be the bottleneck for sixty people. Nobody had been wrong. The question had simply changed size underneath us.</p>
+
+    <p>That is why I think of every show as a new product, and why a decision record, which we'll get to shortly, carries a review date. We'll see the same effect from the research side in <span class="xref">Ch. 27</span>.</p>
+
+    <h2 id="build" data-short="Building is a long relationship">Building is a long relationship</h2>
+
+    <p>The most common error I see, and the one I've made myself most often, is treating a build decision as a project instead of a relationship. A project ends. A relationship comes with weekends.</p>
+
+    <p>Take the unglamorous things first. Someone has to write the documentation, and then keep it true. Someone has to teach new hires a tool that exists nowhere else. Someone has to be on call for it, because artists will want it at two in the morning. And when the world changes around it, a new operating system or a new version of the programs it plugs into, someone has to do the upgrade, on the world's timetable and not yours.</p>
+
+    <p>Then there's the people. A custom tool is often the brilliant work of one engineer, and it carries that engineer's habits and shortcuts. On the day they move on, which they will, you discover whether you built software or a monument.</p>
+
+    <p>I don't want to make building sound foolish, because sometimes it is exactly right. When the work touches how images look, or when scale breaks everything on offer, or when a critical path needs to bend on your timetable, there is nothing like owning the thing. <span class="xref">Ch. 8</span> tells the story of a decision like that, and I'd make it again. We also got one wrong in the other direction: a small recorder of where each file came from, which we kept deferring for three shows, and which would have saved us a great deal of grief (<span class="xref">Ch. 6</span> picks that up). But I should confess that pride gets into both sides of this argument. “Not invented here” has a quieter sibling, “invented here, therefore sacred,” and I've been guilty of the second far more often than the first.</p>
+
+    <h2 id="boltons" data-short="The bolt-on trap">The bolt-on trap</h2>
+
+    <p>Which brings me back to the coral reef. If you asked me to point at the most common way pipeline software actually gets made, it wouldn't be any of the four doors as a deliberate choice. It would be the bolt-on that grew.</p>
+
+    <p>It goes the same way every time. A script that fixes today's irritation. A second script that calls the first. A service that wraps both because someone wanted a button. A name, then a few users, then a chat channel, and then, one Tuesday, an outage that affects thirty people and has no obvious owner. You have, without any decision, acquired a product.</p>
+
+    <div class="callout aside">
+      <span class="callout-label">Signs you're holding an accidental product</span>
+      <ul>
+        <li>People file requests for it, but nobody is assigned to answer them.</li>
+        <li>It has a name that nobody chose.</li>
+        <li>The person who wrote it has left, or soon will.</li>
+        <li>An outage in it would stop real work, and you'd learn about it from an artist.</li>
+      </ul>
+    </div>
+
+    <p>I should say that bolting on is often the right first move. It's the cheapest way to learn what you actually need, and plenty of good software began as glue. The trap is not starting this way but never revisiting it. The habit that has helped me most is giving every bolt-on a <strong>review date</strong> and, on that date, making one of three decisions out loud: <em>promote it</em> into something with an owner, <em>retire it</em>, or <em>rewrite it</em> properly.</p>
+
+    <p>We have a cousin of the delivery script to prove it. We were sure we would buy a review-and-notes tool, and ended up bolting one onto what we had, because the purchase would have taken longer than the show. It works. It also now has users, a name nobody chose, and no owner, and its review date has been missed twice. <span class="xref">Ch. 23</span> returns to the review room.</p>
+
+    <h2 id="leaving" data-short="The cost of leaving">The cost of leaving</h2>
+
+    <p>I promised earlier that exit cost would matter, so here is why. Choices don't all cost the same to undo, and the difference is enormous.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <ol class="ladder">
+          <li style="--w:10%"><span class="rung">Swap a plugin</span><span class="cost">hours to days</span></li>
+          <li style="--w:32%"><span class="rung">Replace a library behind a clean interface</span><span class="cost">weeks</span></li>
+          <li style="--w:62%"><span class="rung">Migrate a data format that other tools depend on</span><span class="cost">months</span></li>
+          <li style="--w:100%"><span class="rung">Re-platform something an entire studio is built around</span><span class="cost">years</span></li>
+        </ol>
+      </div>
+      <figcaption><b>Figure 3.2</b>The same word, “migration,” covers wildly different amounts of work. The deeper a choice sits in the data, the more it costs to leave.</figcaption>
+    </figure>
+
+    <p>The expensive end of that ladder has a pattern. It's almost always about <em>data</em>, not code. Replacing a program is hard, but replacing the format of everything that program ever wrote, when a hundred other tools have learned to read it, is a different order of difficulty. Our delivery script sits on that scale too: replacing it would not be hard as software, but every show's delivery had learned its manifest, so the price was a month of parallel deliveries. And when we moved a scene format, we planned six months of overlap and needed fourteen, because most of the effort went not into the new thing but into teaching every old thing to speak it. (<span class="xref">Ch. 5</span> has that story, and <span class="xref">Ch. 28</span> adds the full set of migration case files.)</p>
+
+    <p>So the useful question at the start isn't “which is cheapest to adopt?” but “which is cheapest to be wrong about?” A choice that you can undo in a weekend deserves a lot less debate than one you'll live with for years.</p>
+
+    <h2 id="writing" data-short="Deciding in writing">Deciding in writing</h2>
+
+    <p>The last habit is the smallest, and the one I'd keep if I had to give up the rest. When we make one of these choices, we write it down in half a page, in a form I'll call a decision record. It has no ceremony. Its job is to remember <em>why</em>, so that in three years somebody can tell whether the reasons still hold. (When we show one in <span class="xref">Ch. 8</span>, it's a reconstruction written after the fact, which is its own lesson.)</p>
+
+    <div class="record">
+      <span class="callout-label">Decision record · filled in as an example (illustrative)</span>
+      <h4>Wrap the open-source image library, or write our own reader?</h4>
+      <dl>
+        <div><dt>Context</dt><dd>A new show arrives with unusual image formats, and delivery is five months away.</dd></div>
+        <div><dt>Options considered</dt><dd>Adopt the open-source library as it is. Bolt on a thin wrapper of our own. Build a reader from scratch. Buy a commercial converter.</dd></div>
+        <div><dt>Decision</dt><dd>Adopt the library, with a thin wrapper.</dd></div>
+        <div><dt>Because</dt><dd>Image reading is not what makes our pictures look the way they do, the library already copes with our scale, and leaving means replacing a wrapper.</dd></div>
+        <div><dt>We'd change our mind if</dt><dd>A second show needed behavior the maintainers won't take upstream, or we found ourselves carrying a private fork.</dd></div>
+        <div><dt>Review</dt><dd>After the first delivery.</dd></div>
+      </dl>
+    </div>
+
+    <p>The line I value most is “we'd change our mind if.” It turns a decision from a verdict into a hypothesis, and it gives a future colleague permission to revisit it without feeling they're attacking someone's judgement.</p>
+
+    <h2 id="stuck" data-short="What stuck with me">What stuck with me</h2>
+
+    <p>Remember the meeting where the smartest person in the room asked why we shouldn't just use X? Here is how I'd answer it now. “That's a good idea. Let's write down what happens in year three, and what leaving would cost.” It's less satisfying than a flat yes or no, and a good deal more useful. It's also the question nobody asked on the day that ten-line script was born.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">Takeaway</span>
+      <p>The decision you make is rarely the decision you live with. Choose the one you can afford to be wrong about.</p>
+    </div>
+
+    <p>That closes Part I. We know what a shot is, how large the problem becomes, and how to think about what to own. Which raises the oldest question in the pipeline, and the one that sits underneath all the others: how do you keep track of everything these systems produce? Part II begins there.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pipeline TDs: The Bridge Role · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 26. The pipeline TD is part engineer, part translator, part firefighter, and the most valuable and most fragile job in a facility. How to hire, grow and keep one.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch26">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><em>Contents</em><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part VII · People and Process</p>
+    <p class="chap-num" aria-hidden="true">26</p>
+    <h1>Pipeline TDs: The Bridge Role</h1>
+    <p class="dek">The most valuable and most fragile job in a facility, and how to hire, grow and keep the people who do it.</p>
+    <p class="meta"><span>Chapter 26</span><span>Continues from: Chapter 25</span><span id="reading-time">15 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">I once spent a week trying to write a job posting, and every draft described three different people.</p>
+
+    <p>The first draft wanted an artist who understood how lighting really works. The second wanted an engineer who could debug a distributed system at midnight. The third wanted someone patient enough to sit beside an upset compositor and ask, kindly, what exactly looked wrong. I tried merging them. The result asked for a diplomat, a night owl, a software developer and a person with taste, and I could hear every good candidate closing the tab.</p>
+
+    <p>The role I was failing to describe is the <dfn>pipeline TD</dfn>. TD stands for technical director, a title that sounds grander than the job and has never once been explained to a relative at a holiday dinner. A pipeline TD is the person who makes the tools, the data and the artists' daily work fit together. Part engineer, part translator, part firefighter. You've met them throughout this book without the title: the one who knows which cache is stale, the one who answered the message at 2 a.m. in <span class="xref">Ch. 25</span>, the one who somehow already has the broken scene open when you reach their desk.</p>
+
+    <p>Here is a scene I'd put on the posting if postings had scenes. It's late. A lighter and an engineer have been arguing for twenty minutes about a flicker in a shot of the giant's shoulder. The lighter says the lights are fine and the engineer says the renderer is deterministic, and both are right, which is why it's taking so long. A TD I'll call the one who read the shot walks over, asks for the contact sheet, a grid of frames laid out side by side, and looks at it for about ten seconds. “It's the cache, not the light,” she says. Both of them nod. The argument ends, and nobody mentions it again.</p>
+
+    <p>Nothing in her job description covered this. Nothing covered the private list she kept of every script living in every artist's home folder in her department, either, which turned out to be the map we needed for <span class="xref">Ch. 23</span>. Nor did it mention that she read the logs of the orphaned tool from <span class="xref">Ch. 3</span>, the nine-year-old one whose only expert had left, simply because somebody should. She later became the queue owner in the sense of <span class="xref">Ch. 19</span>: the person who knows whose work is waiting, and why. That is the job. This chapter is about how to find people who can do it, and how to keep them once you have.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>The belief I started with comes in two flavors, and they're mirror images. The first says: hire engineers, and artists can file tickets. The second says: hire artists who can script, because engineers don't understand the work. Each sounds practical. Each saves you from admitting the role is hard.</p>
+
+    <p>My own early postings were a monument to the first flavor. One asked for twelve years of experience in a tool that was eight years old, plus a degree, plus “a passion for the creative process.” I'd written it by pasting together the wishes of three departments, and it read like a ransom note from a committee. We received very few applications, and I congratulated myself on being selective.</p>
+
+    <h2 id="gap" data-short="The gap between two teams">The gap between two teams</h2>
+
+    <p>Here is what happens without a bridge. It happened to us on a show a few years ago, and I'll tell it as plainly as I can.</p>
+
+    <p>Lighting needed a faster way to swap one version of an environment for another while keeping their light setups. They asked engineering for it, in the words artists use: “I want to flip the forest without losing my rig.” Engineering heard a request about asset versioning, and built exactly that, to specification, with a sensible data model and careful tests. It shipped, and nobody in lighting could use it. It asked them to name and register things in a way that nobody had time for during a week of notes. It was a correct answer to a question nobody had asked.</p>
+
+    <p>Then came the two stories. Lighting said engineering never listens. Engineering said artists never say what they want. Both stories were true in the way that matters, which is that each side had told the other everything in its own vocabulary. An artist describes the result: “the shadows are wrong.” An engineer describes the mechanism: “the light linking resolves late.” Same fact, different nouns, and a missing translator standing nowhere in particular. We lost about three weeks, and a fair amount of goodwill that took longer to earn back.</p>
+
+    <p class="pullquote">The same facts, two stories, and nobody whose job it was to stand in the middle.</p>
+
+    <p>The role gets mistreated in three common ways, and I've done all three.</p>
+
+    <p>The first is treating it as support. The TD becomes the person you call when something is broken, which makes them the face of every problem and the owner of none of the decisions. The second is treating it as a stopgap: we can't afford both an engineer and an artist's assistant, so we'll get one person to be a little of each. That person ends up doing two jobs at 60 percent, and is blamed for the missing 40.</p>
+
+    <p>The third is the one I'm least proud of, because it looked like kindness. It treats the role as a promotion for the best artist. A gifted lighter on one of our shows was brilliant with the tools, patient with colleagues and well liked, so we offered her a TD seat. We had no path for her, no training plan and no one to learn from. She did the job well anyway. She also missed the art terribly, and a year later she left for a game studio, where she is, by every report, thriving. We lost a great lighter and gained a good TD for twelve months, and the failure was mine: I should have built the path before I made the offer. I still think about that one.</p>
+
+    <h2 id="profession" data-short="A profession, not a gap-filler">A profession, not a gap-filler</h2>
+
+    <p>The reframe took me years. The pipeline TD is not what you get when you can't afford both an engineer and an artist. It is the skill of making the two understand each other, and that skill is a craft with its own depth. Fluency is learned. It can be taught, mentored, practiced and, more to the point, measured: a good TD's shows have fewer repeated questions, fewer surprises at delivery and fewer midnight messages.</p>
+
+    <p>Put another way, the job isn't half art and half code. It's fluency in both, and patience for the gap.</p>
+
+    <p>Once I saw it that way, the question changed from “what can we get away with?” to “what does a person in this seat need to grow?” It also helped to admit that “pipeline TD” is a family of jobs, not one. They share a vocabulary and differ in where they stand.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 840 170" role="img" aria-labelledby="f26t f26d">
+          <title id="f26t">The spectrum of technical director roles</title>
+          <desc id="f26d">A horizontal scale from art-facing on the left to engineering-facing on the right. Show TD sits near the art end, pipeline TD in the middle, pipeline developer toward the engineering end, and cross-department architect at the far right.</desc>
+          <defs>
+            <marker class="ah" id="a26" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+          <g class="flow"><path d="M20 120 H820" marker-end="url(#a26)"/></g>
+          <g class="node">
+            <rect x="20" y="30" width="170" height="52" rx="8"/><text x="105" y="52" style="font-size:14px">Show TD</text><text x="105" y="70" style="font-size:11px">sits with one show</text>
+            <rect x="230" y="30" width="170" height="52" rx="8"/><text x="315" y="52" style="font-size:14px">Pipeline TD</text><text x="315" y="70" style="font-size:11px">sits across shows</text>
+            <rect x="440" y="30" width="170" height="52" rx="8"/><text x="525" y="52" style="font-size:14px">Pipeline developer</text><text x="525" y="70" style="font-size:11px">builds shared tools</text>
+            <rect x="650" y="30" width="170" height="52" rx="8"/><text x="735" y="52" style="font-size:14px">Architect</text><text x="735" y="70" style="font-size:11px">sits across departments</text>
+          </g>
+          <text x="20" y="146" style="font-size:13px">Art-facing</text>
+          <text x="820" y="146" text-anchor="end" style="font-size:13px">Engineering-facing</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 26.1</b>A model, not an org chart. People slide along it during a career, and the best ones can stand anywhere on it.</figcaption>
+    </figure>
+
+    <p>A <em>show TD</em> lives close to the artists on a single show. They know the director's habits, which shots are burning and which artist prefers which tool. A <em>pipeline TD</em> works across shows, smoothing the way the studio's tools meet each show's odd demands. A <em>pipeline developer</em> sits nearer to platform engineering and builds the shared tools the others depend on. The <em>architect</em> thinks across departments and across years, which is the end of the spectrum where the role starts to look like the work in <span class="xref">Ch. 3</span>. The titles are interchangeable at the edges, but the jobs are not.</p>
+
+    <p>It helps to say how this differs from neighboring jobs. A software engineer is judged mostly by the system they leave behind; a TD is judged by whether the artist's Tuesday got better. A technical artist in games lives closer to a single product and a single engine, where the studio's tools are one stack. A support engineer answers questions; a TD often has to notice that the question is the wrong one. They overlap with all three, and none of the three quite covers them.</p>
+
+    <h3>A day, in four moves</h3>
+
+    <p>The days vary, but this rhythm is common enough that I'll offer it as a sketch.</p>
+
+    <p>Mornings are triage. Overnight, about a thousand tasks failed, and most of them failed for dull reasons. The TD reads the pattern, not the individual failures: one bad texture path, one node out of sync, one artist who published from a stale scene. By nine they know which three matter. Midday, they sit with an artist. This is the most underrated hour of the job. The artist describes what they want in their own words, and the TD writes it down in the other language. Afternoons belong to a small tool, perhaps a hundred lines of script that removes one irritating step for forty people, which will never appear on a roadmap and will save the show a week. Evenings are for review: watching shots with the artists, noticing what they wince at, and carrying it back as a note that somebody can act on.</p>
+
+    <h2 id="hiring" data-short="Hiring">Hiring</h2>
+
+    <p>There are two common sources of pipeline TDs: artists who learned to code and engineers who learned to see. Each has strengths and blind spots, and I've hired plenty of both.</p>
+
+    <p>Artists who code arrive knowing what a bad day in lighting feels like. They speak the language, they earn trust fast and they build tools that fit the hand. Their blind spot is scale. Something that works for one scene on one desktop is not something that works for a million tasks a night, and the lesson usually arrives as a weekend incident. Engineers who learned to see arrive with discipline: tests, reviews, a feel for failure. Their blind spot is the other direction. They can build the right thing for the wrong person, and they sometimes hear “the shadows are wrong” as a vague complaint instead of precise information.</p>
+
+    <p>In my experience, slightly more of my successes came from artists who code, but I'd hesitate to make that a rule. Both need a mentor. Neither is complete.</p>
+
+    <h3>What a résumé hides</h3>
+
+    <p>The things I look for are almost never on paper. Curiosity about the other side: does the engineer ask what an artist's afternoon is like, and does the artist ask how the farm decides who goes first? Comfort with ambiguity, because the request will arrive as a feeling. And how they explain a problem to someone who doesn't share their vocabulary, which is the closest thing to a direct test of the job.</p>
+
+    <p>The first three TDs I hired, I chose on trivia. I asked about the details of a scripting language and a few corners of a scene format, and I rated the answers. Two of the three were wrong for the seat. They were smart and well read, and they struggled the first time an artist asked for something in a sentence that began “you know how it kind of...” That was my mistake, and I made it more than once before I stopped.</p>
+
+    <p>What worked was an hour-long conversation with a pretend lighter. One of our people plays an artist with a flickering shot, in character, annoyed, a little vague. The candidate has the scene, the logs and the time. We don't watch for the right answer, we watch for the questions: do they ask to see a frame, do they ask what changed since yesterday, do they restate the problem in the artist's words before touching anything? We also pay attention to how candidates talk about artists. A candidate who calls them “users” in a flat voice, or calls engineers “the coders” in a flatter one, usually tells us what the next two years will look like.</p>
+
+    <p>Other prompts have served us well, and I'll list them in the role profile below. They share a pattern: a small, realistic mess, a person to talk to, and an hour. Trivia and whiteboard puzzles don't make the cut, because the job rarely hands you a clean problem and a marker.</p>
+
+    <p>The best hire that came out of this change was a compositor who already ran her department's scripts, unofficially, because nobody else would. We'd never have found her through a posting. We found her because someone said, “she's the one who fixes it,” and we asked her to talk to us. Another excellent hire came from a game-tools background and spent his first month asking what a plate was. He asked a lot of useful questions that the rest of us had stopped asking.</p>
+
+    <p>The honest market reality is that the pool is small and everyone is hiring from it. A facility, a game studio and a tech company may all want the same person. That's my experience, not a statistic. It means hiring is slow, and I'd rather be slow than fill the seat wrongly again.</p>
+
+    <div class="callout">
+      <span class="callout-label">A role profile you can adapt</span>
+      <p><em>Show TD.</em> Owns the daily health of one show's pipeline. Close to the artists, fluent enough in the tools to fix the problem or find who can. Success looks like fewer repeat questions and no surprises at delivery. Interview prompt: a lighter's shot flickers; talk it through with them.</p>
+      <p><em>Pipeline TD.</em> Works across shows, carries lessons from one to the next, writes the small tools that remove steps. Success looks like fixes that stay fixed. Interview prompt: here is a messy script someone wrote three shows ago; tell us what it does and what you'd worry about.</p>
+      <p><em>Pipeline developer.</em> Builds and maintains shared tools and services. Reviews code, reads artists' needs, says no politely. Success looks like tools people choose to use. Interview prompt: explain what our scheduler does to a lighter who only wants to know why her work hasn't started.</p>
+    </div>
+
+    <h2 id="growing" data-short="Growing">Growing</h2>
+
+    <p>The biggest trap in career design is the fork: you can become a manager or you can stay a narrow specialist, and nothing in between counts. The people I want are exactly the ones who resist that choice. So we built four paths, and put names and steps on them.</p>
+
+    <p>One is deep technical: someone who becomes the person to ask about, say, how scene data moves between departments, and is paid and respected like a senior engineer. One is the show-facing lead, who runs the technical side of a show and is the face of the pipeline to its supervisors. One is platform owner, who is accountable for a shared service. And one is the cross-department architect, who thinks in years. People move between them. The steps are visible, which matters more than I expected, because a path that exists only in a manager's head isn't a path.</p>
+
+    <p>We pair every new TD with an artist for their first month. They sit in the room, watch a real shot go through, and are asked to fix one small irritation that the artist names. Over time, the pairing runs in both directions: engineers sit in on review sessions, and artists, the willing ones, join code review for tools they use. Some of them find it dull, and some of them find three bugs. TDs also rotate through shows, partly to keep them from becoming the only person who knows one show's secrets, and they share the on-call rota described in <span class="xref">Ch. 25</span>, so the nights are spread and not inherited.</p>
+
+    <p>Then comes the hard part, which is time. A job made of permanent triage leaves no room for learning, because the next fire is always already lit. We protect a few hours a week for it, and they are the first thing to vanish in a crunch. I won't pretend we protect them well. The honest summary is that we protect them about two weeks in three.</p>
+
+    <p>The last piece is recognizing invisible work. The best thing a TD can do is prevent a problem, and a prevented problem leaves no evidence. Nobody throws a party for the flicker that never happened. We started writing a short note, each quarter, of things that did not go wrong and why, with the person's name on it. It sounds small. It was the single most appreciated thing we did, and it cost an afternoon.</p>
+
+    <div class="callout aside">
+      <span class="callout-label">The cost of all this</span>
+      <p>Hiring slowly means seats stay empty and the show feels it. Mentoring takes a senior person's hours away from fixing things. And a career path with real steps has to be argued for in every budget cycle, because it looks like overhead until the person you didn't promote leaves.</p>
+    </div>
+
+    <h2 id="keeping" data-short="Keeping">Keeping</h2>
+
+    <p>People leave this role for four reasons, and I've heard all four in exit conversations. Their work was unrecognized. Crunch was unsustainable, which is the thread from <span class="xref">Ch. 25</span>: the people who answer the nights are the people who burn out. They were the only one who knew something, so they could never be off. Or they couldn't see a way forward.</p>
+
+    <p>The third reason deserves a word, because it is a people problem dressed as a technical one. In <span class="xref">Ch. 3</span> we called it the bus factor, the number of people who can be missing before something stops. If one person holds a system in their head, they are valuable, trapped and, quietly, never on holiday. Spreading the knowledge is a retention tool as much as a safety measure, because it is what lets someone take two weeks away without a phone call. Writing it down, pairing on it and rotating the on-call are, in effect, ways of giving people their lives back.</p>
+
+    <figure class="fig">
+      <div class="fig-box">
+        <svg viewBox="0 0 520 260" role="img" aria-labelledby="f26rt f26rd">
+          <title id="f26rt">The retention loop</title>
+          <desc id="f26rd">Four boxes arranged in a cycle with arrows: recognition leads to a visible path, which leads to sustainable load, which leads to shared knowledge, which leads back to recognition.</desc>
+          <defs>
+            <marker class="ah" id="a26b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+          <g class="node">
+            <rect x="20" y="20" width="170" height="48" rx="8"/><text x="105" y="49" style="font-size:14px">Recognition</text>
+            <rect x="330" y="20" width="170" height="48" rx="8"/><text x="415" y="49" style="font-size:14px">A visible path</text>
+            <rect x="330" y="190" width="170" height="48" rx="8"/><text x="415" y="219" style="font-size:14px">Sustainable load</text>
+            <rect x="20" y="190" width="170" height="48" rx="8"/><text x="105" y="219" style="font-size:14px">Shared knowledge</text>
+          </g>
+          <g class="flow">
+            <path d="M190 44 H328" marker-end="url(#a26b)"/><path d="M415 68 V188" marker-end="url(#a26b)"/>
+            <path d="M330 214 H192" marker-end="url(#a26b)"/><path d="M105 190 V70" marker-end="url(#a26b)"/>
+          </g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 26.2</b>Each part feeds the next. Pull one out and the loop quietly stops.</figcaption>
+    </figure>
+
+    <p>What helps, in short: a career path with steps you can see, pay that tracks the engineering market, visibility with leadership, and permission to say no. That last one sounds soft and isn't. A TD who can say “not this week” to a request without fear is a TD who will still be here next year. They are asked for everything, because they can do everything, and without that permission they will do everything until they stop.</p>
+
+    <p>On pay, since people expect me to skip it. The gaps with games, tech and startup work exist. In my experience they have been real, and they narrow only when you go and fight for the budget. I won't give figures, but I'll say that “passion for the craft” does not close a gap, and I've learned not to count on it.</p>
+
+    <p>Some people will leave anyway, to games, to tech, to a startup that sounds exciting, and some of them will be right to go. I try to design for that: a graceful goodbye, a handover that is not an ambush, and a door left open. Several have come back. We call them boomerangs, with affection, and they return with outside habits we'd never have developed ourselves. I also keep a private count of those who left for reasons I could have fixed. I treat each as my own miss, and the count is longer than I'd like.</p>
+
+    <h2 id="unsolved" data-short="Still unsolved">What's still unsolved</h2>
+
+    <p>I don't want to leave this tidy, because it isn't. Pay gaps with other industries remain. The invisibility problem is better but not fixed: a quarterly note is not the same as being seen. The hiring pool is small and moves with the cycles of the industry, so in a lean year we lose people and in a busy one we can't find them. Some of our best people left, and I own that. The path I built is real, but it was built after the fact, and the first people who walked it were the ones who most needed it earlier.</p>
+
+    <p>One question I keep asking myself, on any project: <em>who is standing in the gap right now, and do they know it?</em> It sounds trivial. Most of the time the answer is a person nobody has named, doing the work out of habit. The first useful thing you can do for them is notice.</p>
+
+    <h2 id="stuck" data-short="What I'd tell my past self">What I'd tell my past self</h2>
+
+    <p>Back to the posting. After years of drafts, here is roughly where mine ended up. <em>We're looking for someone who is curious about both sides of the screen. You'll spend your days between artists and engineers, fixing small things before they become large ones, and translating when neither side has the words. You'll be asked for a lot. We'll protect your time for learning, give you a path with steps, and pay you as the engineer you are.</em> It's shorter than the old one, and it's honest. It gets the right people to write back.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">What I'd tell my past self</span>
+      <p>The person who understands both sides is rare. Treat them as infrastructure, because everything leans on them, and as a person, because they will notice if you forget.</p>
+    </div>
+
+    <p>One of those bridges leads in a different direction. The TD stands between the artist and the engineer, but there is another person who stands between the studio and the outside world, carrying papers, prototypes and big ideas to the door. They need a very different kind of care, and sometimes a very polite no. That's the subject of <span class="xref">Ch. 27</span>.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

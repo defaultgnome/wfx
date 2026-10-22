@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asset Management Without a Single Source of Truth · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 4. Versioning huge, mostly binary, interdependent data is not source control with bigger disks. There is no single source of truth, and the job is to make that survivable.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch4">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part II · Assets and Data</p>
+    <p class="chap-num" aria-hidden="true">04</p>
+    <h1>Asset Management Without a Single Source of Truth</h1>
+    <p class="dek">In a pipeline, “latest” is an opinion, not a fact. The job is to make the disagreement survivable.</p>
+    <p class="meta"><span>Chapter 4</span><span>Continues from Chapter 3</span><span id="reading-time">15 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">On a Friday evening, an artist fixed a foliage texture. By Monday morning, 296 shots looked different, and nobody could say who had touched what.</p>
+
+    <p>The fix was a good one. The old texture had a seam that showed up in close-ups, and the artist, who knew what she was doing, painted it out and published the better version over the old name. That was the rule. Our own rule, in fact: a name meant “the current best,” and publishing meant replacing it. Nobody was warned, because the rule said nobody needed to be.</p>
+
+    <p>Over the weekend the farm did what it does. Every shot that used the foliage re-rendered with the new texture, about 18,000 frames in all, and the new leaves were slightly brighter. Not wrong, just different, in 296 shots that had already been approved. A lighting supervisor spent Monday morning with two screenshots open, trying to work out whether the change was in the lighting, the render or the asset. It was in the asset. It took until lunch to prove it.</p>
+
+    <p>This is the first chapter of Part II, and it is about the oldest question in a pipeline: how do you keep track of things? It also pays off the second of the five differences from the Foreword, <em>the requirements change nightly</em>. A film is discovered while it's being made, so the data has to keep changing and, at the same moment, stay consistent. Those two demands pull in opposite directions, and most of this chapter is about the knot between them.</p>
+
+    <p>The question underneath the Monday morning wasn't “who broke it?” It was simpler and much harder to answer: <em>which version were we all looking at?</em></p>
+
+    <h2 id="belief" data-short="The comfortable belief">“We'll just use source control”</h2>
+
+    <p>The first instinct of anyone who has written software is to reach for a repository. It's a good instinct. Source control gives you history, names for versions, and the ability to say “show me what changed.” For text files it is one of the great inventions of the trade.</p>
+
+    <p>Then you point it at a facility. Our shows hold hundreds of terabytes of working data, and the giant's misty forest alone is a few hundred gigabytes before anyone has lit it. A single character can be a 40 GB tree of files. You cannot diff a texture, and you cannot merge two sculpts by reading both and picking the better lines. A repository asked to hold all that does its best, and its best is a very long coffee break for every artist who needs a copy.</p>
+
+    <p>So we used source control for what it suits, which is code and small text, and we needed something else for the rest. To see what, we have to look at what an asset really is.</p>
+
+    <h2 id="different" data-short="What makes assets different">What makes an asset different</h2>
+
+    <p>An <dfn>asset</dfn> is anything an artist builds once and many shots reuse: a character, a prop, an environment, a texture set. The word sounds like a file. It's really a bundle, and the bundle is made by many departments. A character is a model from one team, a rig from another, textures from a third and a groom, the fur or hair, from a fourth. Each of those pieces has its own versions, and the character is only “version 12” by agreement.</p>
+
+    <p>Four properties make this awkward, and they compound.</p>
+
+    <p>First, size. Assets run from megabytes to tens of gigabytes, and most of it is binary, so there is nothing to read and nothing to merge. Second, interdependence. The character references a model, which references textures, and any of those can move without the others noticing. Third, authorship. The pieces are made in different tools that know nothing about one another (we'll meet that problem properly in <span class="xref">Ch. 24</span>). Fourth, fan-out. This is the lesson from <span class="xref">Ch. 1</span>: a shared asset ripples out into hundreds of shots, so one small change is never small. Our foliage texture was a few megabytes. Its blast radius was 296 shots.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 300" role="img" aria-labelledby="t41 d41">
+          <title id="t41">A character asset as a tree of sub-assets</title>
+          <desc id="d41">A character, version 12, at the top, with four children: model v7, rig v9, textures v15 and groom v4. An arrow from textures v15 fans out to many shots below.</desc>
+          <g font-family="Inter, sans-serif" font-size="14" fill="currentColor" text-anchor="middle">
+            <rect x="330" y="14" width="160" height="44" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <text x="410" y="42" font-weight="600">Character · v12</text>
+            <path d="M410 58V84M105 84H715M105 84V104M285 84V104M535 84V104M715 84V104" stroke="currentColor" stroke-width="1.2" fill="none" opacity=".6"/>
+            <rect x="35" y="104" width="140" height="40" rx="8" fill="none" stroke="currentColor" stroke-width="1.2"/><text x="105" y="129">Model · v7</text>
+            <rect x="215" y="104" width="140" height="40" rx="8" fill="none" stroke="currentColor" stroke-width="1.2"/><text x="285" y="129">Rig · v9</text>
+            <rect x="465" y="104" width="140" height="40" rx="8" fill="#f7e6dd" stroke="#c0502a" stroke-width="1.8"/><text x="535" y="129" fill="#26221d">Textures · v15</text>
+            <rect x="645" y="104" width="140" height="40" rx="8" fill="none" stroke="currentColor" stroke-width="1.2"/><text x="715" y="129">Groom · v4</text>
+            <path d="M535 144V180M535 180L330 232M535 180L440 232M535 180L535 232M535 180L630 232M535 180L740 232" stroke="#c0502a" stroke-width="1.6" fill="none"/>
+            <g font-size="12">
+              <rect x="285" y="232" width="90" height="30" rx="6" fill="none" stroke="currentColor"/><text x="330" y="252">shot 0110</text>
+              <rect x="395" y="232" width="90" height="30" rx="6" fill="none" stroke="currentColor"/><text x="440" y="252">shot 0340</text>
+              <rect x="490" y="232" width="90" height="30" rx="6" fill="none" stroke="currentColor"/><text x="535" y="252">shot 0720</text>
+              <rect x="585" y="232" width="90" height="30" rx="6" fill="none" stroke="currentColor"/><text x="630" y="252">shot 1015</text>
+              <rect x="695" y="232" width="90" height="30" rx="6" fill="none" stroke="currentColor"/><text x="740" y="252">and 291 more</text>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 4.1</b>An asset is a tree, not a file. Each branch has its own version number, and one change on one branch reaches every shot that uses it.</figcaption>
+    </figure>
+
+    <h2 id="git" data-short="What Git got right">What source control got right, and what it didn't</h2>
+
+    <p>I don't want to sneer at the repository, because it got several things deeply right, and we kept them.</p>
+
+    <p>History that can't be rewritten is the big one. Once something is recorded, it stays recorded, and you can always ask what it looked like on a given day. Content addressing, naming a thing by what it contains, means two identical files are provably the same file. And cheap labels let you point at a moment (“the version we delivered”) without copying anything. We took all three.</p>
+
+    <p>What we dropped was the machinery built for people editing the same text at once. Merging makes no sense when you can't read the content. Branching makes little sense either, because nobody wants two parallel forks of a character's skin weights. And a full copy on every desk is a non-starter when the asset is 40 GB and there are 500 artists. (Large-file extensions to the major source-control tools exist, and plenty of teams use them well, especially for smaller sets of binaries. For us they covered the history but not the rest of what we needed.)</p>
+
+    <p>What we adopted in place of merging is <em>lock and publish</em>. One person works on an asset at a time. When they're ready, they publish, and the result is a new, frozen version. If that sounds like a step backward, it isn't, and I'd like to be honest about whose idea it was. It wasn't mine. Artists already did this. Anyone who has shared a room with a character artist has heard someone shout “I've got the hero rig!” across it. The tooling only wrote down a habit people already had.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Idea from source control</th><th>What we did with it</th></tr></thead>
+          <tbody>
+            <tr><td><b>Kept</b></td><td>Immutable history. Content addressing. Cheap labels that point at a version.</td></tr>
+            <tr><td><b>Adapted</b></td><td>Exclusive editing, written down as lock and publish. Snapshots, taken as publishes rather than commits.</td></tr>
+            <tr><td><b>Dropped</b></td><td>Merging. Branching. A full copy on every desk. Line-based diffs.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Figure 4.2</b>A fair comparison: most of the ideas survived, and most of the machinery didn't.</figcaption>
+    </figure>
+
+    <h2 id="versions" data-short="Versions, publishes and pins">Versions, publishes and pins</h2>
+
+    <p>Here is the core mechanism, and it's smaller than you'd expect.</p>
+
+    <p>An artist's day is a long series of saves into a <em>work</em> area. These are private, constant, and frequently regretted. Nobody else depends on them, so nobody else needs to care. A <dfn>publish</dfn> is different. It's a deliberate act that copies the current state into a new numbered version and freezes it. From that moment, others may rely on it. The gate is on purpose: it's the line between “I'm still thinking” and “you may build on this.”</p>
+
+    <p>The rule that follows is <em>immutability</em>. A published version never changes. If it's wrong, you don't fix it, you publish the next one. This is the rule our Friday texture broke, by publishing over a name instead of making a new version, and it is the rule that would have saved the weekend.</p>
+
+    <p>Numbers alone aren't friendly, so we add <dfn>labels</dfn>: names such as “approved” or “latest good” that point at a version. This is the useful trick. The versions never move, but the labels do. “Approved” can slide from version 7 to version 8 when a supervisor signs off, and nothing underneath has been touched.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 220" role="img" aria-labelledby="t42 d42">
+          <title id="t42">Timeline of one asset</title>
+          <desc id="d42">A long row of small ticks for work saves, five larger marks for publishes numbered 1 to 5, approvals on versions 2 and 4, and three shots pinned to versions 2, 4 and 5.</desc>
+          <g font-family="Inter, sans-serif" font-size="12" fill="currentColor" text-anchor="middle">
+            <path d="M30 100H790" stroke="currentColor" stroke-width="1.5" opacity=".5"/>
+            <text x="30" y="30" text-anchor="start" font-weight="600">Work saves (dozens, private)</text>
+            <path d="M40 90v20M58 90v20M76 90v20M94 90v20M112 90v20M130 90v20M148 90v20M178 90v20M196 90v20M214 90v20M232 90v20M262 90v20M280 90v20M298 90v20M316 90v20M334 90v20M352 90v20M382 90v20M400 90v20M418 90v20M436 90v20M466 90v20M484 90v20M502 90v20M520 90v20M538 90v20M568 90v20M586 90v20M604 90v20M622 90v20M640 90v20M670 90v20M688 90v20M706 90v20M724 90v20M742 90v20M760 90v20" stroke="currentColor" stroke-width="1" opacity=".35"/>
+            <g fill="#c0502a">
+              <circle cx="165" cy="100" r="9"/><circle cx="249" cy="100" r="9"/><circle cx="369" cy="100" r="9"/><circle cx="453" cy="100" r="9"/><circle cx="555" cy="100" r="9"/>
+            </g>
+            <g fill="#26221d" font-size="11"><text x="165" y="104" fill="#fff">1</text><text x="249" y="104" fill="#fff">2</text><text x="369" y="104" fill="#fff">3</text><text x="453" y="104" fill="#fff">4</text><text x="555" y="104" fill="#fff">5</text></g>
+            <text x="165" y="70" fill="#c0502a">publish</text>
+            <g fill="#1d6b68" font-weight="600"><text x="249" y="60">approved</text><text x="453" y="60">approved</text></g>
+            <path d="M249 130V150M453 130V150M555 130V150" stroke="#1d6b68" stroke-width="1.3"/>
+            <g><rect x="199" y="150" width="100" height="26" rx="6" fill="none" stroke="currentColor"/><text x="249" y="168">shot A, pinned v2</text>
+            <rect x="403" y="150" width="100" height="26" rx="6" fill="none" stroke="currentColor"/><text x="453" y="168">shot B, pinned v4</text>
+            <rect x="505" y="150" width="100" height="26" rx="6" fill="none" stroke="currentColor"/><text x="555" y="168">shot C, pinned v5</text></g>
+            <text x="410" y="204" fill="#8a8275">Three shots, three versions, all of them correct for their own moment.</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 4.3</b>One asset over a few weeks: dozens of private saves, five publishes, two approvals, and three shots each pinned to the version that was right for them.</figcaption>
+    </figure>
+
+    <p>That brings up the other half of the vocabulary. A shot that uses an asset can <dfn>pin</dfn> a specific version, or it can <em>float</em> and follow whatever a label currently says. Both are useful, and they have opposite risks. Pinning is stable and slow to receive fixes. Floating gets every fix immediately, along with every surprise.</p>
+
+    <p>Our default was a split. Early look development floats, because the whole point is to see the latest and nobody is going to be hurt by it. A shot in production pins, because by then stability is worth more than freshness. The tension never goes away: a pinned shot can sit on a bug for weeks while everyone else has long since moved on.</p>
+
+    <p>Which leads to the override. Every pipeline I've seen grows a “just this once” escape hatch, the button that lets a lighter take a newer version into a pinned shot, because tomorrow is a review and the fix is real. It's a reasonable button. The trouble is that “just this once” is a very popular frequency. We kept ours, but it now leaves a visible mark on the shot, which turned out to matter more than the button itself.</p>
+
+    <p>Version states stayed deliberately small. A version is in <em>work</em> (private), <em>published</em> (frozen, usable), <em>approved</em> (someone with authority has accepted it), <em>final</em> (it went into a delivery), or <em>retired</em> (no new shot should pick it up, though old shots may still need it). Five words. We resisted adding a sixth for a long time and I'm glad we did.</p>
+
+    <h2 id="truth" data-short="Many sources of truth">There is no single source of truth</h2>
+
+    <p>Here is the reveal that gives the chapter its title. We had assumed, as most people do, that somewhere there ought to be one place that knew the real state of every asset. Build that, point everything at it, and the arguments stop.</p>
+
+    <p>We never got one, and I now think we couldn't have. The production tracker, the database where people mark what has been approved, said the prop was approved. The file system said a file was there, but a different file than the one the tracker had in mind. The asset database said something else about which version carried the “latest good” label. And the artist, quite reasonably, said “I fixed that yesterday,” which was true and appeared in none of the other three.</p>
+
+    <p>Each source is right about something. The tracker is right about what people decided. The disk is right about which bytes exist. The asset database is right about versions and labels. The artist is right about what they meant to do. They disagree because they are answering different questions.</p>
+
+    <p>For a while we tried to reconcile them, a nightly job that compared all four and repaired the differences. It mostly produced a long report that nobody read, and a few repairs that someone later had to undo. The better move was to stop trying to merge the truths and decide, for each kind of question, which one wins. The result was not one database to rule them all, but <em>clear ownership of each fact</em>. I'll give that idea its own section in a moment, because it turned out to be the most useful thing in the chapter.</p>
+
+    <p>One more point before then. Everything above tells us <em>which version exists</em>. It doesn't tell us which versions a particular frame actually used on the night it was rendered. That needs a record of its own, and <span class="xref">Ch. 6</span> builds it on top of the publish records we've just described.</p>
+
+    <h2 id="lanes" data-short="The lane problem">The lane problem</h2>
+
+    <p>The prop in question was approved in the tracker, present on disk, and labeled “latest good” in the asset database. By every system's account it was fine. Yet three artists were each using a different copy of it. One had a version copied to a personal folder weeks earlier, one had pinned an older publish, and one was following the label.</p>
+
+    <p>Nothing was wrong in any single place. The mismatch lived between them. That's what I call <dfn>the lane problem</dfn>: <em>who owns which fact about an asset</em>. Trouble starts when a fact is answered from the wrong lane, or when two lanes each believe the fact is theirs.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Lane</th><th>Owns this fact</th><th>Does not own</th></tr></thead>
+          <tbody>
+            <tr><td><b>Tracker</b></td><td>Approval status: what someone with authority decided</td><td>Whether the bytes exist; which file a shot is using</td></tr>
+            <tr><td><b>File system</b></td><td>What bytes exist, and where</td><td>Whether they are approved or current</td></tr>
+            <tr><td><b>Asset database</b></td><td>Versions, labels and pins</td><td>Whether a decision was made; what an artist intended</td></tr>
+            <tr><td><b>The artist</b></td><td>Intent: what they meant, what they changed</td><td>Anything that others must rely on until it is published</td></tr>
+            <tr><td><b>The asset's builder</b></td><td>Weight and behavior: polygon count, memory use, how it deforms</td><td>Which shots use it, and when</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Figure 4.4</b>The lane matrix. Each fact has exactly one owner, and each owner is not allowed to answer questions that belong elsewhere.</figcaption>
+    </figure>
+
+    <p>The last row in that matrix is the one later chapters lean on, so let me spend a paragraph on it. The weight and behavior of an asset belong to whoever built it. If a prop arrives in a shot at 40 GB, or a tree makes a simulation crawl, the team that discovers this is almost never the team that made it. A lighter finds out on a Thursday. The fix, though, belongs in the builder's lane: smaller textures, simpler geometry, a lighter rig. When we left it with the downstream team, they patched it in their shot, and the next shot found the same problem. <span class="xref">Ch. 9</span> and <span class="xref">Ch. 11</span> both come back to this.</p>
+
+    <p>The rule we adopted has three parts. One owner per fact. An explicit handoff whenever a fact crosses lanes, so it is moved on purpose and not guessed. And a disagreement is a bug report against the lane that answered, not a debate about whose answer is right. That last part changed the tone of the meetings more than any tool did. “The tracker said approved and the label pointed elsewhere” is now a ticket with an owner, not an argument with two.</p>
+
+    <p>I should be honest about the cost. Lanes need a referee, someone who decides when it isn't clear whose fact it is. For about a month, the referee was me. It was not a good use of anyone's time, least of all mine, and it ended only when the rules were written down clearly enough that people could apply them without asking.</p>
+
+    <h2 id="keeping" data-short="The cost of keeping everything">The cost of keeping everything</h2>
+
+    <p>If publishes are immutable, you'd think the simplest policy is to keep them all. For published versions, that's what we do, indefinitely. They are the record, and they're comparatively small in number. Work saves are another story. An artist saves a few hundred times in a week, and at tens of gigabytes per asset you cannot keep them all forever without that becoming the budget.</p>
+
+    <p>So we settled on a policy. Published versions are kept without limit. Work saves are kept for six weeks, then thinned to one a day. Approved versions of a finished show move to cold storage, cheaper and slower, which <span class="xref">Ch. 7</span> covers properly.</p>
+
+    <p>The policy has that tidy shape because of one bad day. A routine cleanup of “old scratch” removed what looked like abandoned files, and among them was a lighter's unpublished override for the giant's hero shot, a week before delivery. The override had never been published, so nothing in the asset database knew it existed. By any rule we then had, it was exactly the kind of thing a cleanup is allowed to delete.</p>
+
+    <p>We got it back by luck. A render node still held the file in its local cache, and someone thought to look. I wrote the six-week rule that same afternoon. It's a plain rule, and it isn't clever, and I have thought about that file more often than I'd like to admit.</p>
+
+    <h2 id="stuck" data-short="What stuck with me">What stuck with me</h2>
+
+    <p>Looking back, the Friday texture wasn't a mistake by one artist. It was the result of a rule we wrote ourselves, in which a name meant “current best” and publishing meant replacing it. The weekend of re-renders was the system working exactly as designed. We hadn't built a safe pipeline. We'd built a fast one that trusted a name.</p>
+
+    <p>The naming is the other half. Early on we had a folder on the shared drive that grew a new suffix every Friday, the polite cousin of the “final_final_v2” files from <span class="xref">Ch. 1</span>. It was our own habit, and it was telling us something we didn't want to hear: when a name has to carry the whole meaning, people will keep adding to it. A path tells you where something is. An identity tells you which thing it is. We needed the second and we had been using the first. That gap is why version identity mattered so much when we later had to migrate storage and scene formats (<span class="xref">Ch. 28</span>).</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">Takeaway</span>
+      <p>Name the thing, freeze the thing, and let people point at it. In a pipeline, “latest” is an opinion, not a fact.</p>
+    </div>
+
+    <p>Versions tell us <em>which</em> files. They don't tell us what's inside them, or whether two tools can even agree on what a scene is. That's where the real arguments begin, and it's the subject of <span class="xref">Ch. 5</span>.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

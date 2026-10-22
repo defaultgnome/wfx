@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taming Memory · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 9. Memory is the budget nobody can borrow against. How a path tracer eats RAM, why instancing is the big lever, and why the cheapest polygon is the one you never load.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch9">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part III · Rendering</p>
+    <p class="chap-num" aria-hidden="true">09</p>
+    <h1>Taming Memory</h1>
+    <p class="dek">Compute can be waited out. Memory runs out, and the task dies. Most of the craft is deciding what never needs to exist in memory at all.</p>
+    <p class="meta"><span>Chapter 9</span><span>Continues from Chapter 8</span><span id="reading-time">16 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">The frame had rendered fine the day before. <em>At 3 a.m. it died on a node with exactly the same RAM as always.</em></p>
+
+    <p>The alert was the usual kind: one task, one out-of-memory kill, no stack trace worth reading. The scene hadn't changed in any way anyone could name. A lighter had added one hedge along a garden wall, and the hedge looked small. In the viewport it was a few green slabs. On the farm it turned out to be about thirty-five million polygons, modeled by nobody, produced by a procedural tool that only looked small, and the whole thing hung on one “density” slider that someone had nudged from 3 to 4.</p>
+
+    <p>That is not a story about a careless lighter. The slider was labeled the way sliders are labeled. It is a story about a budget that nobody could see, and it is the whole chapter in miniature. Chapter 8 left us with a renderer that is correct and hungry. This chapter is about feeding it, on machines whose RAM is fixed, with scenes that are not.</p>
+
+    <p>If you remember one line, make it this one: <strong>the cheapest polygon is the one you never load.</strong></p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>My first instinct, I'm sorry to say, was to buy more RAM. It is a cheerful instinct and it works more often than engineers admit. Memory is cheap next to an artist's week, and a node with twice the RAM is a pleasant afternoon of procurement paperwork. For years our answer to a hungry scene was a bigger machine.</p>
+
+    <p>Then the farm got big. Recall from Chapter 2 the shape of it: about 5,000 nodes of 64 cores each, and a standard node carries 512 GB of RAM, which is about 8 GB per core. We also keep a smaller <dfn>high-memory pool</dfn> of nodes with 1 TB. That sounds like plenty until you multiply. Doubling RAM across 5,000 nodes is not a purchase, it is a program, with a budget line and a year of arguments. And the next tier up is rarely a bigger version of the same machine. It is a different class of machine, with different availability and a different price per core.</p>
+
+    <p>So the standard node is a fact of life, the high-memory pool is a scarce favor, and every shot that needs the pool is a shot that waits in a shorter line (more on that queue in <span class="xref">Ch. 19</span>). Buying RAM stopped being the answer and became the last resort. I wish I'd noticed sooner. I spent two shows believing RAM was cheap, and then spent a third paying for the belief.</p>
+
+    <h2 id="hungry" data-short="Why the budget is hard">Why the budget is hard</h2>
+
+    <p>To see why a path tracer is so greedy, picture two kinds of kitchens. A rasterizer is a sushi bar: the plates go past the customer one at a time, and when a plate has gone by, it's gone. You can stream the scene past the camera and forget each piece after you've drawn it. Memory use stays roughly flat no matter how big the scene gets.</p>
+
+    <p>A path tracer is a warehouse with a very odd picking system. Every ray of light bounces, and where it bounces next depends on where it just landed. A ray that starts at the giant's shoulder might end up in the hedge, or the sky, or the far side of a tree, and the very next ray might go somewhere else entirely. Any ray can ask for anything. You cannot stream the scene past the camera, because there is no one order in which everything is needed. So the renderer wants the whole warehouse on the shelves before it picks a single order.</p>
+
+    <p>What fills the shelves? Four things, plus a fifth that people forget.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>What</th><th>Typical shot</th><th>Monster shot</th><th>Why it grows</th></tr></thead>
+          <tbody>
+            <tr><td>Geometry</td><td><span class="pips" data-n="2"></span><span class="size">~60 GB</span></td><td><span class="pips" data-n="3"></span><span class="size">~250 GB</span></td><td class="who">Polygon counts, hair, vegetation</td></tr>
+            <tr><td>Acceleration structures</td><td><span class="pips" data-n="2"></span><span class="size">~40 GB</span></td><td><span class="pips" data-n="3"></span><span class="size">~200 GB</span></td><td class="who">One per piece of geometry</td></tr>
+            <tr><td>Textures</td><td><span class="pips" data-n="2"></span><span class="size">~30 GB</span></td><td><span class="pips" data-n="2"></span><span class="size">~90 GB</span></td><td class="who">Resolution, number of assets</td></tr>
+            <tr><td>Volumes</td><td><span class="pips" data-n="1"></span><span class="size">~5 GB</span></td><td><span class="pips" data-n="3"></span><span class="size">~120 GB</span></td><td class="who">Mist, smoke, fire, sampled in 3D</td></tr>
+            <tr><td>Renderer working set</td><td><span class="pips" data-n="1"></span><span class="size">~15 GB</span></td><td><span class="pips" data-n="2"></span><span class="size">~40 GB</span></td><td class="who">Image buffers, per-thread scratch</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 9.1</b>Where the memory goes, as rough orders of magnitude. The monster column is one real kind of shot, not a ceiling: it adds up to about 700 GB at peak, which is the figure we'll come back to. Illustrative and rounded.</figcaption>
+    </figure>
+
+    <p>The surprising line is the second one. An <dfn>acceleration structure</dfn> is the index the renderer builds so that a ray can find what it hits without testing every polygon in the scene. Think of the index at the back of a very large cookbook. Nobody counts it as part of the recipes, but in a heavy scene it can rival the geometry itself, because it has to describe the same millions of things. I didn't believe this until I saw the profile. We had been optimizing models for weeks while the index quietly matched them byte for byte.</p>
+
+    <p>Then there is the matter of <em>when</em> the memory is used. A task doesn't need the same amount all the way through. It reads the scene, builds the indexes, and only then starts tracing, and the first two steps can need more than the third. The task that dies is the peak one, and the peak is often in setup, long before the first pixel appears. This produces a particularly rude failure: a render that crashes after twenty minutes of apparent progress, and which then needs a person to tell it from one that was merely slow. Failures like that are <span class="xref">Ch. 20</span>'s territory.</p>
+
+    <p>And remember the long tail from Chapter 2. The farm is not sized for the average shot. It is sized, in practice, for the ninety-ninth percentile, because the one shot that doesn't fit is the one that stalls the show. A single monster scene sets the requirement for everybody.</p>
+
+    <p>Our giant is a fair example, and not the one you'd guess. You would expect his body to be the heavy part. It wasn't. His body was a few tens of gigabytes. The mist volume curling around his legs and the moss fur on his shoulders were what pushed some of his renders past the standard 512 GB node and onto the 1 TB pool, on about a third of his versions at one stage. Nobody had been looking at the mist, which is a theme for that shot (we met him in <span class="xref">Ch. 1</span>).</p>
+
+    <h2 id="instancing" data-short="Instancing, and how it quietly breaks">Instancing, and how it quietly breaks</h2>
+
+    <p>The biggest lever we have is also the oldest. A forest is not ten million trees. It is one tree and ten million notes saying <em>put a copy here, turned this way, this big</em>. That is <dfn>instancing</dfn>: one stored copy, many placements. A tree might cost 3 GB with its leaves and bark. Stored once and placed ten million times, it still costs about 3 GB plus the placements, which are a few dozen bytes apiece. Stored ten million times, it costs the entire farm.</p>
+
+    <p>It gets better, and then it gets dangerous. Instances can contain instances. A branch is placed on a tree, the tree is placed in a grove, the grove is placed across a valley, and the valley is one of three. This is <dfn>hierarchical instancing</dfn>, and the multiplication is wonderful: a few gigabytes of stored data can describe more polygons than anyone could afford to hold.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Level</th><th>What is stored</th><th>What the renderer sees</th></tr></thead>
+          <tbody>
+            <tr><td>One tree</td><td>1 tree, ~3 GB</td><td class="who">~3 GB</td></tr>
+            <tr><td>A grove</td><td>1 tree + 500 placements</td><td class="who">500 trees</td></tr>
+            <tr><td>A valley</td><td>1 grove + 400 placements</td><td class="who">200,000 trees</td></tr>
+            <tr><td>The whole view</td><td>1 valley + 50 placements</td><td class="who">10 million trees</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 9.2</b>Instancing multiplication. Stored, this is a tree and some arithmetic. Unstored, it is about 30 petabytes, which no farm owns. Illustrative.</figcaption>
+    </figure>
+
+    <p>The failure mode is quiet, and it always starts with a reasonable request. A supervisor looks at the valley and says the third tree from the left is too symmetrical. An artist fixes it. To fix it, they have to make that one tree its own object, because an instance cannot differ from its siblings. “Just one more tree,” someone says, and it is the sentence that ends budgets. One tree is 3 GB. It is also, innocently, the thing that proves the rule, because nobody sets out to break instancing. They set out to improve a tree.</p>
+
+    <p>Here's how it usually breaks:</p>
+
+    <ul class="questions">
+      <li><span>A tiny per-copy edit forces that copy to be stored in full.</span></li>
+      <li><span>A unique material on one instance can make the renderer treat it as a separate object.</span></li>
+      <li><span>A “make it real” operation, meant to turn placements into editable geometry, flattens everything at once.</span></li>
+      <li><span>Translation between tools drops the instancing and hands the renderer the expanded version. <span class="xref">Ch. 5</span></span></li>
+    </ul>
+
+    <p>That last item deserves emphasis, since it's the one nobody can see from their own desk. Instancing is a property of the scene description, and it has to survive every handoff on the way to the renderer. A tool that wrote placements faithfully and a tool that read them back as full copies together add up to a very expensive misunderstanding. We found one such converter that had been silently expanding a particular kind of grove for two shows. It cost us a few hundred gigabytes per heavy shot and nobody noticed, because it still rendered, only on a bigger machine.</p>
+
+    <p>What worked was making the right thing the <em>easy</em> thing. We stopped asking artists to remember and taught the tools to warn. If an edit was about to turn a 3 GB tree into 3 GB times four hundred, the tool said so, in plain words, before the edit. People did not need to be told to care about memory. They needed to be told, at the moment it mattered, what it would cost.</p>
+
+    <h2 id="lazy" data-short="Make geometry only when needed">Make geometry only when needed</h2>
+
+    <p>Instancing saves memory by sharing. The second family of tricks saves it by waiting. If a polygon is behind the giant, or sixty meters from the camera and the size of a grain of rice, why would it exist at all?</p>
+
+    <p><dfn>Level of detail</dfn> is the simplest version. The tree two meters from the camera is the full model. The tree on the far ridge is a cheap stand-in, and the renderer picks which to use per frame. The trick is making sure nobody can tell. The better version is <em>procedural</em> geometry: the scene stores a recipe instead of the result, and the renderer builds the polygons when a ray needs that region, then discards them afterward.</p>
+
+    <p>Displacement works the same way. An artist paints a rough bark texture that should physically bump the surface. Stored in full, the bark would multiply the polygon count a hundredfold. Instead the model stays smooth and small on disk, and the bumps are applied late, at render time, only where a ray is actually looking. Subdivision is the cousin: store a coarse cage, and let the renderer refine it where the camera cares.</p>
+
+    <p>Hair and fur are the extreme case. A character can carry millions of individual strands, and storing every one of them is a losing proposition, so they are generated, from a few thousand guide curves, at the moment they are needed. (That is a story for <span class="xref">Ch. 14</span>, and for vegetation, <span class="xref">Ch. 15</span>.) The pattern repeats: store the cause, not the effect.</p>
+
+    <p>Lazy geometry is not free, and I'd be a poor guide if I pretended otherwise. It costs CPU, since the same polygons may be built, thrown away and built again. And it makes renders harder to reproduce exactly. If the recipe changes between versions of a plugin, the same scene can quietly produce a different hedge, which is a cousin of the mystery in <span class="xref">Ch. 6</span>. We now record the version of every procedural recipe next to the frame. We learned that, as we learned most things, by being asked “why does this look different?” and having no answer.</p>
+
+    <h2 id="out-of-core" data-short="Out of core: the scene on disk">Out of core: keeping the scene on disk</h2>
+
+    <p>Sometimes the scene is simply bigger than the machine, and no amount of cleverness changes that. The remaining option is <dfn>out-of-core</dfn> rendering: keep the hot part of the scene in RAM, leave the rest on disk, and fetch it when needed. Computer scientists have used this idea for decades. It's the same idea as a desk and a filing cabinet.</p>
+
+    <p>The trouble is the word <em>hot</em>. In most software, what you will need next is a little like what you needed just now. Rays are not like that. Neighboring rays on screen can fly off to opposite ends of the scene, so the access pattern is, to put it politely, rude. A naive out-of-core renderer spends more time fetching than tracing.</p>
+
+    <p>So the work is in improving the odds. The renderer can sort rays so that those heading for the same region are processed together, which turns many random reads into a few bulk ones. It can cache meshes and texture tiles it has just used, on the bet that someone else will want them soon. And it can share read-only data between processes on a node: the same trees, the same textures, held once in memory and read by several tasks, instead of once per task. That last one is dull and extremely effective. On a 64-core node it is often worth more than any clever paging.</p>
+
+    <p>Textures are the gentlest case of all. A texture stored as one huge image has to be loaded whole. A texture stored as tiles, at several resolutions, can be read in pieces: only the tiles on screen, at only the resolution the camera needs. The giant's skin textures went from a gigabyte or two each, wholly loaded, to a few hundred megabytes touched. It is the nearest thing to a free lunch in this chapter, and even it demands that someone convert the textures first.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 190" role="img" aria-labelledby="f1t f1d">
+          <title id="f1t">From everything in RAM to everything paged</title>
+          <desc id="f1d">A horizontal spectrum with three zones. On the left, everything in memory: fastest, but tasks die when the scene does not fit. In the middle, a hot working set in memory with the rest on disk: slower and more disk traffic. On the right, mostly paged: always fits, but very slow.</desc>
+          <rect class="belt" x="20" y="60" width="780" height="14" rx="7"/>
+          <g class="node">
+            <rect x="20" y="96" width="240" height="70" rx="8"/><text x="140" y="124">Everything in RAM</text><text class="sm" x="140" y="148">fastest, dies if it doesn't fit</text>
+            <rect x="290" y="96" width="240" height="70" rx="8"/><text x="410" y="124">Hot set in RAM</text><text class="sm" x="410" y="148">slower, more disk traffic</text>
+            <rect x="560" y="96" width="240" height="70" rx="8"/><text x="680" y="124">Mostly paged</text><text class="sm" x="680" y="148">always fits, very slow</text>
+          </g>
+          <g class="tick"><text x="140" y="46">speed</text><text x="680" y="46">safety</text></g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 9.1</b>The out-of-core spectrum. Neither end is where we want to live, and the middle has its own price. Cost goes up toward the right; so does the chance of finishing.</figcaption>
+    </figure>
+
+    <p>Out-of-core is not free, and two of its costs are easy to underestimate. The first is speed: a render that fits only by paging might run two or three times slower, and the farm bills for every hour of it. The second is I/O. A thousand tasks each pulling their own cold data from the same file servers is exactly the pile-up that <span class="xref">Ch. 7</span> was about, and we learned that the hard way too. Out-of-core moves a memory problem onto the network, and the network does not thank you.</p>
+
+    <p>When is it worth it? When the scene is only a little over budget, when it's a handful of frames, or when the deadline is tomorrow. When the scene is hopelessly over, the better answer is almost always to simplify the scene. Paging is a bridge. It is a poor place to build a house.</p>
+
+    <h2 id="contract" data-short="Memory as a contract">Memory as a contract</h2>
+
+    <p>All of the above is engineering. What actually changed our outcomes was something closer to manners.</p>
+
+    <p>We started giving assets and shots a <dfn>memory budget</dfn>, and a report an artist could read. For each asset, the report said what it cost in plain gigabytes and, more importantly, why. We hung warnings on it far upstream of lighting, where the news is cheap, instead of at 3 a.m., where it's a render task dying. The report looked something like this.</p>
+
+    <div class="callout record">
+      <span class="callout-label">Memory report (illustrative)</span>
+      <p><strong>hedge_garden_wall</strong> &mdash; budget 20 GB, now 31 GB, over by 11 GB.<br>
+      Why: procedural density 4 generates about 35 million polygons across 30 sections, and each section is seeded differently, so none can be shared.<br>
+      Try: seed shared across copies (saves about 22 GB); density 3 beyond the second bay (saves about 8 GB).<br>
+      Need the full thing anyway? Ask for a high-memory slot, and tell us why.</p>
+    </div>
+
+    <p>Notice the last line. A budget that is a wall gets routed around, so ours is guidance with a door in it. If a shot genuinely needs the monster, there is a path: an asset lead signs off, the shot is marked, and it is scheduled on the high-memory pool. The point is not to forbid heavy shots. It is that nobody gets surprised.</p>
+
+    <p>Then there is the question of who owns the number. It would be easy to say the renderer team, since they wrote the thing that runs out of memory. That's the wrong answer, and it took us a while to see why. A renderer cannot make a hedge cheaper. The people who can are the ones who build and edit the assets. This is the lane problem from <span class="xref">Ch. 4</span> in a new coat: who owns which fact about an asset. For its looks, it's the artist. For its geometry, the modeler. For its <em>weight</em>, nobody, until we gave the asset builders the report and told them it was theirs.</p>
+
+    <p>I should confess that the loudest resistance disappeared in a single meeting, and not because of anything clever. The report showed “this tree costs 3 GB” next to an asset name, and three different teams had spelled that name three different ways. It was my own naming rule coming home. We spent the first hour of the meeting arguing about whether they were the same tree, and the second agreeing that the answer was yes, and that the tree was too big. It was the cheapest consensus of my career.</p>
+
+    <h3>One monster, before and after</h3>
+
+    <p>The proof, such as it is, came from a single sequence. It was a long garden wall under heavy mist, exactly the kind of shot that sets the requirement for everybody, and it peaked at about 700 GB. That meant the 1 TB pool, a queue, and a lot of apologetic messages. We spent two weeks going through the list below, in the order of how much each item bought us.</p>
+
+    <ol class="stages">
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">1</span>
+        <h3>Restore instancing</h3>
+        <p class="kitchen">About 170 GB saved</p>
+        <p>The converter problem described above, plus a handful of hedges that had been “made real” for a single fix and never put back. Most of the win was undoing damage.</p>
+      </li>
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">2</span>
+        <h3>Move displacement late</h3>
+        <p class="kitchen">About 90 GB saved</p>
+        <p>The stone wall had been stored with its detail baked into the polygons. We put the bumps back where they belonged, at render time.</p>
+      </li>
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">3</span>
+        <h3>Tile the textures</h3>
+        <p class="kitchen">About 40 GB saved</p>
+        <p>Dull, mechanical and entirely effective, as promised.</p>
+      </li>
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">4</span>
+        <h3>Trim the mist</h3>
+        <p class="kitchen">About 20 GB saved</p>
+        <p>A volume sampled at a resolution finer than anyone could see, along the far edge of the frame, where it was mostly a rumor.</p>
+      </li>
+    </ol>
+
+    <p>The total came to about 380 GB at peak, a little more than half of where we started. That fits on a standard node with room to spare, which meant the shot could run anywhere. It is a satisfying story, and I'd like you to trust it exactly as much as it deserves, since the numbers are rounded and the first item did most of the work. The savings were mostly the removal of mistakes. Almost none of it was new technique.</p>
+
+    <h2 id="footnote" data-short="What still isn't solved">What still isn't solved</h2>
+
+    <p>I'd be misleading you if I said the budget is tamed. Three things remain unsolved, and I expect them to stay that way.</p>
+
+    <p>Out-of-core renders are correct but slow, and slow has a cost the memory report doesn't show. A shot that only fits by paging can take three times longer, and the farm quietly pays the difference. Our estimates of memory are also wrong, and in the unlucky direction. We guess from the scene, the task grows during setup, and the node the task landed on is the one that doesn't have room. We under-ask for memory far more often than we over-ask, because over-asking is visible and under-asking is merely an alert at 3 a.m.</p>
+
+    <p>And the next show will double the asset sizes. It always does. Directors want more hair, more mist, more wall, and every one of those is a perfectly good creative reason. The budget moves because the work moves. A memory budget is not a thing you set. It is a thing you keep renegotiating, preferably early, and in daylight.</p>
+
+    <p>Packing is the last loose end. A task that needs 400 GB wastes most of a 64-core node if it's the only thing running there, since the other cores have nothing left to eat. Where those cores go is a scheduling question, and it belongs to <span class="xref">Ch. 19</span>. What happens to the task when it fails regardless belongs to <span class="xref">Ch. 20</span>.</p>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>The hedge is still there. It's the same procedural tool, with the same density slider, except that the slider now carries a label that says what the setting costs in gigabytes, and what it cost the last time somebody moved it. Density 4 is still allowed. It just doesn't ambush anyone at 3 a.m. any more.</p>
+
+    <p>The giant, I should add, never stopped being heavy. He simply stopped being a surprise. His mist is trimmed, his moss is tiled and shared, and his renders no longer need to ask for the high-memory pool in every third version. He is the same giant. We stopped paying for the parts nobody could see.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">Takeaway</span>
+      <p>An out-of-memory kill is not a crash. It's the system reporting an overdraft. The cheapest polygon is the one you never load.</p>
+    </div>
+
+    <p>Once a frame fits and finishes, it comes out noisy, and the next question is entirely different: how much noise will an artist accept, who gets to decide, and how do you earn their trust in the answer? That is <span class="xref">Chapter 10</span>.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Water, Fire, Destruction · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 12. A solver is the easy part. The framework around it, meaning the data, the handoffs, the restarts and the steering knobs, decides whether an artist can finish a shot.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch12">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part IV · Simulation and Procedural Systems</p>
+    <p class="chap-num" aria-hidden="true">12</p>
+    <h1>Water, Fire, Destruction</h1>
+    <p class="dek">Nine seconds of water, six terabytes of cache, and one note: the same, but with less foam. A solver is the easy part. The workflow around it is the product.</p>
+    <p class="meta"><span>Chapter 12</span><span>Continues from Chapter 11</span><span id="reading-time">15 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">The email arrived on a Tuesday morning, and it contained one number: <em>six terabytes.</em></p>
+
+    <p>It was the storage report for a single wave shot. Nine seconds of water crashing over a harbor wall, and its simulation had written more data than the whole show had produced in its first month. <span class="xref">Ch. 2</span> warned us that simulation caches are the heaviest data in a shot; it is different to read it in an inbox. Nobody had done anything wrong. The water, I should say, looked wonderful.</p>
+
+    <p>The trouble came on Thursday, when the director watched it and said, kindly, “Great. Can we have the same, but with less foam?” It is a perfectly reasonable note. It took us a while to see that we couldn't answer it, because nobody could say with confidence which version of the setup had produced that water. The note, and what it took to answer it, is the thread of this chapter. We'll come back to it at the end.</p>
+
+    <p>This is the first chapter of Part IV, and the subject changes. Part III was about turning a scene into pixels. This part is about making the scene move in ways no animator could do by hand: oceans, flames, collapsing buildings, and, in the chapters after this one, crowds, cloth, hair and forests. We start with the three big “effects” simulations, and with an organizational question as much as a technical one: do you build one general framework for all of them, or one solver per phenomenon, and who owns what? There's a third reason to care. Every show is a new product, and each one arrives with a look that quietly resets the target for every simulation setting we trusted on the last.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>I came to simulation with a tidy belief. Simulation is physics. Physics is deterministic. So a good solver, fed good inputs, gives you <em>the answer</em>, and the work is mostly getting the equations right.</p>
+
+    <p>Two things are wrong with that, and I found both within my first month. First, nobody wants the answer. The director wants <em>this</em> splash, a little bigger, a little to the left, arriving about four frames later. A solver that has done exactly what the laws of physics require has, in the director's eyes, done it wrong. Physics gets you the first 80 percent of the shot. The director's notes are the other 80 percent.</p>
+
+    <p>Second, “deterministic” turns out to be an aspiration rather than a property. Run the same setup twice on a farm that spreads one simulation across many cores, and the arithmetic can be added up in a slightly different order each time. Floating-point addition isn't perfectly associative, so tiny differences appear and then grow, because a simulation feeds each frame into the next. Two runs that begin identical can end up with water in visibly different places. We got fully repeatable results only where we paid for them, with fixed seeds, fixed thread layouts and pinned software, and I'll say plainly that even then we trusted “very close” more than “identical.”</p>
+
+    <h2 id="trouble" data-short="Three kinds of trouble">Three kinds of trouble</h2>
+
+    <p>First, a few terms. A <dfn>simulation</dfn> is a time-stepped computation: it takes a setup (shapes, forces, materials) and advances it a tiny slice of time, the <dfn>time step</dfn>, over and over. A <dfn>solver</dfn> is the program that does the stepping. What comes out is a <dfn>simulation cache</dfn>, a per-frame record of the result, which lighting and rendering then treat as ordinary data. (This is a different thing from the storage cache of <span class="xref">Ch. 7</span>, which is a nearby copy of a file that spares the shared storage. In this chapter, “cache” means the first kind.)</p>
+
+    <p>The key property is that simulation is sequential in time. Frame 200 needs frame 199. Rendering, the subject of Part III, is the opposite: every frame is independent, so you can hand sixty frames to sixty machines and go to lunch. A simulation can't be dealt out like cards. That one fact causes much of what follows.</p>
+
+    <p>The three phenomena in this chapter are hard in different ways, and the differences matter more than the equations.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Phenomenon</th><th>What it is, in data</th><th>What makes it hard</th><th>Where it hurts downstream</th></tr></thead>
+          <tbody>
+            <tr><td>Water</td><td>Millions to billions of particles, plus a surface mesh built from them</td><td>Sheer count; the surface must be meshed; foam and spray live apart from the bulk</td><td>Storage. Terabytes for a hero shot</td></tr>
+            <tr><td>Fire and smoke</td><td>A grid of <dfn>voxels</dfn>, the 3D cousins of pixels (the “volume” of volumetric data, not the capture volume of <span class="xref">Ch. 16</span>), each holding temperature, density and velocity</td><td>Fast-changing fine detail; look depends on how it is lit</td><td>Memory in lighting and rendering (<span class="xref">Ch. 9</span>)</td></tr>
+            <tr><td>Destruction</td><td>Thousands of rigid pieces, plus <dfn>constraints</dfn>, the rules that hold pieces together until they shouldn't</td><td>Pieces multiply as things break; contact between them is chaotic</td><td>Counts: huge numbers of tiny objects for every tool downstream</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Figure 12.1</b>Three phenomena, three different ways of being expensive.</figcaption>
+    </figure>
+
+    <p>Water was the one that taught us about cache size. Our wave started as a coarse simulation of the bulk, and then foam, spray and mist were generated on top of it, each in its own cache. Where does the foam live? The honest answer is “in several places, and the director wants to change one of them.” Fire taught us about coupling: flames emit light, so a fire that looks right in isolation can look wrong the moment it sits in a lit scene. Destruction taught us about counts. A wall that breaks into forty big chunks is fine, and one that breaks into forty thousand is a different problem for every tool that has to open the result.</p>
+
+    <h2 id="budget" data-short="Resolution is a budget">Resolution is a budget</h2>
+
+    <p>Every artist learns the same lesson on their first overnight run, and it goes like this. In a fluid, doubling the detail means twice as many cells along each of three dimensions, so eight times as many cells. The time step must also shrink to keep the thing stable, which roughly doubles the number of steps. About sixteen times the compute for one notch more detail. The first time you do the arithmetic it feels like a mistake. It isn't.</p>
+
+    <p>So detail is a budget, spent knowingly. We settled on a life for every simulation, and it's the one the artists would have chosen if we'd asked sooner.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Stage</th><th>What happens</th><th>Typical time</th><th>Who decides it's good</th></tr></thead>
+          <tbody>
+            <tr><td>1. Setup</td><td>Shapes, forces, materials, where the water starts</td><td>Hours of artist time</td><td>The effects artist</td></tr>
+            <tr><td>2. Low-res test</td><td>Same motion, a fraction of the detail</td><td>About ten minutes</td><td>The artist, over and over</td></tr>
+            <tr><td>3. Motion approval</td><td>The coarse result is shown in context</td><td>A review</td><td>Effects supervisor and director</td></tr>
+            <tr><td>4. High-res run</td><td>Add the detail, foam and spray</td><td>Overnight, sometimes two nights</td><td>Nobody, until morning</td></tr>
+            <tr><td>5. Cache and handoff</td><td>Versioned, checked, published to lighting</td><td>Minutes</td><td>The pipeline</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Figure 12.2</b>The life of a simulation. The cheap stages are where the shot gets decided; the expensive stage is where we find out whether we were right.</figcaption>
+    </figure>
+
+    <p>The reframe, for me, was that iteration speed beats fidelity. A low-resolution version that runs in ten minutes is worth far more than a perfect one that runs overnight, provided the two agree closely enough that approving the first means something. That proviso is where all the effort goes. “Same motion, more detail” sounds trivial, and it is not. Add detail to a fluid naively and the large-scale motion shifts: the wave breaks a little earlier, the splash lands a little to the side, and the approval you got on Thursday no longer describes the thing you rendered on Friday.</p>
+
+    <p>The trick that mostly works is to make the preview a <em>real</em> ancestor of the final. The coarse pass is run first, directed and approved, and its result is then fed forward as a guide, so the high-res run adds detail on top without being allowed to rewrite the motion. We'll return to that under steering. The point for now is that a cheap preview is only cheap if it can be trusted.</p>
+
+    <h2 id="choice" data-short="One framework or many solvers?">One framework or many solvers?</h2>
+
+    <p>This is the question the chapter turns on, so let me tell the history straight.</p>
+
+    <p>We began in what I'll call the bespoke era. Each phenomenon had its own hand-built program, brilliant in its niche, with its own file format, its own quirks and, almost always, its own one expert. Those experts were remarkable, and when a shot hit the edge of what their solver could do, they could fix it in an afternoon. But every show seemed to need a new way to move a cache from one tool to another, and when the expert went on holiday, so did the fire.</p>
+
+    <p>The alternative is a general-purpose framework: one data model, one way of caching, one set of tools for steering, and many solvers plugged in. It gives you reuse, one set of training for artists, and one cache format that everything downstream understands. It costs you the framework's own overhead, and, more subtly, the specialist's last ten percent. A solver written for exactly one phenomenon will usually beat the same solver wedged into a general frame.</p>
+
+    <p>So how do you decide? We applied the criteria from <span class="xref">Ch. 3</span> and added one question: <em>does the studio's look depend on it?</em> If a phenomenon is core to how our pictures look, and its needs change with every show, keep a bespoke path open. If it's routine, put it on the framework and move on with your life.</p>
+
+    <p>Here is what we landed on, including the part that doesn't fit. The shared framework carries water, smoke and rigid-body destruction. One in-house fire-and-smoke solver stays bespoke, because the studio's flames are part of what directors come to us for. It is also the one that still doesn't fit the shared cache format, which means every handoff to or from it goes through a converter that someone has to maintain. It has exactly one remaining expert. I'd like to tell you we have a plan for that, and what we have is a calendar reminder.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 840 290" role="img" aria-labelledby="f3t12 f3d12">
+          <title id="f3t12">Layers of the simulation framework</title>
+          <desc id="f3d12">Three stacked layers. At the bottom, shared services: data model, caching, scheduling and versioning. In the middle, solvers as plug-ins: water, smoke, destruction, and a separate bespoke fire solver. On top, artist tools for setup and steering. Each layer is marked as adopted, custom or bolted on.</desc>
+          <g class="node">
+            <rect x="10" y="10" width="820" height="70" rx="10"/>
+            <text x="420" y="36">Artist tools: setup, steering, preview, restart</text>
+            <text x="420" y="62" style="font-size:13px">custom, thin, built on the framework's own tools</text>
+            <rect x="10" y="100" width="190" height="70" rx="10"/><text x="105" y="130">Water solver</text><text x="105" y="152" style="font-size:12px">adopted</text>
+            <rect x="215" y="100" width="190" height="70" rx="10"/><text x="310" y="130">Smoke solver</text><text x="310" y="152" style="font-size:12px">adopted</text>
+            <rect x="420" y="100" width="190" height="70" rx="10"/><text x="515" y="130">Destruction</text><text x="515" y="152" style="font-size:12px">adopted, in-house tuning</text>
+            <rect x="640" y="100" width="190" height="70" rx="10"/><text x="735" y="130">Fire solver</text><text x="735" y="152" style="font-size:12px">custom, private cache format</text>
+            <rect x="10" y="190" width="820" height="90" rx="10"/>
+            <text x="420" y="218">Shared services: data model, caching, scheduling, versioning</text>
+            <text x="420" y="246" style="font-size:13px">custom, on top of adopted file formats</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 12.3</b>The layers we ended up with, in the vocabulary of Chapter 3. The fire solver sits in the solver row but only half-connects to the layer below. That gap is the bit that still doesn't fit.</figcaption>
+    </figure>
+
+    <p>The split of ownership mattered as much as the split of code. Effects artists own the setups and the look. Pipeline engineers own the framework, the caches and the ability to restart a failed run. A small research group owns the solvers themselves. Each of those three groups used to assume one of the others was handling something, and now there's a list.</p>
+
+    <div class="record">
+      <span class="callout-label">Decision record · the fire solver (illustrative)</span>
+      <h4>Keep the in-house fire solver outside the shared framework?</h4>
+      <dl>
+        <div><dt>Context</dt><dd>The framework was carrying water, smoke and destruction well. The fire solver produced a look directors specifically asked for, and its data didn't fit the shared cache format.</dd></div>
+        <div><dt>Options considered</dt><dd>Port it onto the framework. Replace it with a commercial solver. Keep it bespoke and write a converter at the boundary.</dd></div>
+        <div><dt>Decision</dt><dd>Keep it bespoke, with a converter.</dd></div>
+        <div><dt>Because</dt><dd>The look depends on it, a port would cost a show's worth of schedule, and the converter confines the oddness to one place.</dd></div>
+        <div><dt>We'd change our mind if</dt><dd>A show needed fire on the shared cache path without conversion, or the one remaining expert left before a second person had learned it.</dd></div>
+        <div><dt>Review</dt><dd>At the next show's kickoff. That is when a show's look re-tests every setting, and it is the cheapest moment to ask.</dd></div>
+      </dl>
+    </div>
+
+    <p>I would draw the line in the same place again, with one change: I wouldn't have let the fire solver keep a private format. The look depended on its numerical choices, not on how it wrote its files, and I confused the two for longer than I like to admit.</p>
+
+    <h2 id="job" data-short="Simulation as a reproducible job">Simulation as a reproducible job</h2>
+
+    <p>Back to the wave. The reason we couldn't answer “less foam” was not physics. It was bookkeeping. The setup had been tweaked by hand, on a workstation, across a dozen test runs; the solver had been updated in the middle; and the seed that decided where the first droplets formed had been whatever it happened to be that day.</p>
+
+    <p>A simulation is a job like any other, and the same rule applies as for a render: if you can't reproduce it, you can't fix it. For a simulation, reproducing it means pinning four things: the setup, the input geometry, the solver version, and the random seeds. <span class="xref">Ch. 6</span> owns the mechanics of recording where things came from; here it is enough to say that each simulation cache carries a record of exactly those four, and refuses to be published without them.</p>
+
+    <div class="callout">
+      <span class="callout-label">A reproducible simulation job</span>
+      <p>Before a run counts, check that it has: the setup version, pinned. The input geometry, pinned. The solver and its build, pinned. Random seeds, fixed and recorded. A checkpoint every so often. A name and version for the cache it writes. A low-res sibling that was approved. And a note saying where it runs, because thread layout changes the arithmetic.</p>
+    </div>
+
+    <p>The checkpoint line deserves its own paragraph, because I learned it the way everyone does. A simulation is sequential, so if it dies, you can't just rerun the missing frames; you need the state of frame 199 to start frame 200. Ours was a forty-hour run, and it died at hour 39, with perfect punctuality. A checkpoint is a saved copy of the full state every so often, so that a death costs you an hour rather than a week. <span class="xref">Ch. 20</span> tells that story properly, and owns the mechanics of failure and restart. All I want to keep from it here is the simulation-specific part: you cannot restart from the middle without the middle.</p>
+
+    <p>Pinned inputs paid off in an unexpected place, on the giant. The misty forest around him held a ground-fog simulation, and his footsteps kicked up dust in it. Over his forty versions, every change to his walk raised the same question: does the fog have to be re-run? Mostly it did not. The fog cache was pinned, versioned and checked against its inputs, so we could say with evidence that his walk hadn't touched it, and skip a night of compute forty times over. It's a pleasant feeling, being right with a receipt.</p>
+
+    <p>The simulation caches themselves became first-class assets. They get names and versions like any other published data (<span class="xref">Ch. 4</span>), are compressed on the way out, and carry a retention rule, because six terabytes is not an amount one keeps out of sentiment. The rule we use is boring and works: keep the approved high-res cache, keep the approved low-res sibling, keep the setup that made them, and delete the experiments after a set time. Moving those terabytes around without hurting the shared storage is a story for <span class="xref">Ch. 7</span>.</p>
+
+    <p>One last problem is distributing a problem that doesn't want to be distributed. You can't split a simulation across time, but you can split it across space: cut the water into slabs, give each to a different machine, and have neighbors exchange their edges every step. It works, and it has a cost, which is the seams. Things that cross a boundary behave a little differently from things that don't, and sometimes you can see the line. We use it for the very largest shots, and we look at the seams in review the way a tailor does.</p>
+
+    <h2 id="steering" data-short="Steering the physics">Steering the physics</h2>
+
+    <p>Physics tells water what to do. A director tells it something else. Art direction, in simulation, is a control problem, and the frameworks that artists love are the ones that give them handles.</p>
+
+    <p>The handles come in a few kinds. Forces and guides push the result toward a shape: a gentle invisible hand under the wave, a field that tells the smoke where to go. “Cheats” deliberately break the physics: the flame that burns hotter than the fuel allows, the debris that falls a little slower because it looks better in the shot. And layering ties it together, as I described above. A coarse pass is directed and approved, then detail is added on top without changing the motion. The director's notes get answered at the cheap level, and the expensive level only adds texture.</p>
+
+    <p>There is a negotiation under all this, and it mirrors the one lighters had with us in <span class="xref">Ch. 10</span>. The effects supervisor decides what counts as “real”. Our job, on the pipeline side, is to make sure that when someone breaks the physics, they do it knowingly, in a place where the break is recorded, and not by accident in a corner of the setup nobody remembers. A cheat that is written down is a direction. A cheat that has been forgotten is a bug with a good reputation.</p>
+
+    <p>And there is an honest limit, which is that some notes can only be answered by rerunning overnight. “More chaos at the base of the wave” may need a different coarse result, which then needs a new approval, which then needs a new night. No framework removes that. What a framework can do is make sure that night is spent on the right thing and that you wake up able to compare this morning's wave with last night's.</p>
+
+    <h2 id="hurts" data-short="What still hurts">What still hurts</h2>
+
+    <p>Cache volume, first. Six terabytes for one shot is normal for a hero wave, and a show-month of effects shots dwarfs it. We compress, retain and delete, and storage still has the first and last word on how many versions anyone can afford.</p>
+
+    <p>Expertise is concentrated in very few people. The fire solver's one expert is the visible case. The invisible cases are the people who know why a particular setting is what it is, and the archaeology of finding out, in a solver whose defaults nobody can explain, is a recurring cost. The system is the punchline here, not the colleague: it was configured by a series of reasonable decisions that nobody wrote down, which is exactly the problem decision records exist to prevent.</p>
+
+    <p>Upgrades change results. A solver update that fixes a real bug also moves the water a few centimeters, and the approved shot from three weeks ago no longer matches the new run. We pin versions for the life of a shot and upgrade between shows, and we know that is a postponement rather than a solution.</p>
+
+    <p>There is also a pull toward learned approximations, meaning a model trained to imitate a solver's results at a fraction of the cost. It looks promising for previews, where fast and roughly right is exactly the job. I'll leave the opinion for <span class="xref">Ch. 31</span>, which is where it belongs.</p>
+
+    <p>Finally, a pointer. Cloth and clothing are simulations too, but they have their own concerns, and <span class="xref">Ch. 14</span> owns them.</p>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>We got the director's note back to answer. By then every wave had its four pinned inputs, a low-res sibling, and a checkpoint. We opened the approved setup, turned down the one foam layer that the note was about, reran at low resolution for a look, got a yes, and launched the high-res run that night. The director had the new version before the following Thursday's review, an afternoon of our attention and one overnight run rather than the week of guessing that the first version would have needed.</p>
+
+    <p>The wave still wrote a few terabytes, and the foam still did what foam wants. I stopped being surprised by that. What surprised me, looking back, was how little of the improvement came from the solver. It came from knowing what had been run, being able to run it again, and spending the cheap iterations before the expensive ones.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">Takeaway</span>
+      <p>The solver is a library. The workflow is the product.</p>
+    </div>
+
+    <p>A wave is a physics problem. The next chapter's problem is different: a stadium of ten thousand people, each of whom decides for themselves where to stand, and nobody of whom is in the least interested in the laws of fluid dynamics.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

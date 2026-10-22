@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scheduling a Million Jobs a Night · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 19. A scheduler is not a program that assigns tasks to machines. It is a machine for making decisions about fairness, and every setting in it is a policy someone will argue about.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch19">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part VI · The Farm and the Cloud</p>
+    <p class="chap-num" aria-hidden="true">19</p>
+    <h1>Scheduling a Million Jobs a Night</h1>
+    <p class="dek">Matching work to machines is the easy part. Deciding whose work goes first is a policy, and every setting in the queue is somebody's argument.</p>
+    <p class="meta"><span>Chapter 19</span><span>Continues from: Chapter 18</span><span id="reading-time">16 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">At 9:40 on a Tuesday morning the message arrived: <em>“Can you bump my show up? Just for today.”</em></p>
+
+    <p>It came from a supervisor I like and respect, whose show was three weeks from delivery and whose request was entirely reasonable. I knew, because I'd already seen two of them, that three other supervisors had sent or were about to send the same message, and that every one of them was equally reasonable. Nobody was gaming anything. They were all, correctly, worried about their own deadlines.</p>
+
+    <p>Here is the odd thing about a visual effects studio. Eight shows are in flight at once, each with its own director, its own date and its own sense of what matters most, and for most of the day they never meet. They have separate rooms, separate reviews, separate budgets of attention. The one place they all share is the queue in front of the farm, which starts something like a million tasks a night. It is the only room in the building where every production is present, and nobody is happy about it.</p>
+
+    <p>This opens Part VI, and it pays off the first of the Foreword's five differences: <em>the deadline is a date on a poster.</em> A poster date doesn't move, and it doesn't care that the farm has a fixed size. When a fixed date meets a shared queue, something has to give, and the scheduler is where it gives. Parts III to V were about the work that goes onto the farm: renders, simulations, crowds, captures. This chapter is about how that work gets onto the machines, and who decides what runs first.</p>
+
+    <p>One framing note before we start. I'm describing the <em>old</em> scheduler, the one we ran for most of the pipeline's nine years. Its fairness rules lived in its code and in the heads of about three people, and nowhere else. Writing them down was something we did late, and mostly because a later replacement forced us to. That story belongs to <span class="xref">Ch. 28</span>. For now, treat everything below as lessons from a system whose rules we discovered by arguing about them.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>I started out thinking a scheduler was a matching problem. Tasks on one side, machines on the other, fill the gaps, go home. A few words first, because this is the one chapter where the vocabulary matters more than usual. A <dfn>job</dfn> is a request to the farm, such as “render these sixty frames of this shot,” and in our case it holds about 240 <dfn>tasks</dfn> on average. A task is one unit of work, one chunk on one machine, and it is the unit the rest of this book counts. A million tasks a night is therefore roughly four thousand jobs. (I use “jobs” in the title because that is what people say at the desk. Everywhere else I'll count tasks.) A <dfn>slot</dfn> is a share of a machine. A <dfn>pool</dfn> is a group of machines, or a group of users. <dfn>Priority</dfn> is a number that says who goes first, and <dfn>preemption</dfn> is killing a running task to make room for a more important one.</p>
+
+    <p>Our first scheduler was a list sorted by priority and a very confident cron job that walked down it every minute handing tasks to idle machines. It worked beautifully for about eight months. Its fairness rules were never designed. They were whatever the code happened to do, and everybody believed the code was fair, in the way people believe a tap is clean because it has always run.</p>
+
+    <p>That belief survived because matching is genuinely easy when the farm is quiet. It's when the farm is full, and every show wants the same machines on the same night, that the real question appears. Not “which machine?” but “whose task?”</p>
+
+    <h2 id="decides" data-short="What a scheduler decides">What a scheduler actually decides</h2>
+
+    <p>Follow one task through its life, and notice how many choices happen to it without anybody noticing.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 840 190" role="img" aria-labelledby="l1t l1d">
+          <title id="l1t">The life of a task</title>
+          <desc id="l1d">Five boxes in a row: submitted, waiting, matched, running, finished. Under each is the decision made there: how urgent, whose turn, which machine, whether to keep it running, and what happens next.</desc>
+          <defs>
+            <marker class="ah" id="l1a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+          <g class="node">
+            <rect x="10" y="20" width="130" height="48" rx="8"/><text x="75" y="49">Submitted</text>
+            <rect x="180" y="20" width="130" height="48" rx="8"/><text x="245" y="49">Waiting</text>
+            <rect x="350" y="20" width="130" height="48" rx="8"/><text x="415" y="49">Matched</text>
+            <rect x="520" y="20" width="130" height="48" rx="8"/><text x="585" y="49">Running</text>
+            <rect x="690" y="20" width="130" height="48" rx="8"/><text x="755" y="49">Finished</text>
+          </g>
+          <g class="flow">
+            <path d="M140 44 H178" marker-end="url(#l1a)"/><path d="M310 44 H348" marker-end="url(#l1a)"/>
+            <path d="M480 44 H518" marker-end="url(#l1a)"/><path d="M650 44 H688" marker-end="url(#l1a)"/>
+          </g>
+          <g class="tick">
+            <text x="75" y="100">how urgent?</text><text x="75" y="120">(the show</text><text x="75" y="138">and its priority)</text>
+            <text x="245" y="100">whose turn?</text><text x="245" y="120">(the fairness</text><text x="245" y="138">policy)</text>
+            <text x="415" y="100">which machine?</text><text x="415" y="120">(memory, licenses,</text><text x="415" y="138">cached data)</text>
+            <text x="585" y="100">keep it running?</text><text x="585" y="120">(preemption)</text>
+            <text x="755" y="100">what next?</text><text x="755" y="120">(<span class="xref">Ch. 20</span>)</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 19.1</b>The life of one task. Only one of these five decisions is about machines.</figcaption>
+    </figure>
+
+    <p>Only the third decision, the match, is the one I thought I was building. Even that one is more than a lookup, because tasks come in different shapes. A typical render task wants a handful of cores and a modest slice of the 512 GB on a standard node. A heavy simulation or a dense scene can want 200 GB for itself, and those tasks run only on the high-memory pool, the 1 TB machines from <span class="xref">Ch. 2</span>, because a standard node can hold only a couple of them with little room for anything else. A rig-heavy animation task costs far more to evaluate than its file size suggests, which is the handoff from <span class="xref">Ch. 18</span>. So the scheduler isn't queueing. It's packing, the way you'd load a moving van in which every box is a different shape and some of them are fragile.</p>
+
+    <p>Packing has a few quiet complications. <em>Locality</em> matters: a machine that already has a task's textures and caches nearby saves minutes of reading, and the storage layer will thank you (this is the hot-file problem from <span class="xref">Ch. 7</span>). <em>Licenses</em> matter: a task that needs a seat of some third-party tool simply cannot start if every seat is checked out, however many idle cores are waiting, which is the licensing thread from <span class="xref">Ch. 2</span> seen from the scheduling side. And <em>the cost of a bad match</em> is invisible but real. A task that waits while a machine idles has wasted both, and nobody will ever file a ticket about it.</p>
+
+    <p>Notice also what those decisions have in common. None of them is purely technical. Each of them rewards somebody and delays somebody else, and the delayed person usually sits two floors away.</p>
+
+    <h2 id="fairness" data-short="Fairness, four ways">Fairness, in four flavors</h2>
+
+    <p>The part of the scheduler that earns its keep is the fairness policy: the rule for choosing between two tasks that both want the same slot. We tried four. I'll tell them in the order we met them, including the ones I'd rather forget.</p>
+
+    <h3>Strict priority</h3>
+
+    <p>This was the first. Every show gets a number, the highest number goes first, and a tie goes to whoever was waiting longest. It is simple, predictable, and easy to explain in a sentence. It also lets the highest-priority show starve everyone else for as long as it has work, and a show near delivery always has work. For a week one spring, a show with a pleasant, quiet team and a modest date sat behind a louder one and received, at the end of the week, almost no farm at all. Nobody was being unfair. The rule was.</p>
+
+    <h3>First come, first served</h3>
+
+    <p>The second attempt felt like the moral opposite: forget importance, take turns. It's the fairest-feeling policy there is, and it fails in a very particular way. One enormous submission, such as a whole sequence re-rendered after a lighting change, lands at two in the afternoon and holds the line until midnight, while a ten-minute task that someone needs for tomorrow's review waits behind forty thousand strangers.</p>
+
+    <h3>Weighted shares</h3>
+
+    <p>The third idea was a slice for each show: this one gets a fifth of the farm, that one an eighth, and so on, according to a budget someone had agreed. A show can never take everything and can never be starved. The trouble is idle slices. If a show's artists have gone home, its slice sits empty while another show's tasks wait beside it, and watching a quarter of a farm do nothing while your own work queues is the fastest way I know to turn a reasonable person into a political one.</p>
+
+    <h3>Fair share with decay and borrowing</h3>
+
+    <p>What we ended up with is weighted shares plus two additions. <em>Borrowing</em> means that if a slice is idle, anyone may use it. <em>Decay</em> means the scheduler remembers who has used a lot recently, with a memory that fades over a few days, and gives people who have been taking little a small lead over those who have been taking a lot. A show that ran hot on Monday waits a little on Tuesday. A show that has been quiet gets a head start when it finally has something to run.</p>
+
+    <p>It feels right to almost everyone, and that's exactly where the trouble started, because it surprised people in ways nobody had predicted. The show that had <em>lent</em> the most idle capacity was the unhappiest, since it came back wanting its slice at the moment the borrowers were mid-render, and the decay rule meant that all that lending had been counted against it. We had built a system that punished generosity. The fix wasn't a smarter formula. It was a decay rule short enough that anyone could read it, plus a rule that capacity borrowed from an idle show could be reclaimed within a few minutes, not whenever the borrowers finished.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Policy</th><th>What it rewards</th><th>How it fails</th><th>Who complains</th></tr></thead>
+          <tbody>
+            <tr><td>Strict priority</td><td>Whoever is most important</td><td>Everyone below starves</td><td class="who">The quiet show</td></tr>
+            <tr><td>First come, first served</td><td>Whoever submits first</td><td>One huge submission blocks the afternoon</td><td class="who">Anyone with a small urgent task</td></tr>
+            <tr><td>Weighted shares</td><td>Having a budget</td><td>Idle slices sit empty</td><td class="who">Shows that are waiting beside empty slices</td></tr>
+            <tr><td>Fair share, decay, borrowing</td><td>Using little, lately</td><td>Lenders feel punished until the rules are readable</td><td class="who">The show that lent the most</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 19.1</b>Four ways to choose the next task. None is neutral, and each has a constituency that dislikes it.</figcaption>
+    </figure>
+
+    <h3>Preemption, or the day we killed a simulation at 95 percent</h3>
+
+    <p>Fair share raises a harder question. When a high-priority task arrives and the farm is full, do you wait for something to finish, or do you stop something? Stopping a running task to make room is preemption, and it makes the queue responsive at the price of wasted work: everything the killed task had done is thrown away unless it saved its place.</p>
+
+    <p>The first time we did it on purpose, a long simulation was at about 95 percent when a short, urgent render needed its slot. I approved the kill. The render finished in nine minutes and the director was pleased. The simulation had to start again from the beginning, and its artist found out the next morning, which is not how anyone wants to start a Wednesday. We had made a perfectly defensible trade and not told the person who paid for it.</p>
+
+    <p>That changed the conversation. Preemption stopped being a free lever and became a price: so much wasted work for so much responsiveness, with a name attached to each side. The cure is for long tasks to save their progress as they go, so a kill costs minutes instead of days. That's the checkpointing story, the forty-hour simulation that dies at hour thirty-nine, and it belongs to X. Here the lesson is smaller and more uncomfortable: every time you preempt, you are choosing whose night to spend.</p>
+
+    <h2 id="bottleneck" data-short="The scheduler as bottleneck">The scheduler as bottleneck</h2>
+
+    <p>So far the scheduler has been a judge. It is also a program with a database, and the database has opinions of its own.</p>
+
+    <p>Tracking a million tasks a night means recording a lot of small events: a task was queued, a task started, a task reported progress, a task finished, a task failed. Multiply that by the status chatter from several thousand machines and you have a write rate that would embarrass a modest web service. It was the first sign that the thing deciding where work runs could itself become the thing that limits how much work runs. <span class="xref">Ch. 2</span> had warned about exactly this. We nodded and carried on.</p>
+
+    <p>The first symptom was an unremarkable one. The studio's status page began loading slowly, and then not at all. Nobody connected it to the scheduler for nearly two days, because nothing was wrong with the scheduler. It was running, matching and starting tasks. What it was also doing, every morning, was answering a dashboard. Artists had found the page useful, as artists will, and left it open on second monitors, and each open copy asked the scheduler's database for the state of every task, every few seconds. The monitoring was taking down the thing it monitored. I would like to say we found that clever. We found it on the second morning, in a graph of query counts, with the sinking feeling of a man who built the dashboard.</p>
+
+    <p>Two fixes followed. The dashboard stopped asking the scheduler directly and read from a copy that refreshed every thirty seconds. And we looked harder at how work was being cut up, which is the more interesting half.</p>
+
+    <h3>Chunks and the cost of overhead</h3>
+
+    <p>Every task carries overhead: being queued, matched, started, and cleaned up. If a task takes ten minutes, a few seconds of overhead is noise. If a task takes ten seconds, a farm that spends four of them scheduling has a forty percent tax on its own work. Many of our tasks, such as a single frame of a light compositing pass, were closer to the second kind than we'd admitted.</p>
+
+    <p>The reframe was <dfn>chunking</dfn>: bundle several frames into one task so the overhead is paid once. It works, and it has a cost. A chunk of eight frames that fails at frame seven loses all eight, and chunks that are too coarse make the queue lumpy, since a big chunk can't slip into a small gap. Choosing a chunk size is another quiet fairness decision, because the same bundle that makes the scheduler happy can make the person waiting on frame three wait longer. <span class="xref">Ch. 20</span> picks that thread up on the failure side.</p>
+
+    <p>The ceiling it hit, though, was real. A bigger chunk size bought us time, and more shows and more shapes of work used it up again. Part of why replacing the scheduler eventually became unavoidable was that database, and that is a story for <span class="xref">Ch. 28</span>.</p>
+
+    <h2 id="politics" data-short="The politics of the queue">The politics of the queue</h2>
+
+    <p>Now back to the 9:40 message, because the human half of scheduling is bigger than the technical half.</p>
+
+    <h3>The inflation of “urgent”</h3>
+
+    <p>The scheduler's priority scale ran from one to ten. I had assumed ten levels would mean ten kinds of importance. Within a few months it meant two: normal, and ten. Everyone who needed anything quickly asked for a ten, because the alternative was to be outbid by someone who had, and the system had no way to say no to a reasonable person asking politely. When every request is a ten, the number says nothing, and the real priority goes back to being whoever shouts best.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 230" role="img" aria-labelledby="p1t p1d">
+          <title id="p1t">Requested priorities before and after the policy change</title>
+          <desc id="p1d">Two bar charts of how many requests asked for each priority from one to ten. Before: a tall bar at ten and small bars elsewhere. After: requests spread across the scale, with most at the middle and few at ten.</desc>
+          <g class="grid"><path d="M40 190H380"/><path d="M450 190H790"/></g>
+          <g class="rowl"><text x="40" y="22">Before</text><text x="450" y="22">After</text></g>
+          <g>
+            <rect class="bar" x="48" y="168" width="22" height="22" rx="3"/><rect class="bar" x="82" y="172" width="22" height="18" rx="3"/><rect class="bar" x="116" y="170" width="22" height="20" rx="3"/><rect class="bar" x="150" y="174" width="22" height="16" rx="3"/><rect class="bar" x="184" y="170" width="22" height="20" rx="3"/><rect class="bar" x="218" y="176" width="22" height="14" rx="3"/><rect class="bar" x="252" y="172" width="22" height="18" rx="3"/><rect class="bar" x="286" y="164" width="22" height="26" rx="3"/><rect class="bar" x="320" y="156" width="22" height="34" rx="3"/><rect class="bar redo" x="354" y="40" width="22" height="150" rx="3"/>
+            <rect class="bar" x="458" y="150" width="22" height="40" rx="3"/><rect class="bar" x="492" y="130" width="22" height="60" rx="3"/><rect class="bar" x="526" y="108" width="22" height="82" rx="3"/><rect class="bar" x="560" y="86" width="22" height="104" rx="3"/><rect class="bar" x="594" y="76" width="22" height="114" rx="3"/><rect class="bar" x="628" y="96" width="22" height="94" rx="3"/><rect class="bar" x="662" y="124" width="22" height="66" rx="3"/><rect class="bar" x="696" y="150" width="22" height="40" rx="3"/><rect class="bar" x="730" y="168" width="22" height="22" rx="3"/><rect class="bar redo" x="764" y="178" width="22" height="12" rx="3"/>
+          </g>
+          <g class="tick"><text x="59" y="208">1</text><text x="365" y="208">10</text><text x="469" y="208">1</text><text x="775" y="208">10</text></g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 19.2</b>Requested priority, before and after (illustrative). When everyone is a ten, the scale has two levels. After the change, it had ten again.</figcaption>
+    </figure>
+
+    <p>What finally stopped it wasn't a lecture or a policy memo. It was making priority a thing you could not simply ask for. Priority came from the fair-share rules and from a small number of reservations that a person with authority had to approve. Individual artists could still lower their own priority, which people did cheerfully on a Friday evening, and could raise it only within a narrow band. The ten-level scale became a ten-level scale again.</p>
+
+    <h3>The delivery crunch</h3>
+
+    <p>Deadlines still need a mechanism, because a show near delivery really does deserve a bigger slice. We handled it with <dfn>reservations</dfn>: a time-boxed boost, approved by the head of production and the head of pipeline together, with a start, an end and a named person. The approval mattered less than the end date. Every boost expires on its own, so none can quietly become a permanent feature of the farm.</p>
+
+    <p>That rule has a story behind it, and it's the one the 9:40 message gave us. The supervisor's “just for today” was granted by hand, as a quick favor, with a number typed in. It lasted eleven days. Nobody remembered to remove it, because nobody had been told it was a boost, and it was only noticed when it quietly outlived the show's delivery and went on sorting a finished show ahead of everyone else. A wrapped show was still outranking the ones that needed the machines, and the person who discovered it was me, reading a queue report and wondering why a film that had been delivered was so busy.</p>
+
+    <h3>Making the queue legible</h3>
+
+    <p>The single most useful thing we did wasn't a setting at all. We built a page that answers one question in plain words: <em>why is my job waiting?</em></p>
+
+    <figure class="fig">
+      <div class="fig-box">
+        <svg viewBox="0 0 560 250" role="img" aria-labelledby="w1t w1d">
+          <title id="w1t">Mock-up of the “why is my job waiting?” page</title>
+          <desc id="w1d">A simple card: Your job is waiting. It is number 212 in the line for your show. Your show used 31 percent of the farm over the last three days and its fair share is 20 percent. The next step is a reservation request, if you have a delivery date.</desc>
+          <rect class="node" x="10" y="10" width="540" height="230" rx="10"/>
+          <g class="rowl"><text x="30" y="46" style="font-size:16px">Why is my job waiting?</text></g>
+          <g class="tick" style="text-anchor:start">
+            <text x="30" y="84">Your job is number 212 in line for your show.</text>
+            <text x="30" y="114">Your show has used 31% of the farm over the last three days.</text>
+            <text x="30" y="140">Its fair share is 20%, so other shows are ahead of you for now.</text>
+            <text x="30" y="176">Expected start: about 2:15 p.m.</text>
+            <text x="30" y="214">Have a delivery date this week? Ask for a reservation.</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 19.3</b>The page that answered the question in plain words (a mock-up).</figcaption>
+    </figure>
+
+    <p>It was open to the whole studio, not just to artists with a ticket. That mattered more than I expected. People who can see why they're waiting argue about the policy and not about their luck. Support requests of the “why is my job stuck?” kind dropped by about a third. The arguments didn't get fewer, but they got better. Instead of “you're favoring the other show,” I started hearing “your decay window is too long for a show that submits in bursts,” which is a sentence I'd happily be shouted at with, any day.</p>
+
+    <h3>Someone owns the queue</h3>
+
+    <p>By then it was clear that a queue cannot be everybody's, because an unowned queue belongs to whoever complains last. We gave it an owner: a person who is part operator and part diplomat, who reviews the shares with production on a regular schedule and not in a hallway, and who can say “here is why, and here is how to change it.” The job sounds administrative. It is mostly listening, with a spreadsheet nearby. The shares themselves are reviewed every few weeks, with a short written change log, so that any adjustment can be traced to a person, a date and a reason.</p>
+
+    <h2 id="policy" data-short="Writing the policy down">Writing the policy down</h2>
+
+    <p>All of this should have been on one page from the beginning, and it wasn't. That's the quiet failure under the whole chapter. The old scheduler worked on rules that were never written anywhere: who borrows, who decays, who gets a gentle boost near delivery. They were behavior. They were discovered by arguing and remembered by about three people, one of whom was me, and I'd forgotten half.</p>
+
+    <p>Here's the page I'd write now, and it fits on one side of paper.</p>
+
+    <ul class="questions">
+      <li><span>Each show has a share of the farm, and the share is set by production, in writing.</span></li>
+      <li><span>Idle shares can be borrowed, and reclaimed within minutes.</span></li>
+      <li><span>Recent heavy use counts against you, and the memory of it fades over three days.</span></li>
+      <li><span>Boosts need two approvals, a named person and an end date.</span></li>
+      <li><span>Preemption is allowed only for tasks that save their progress, and every preemption is logged with its cost.</span></li>
+      <li><span>Everyone can see the queue and why they are in it.</span></li>
+    </ul>
+
+    <p>I'd like to claim it was easy. It wasn't, because writing a policy down means someone has to decide the contested parts out loud, such as exactly how much of the farm a finished-but-popular show deserves, and decisions made out loud have people attached. We didn't do it because we were wise. We did it because a replacement scheduler could not be configured from rules that didn't exist on paper, and that is the story I'll tell in <span class="xref">Ch. 28</span>. The honest summary is that the old rules worked for years precisely because nobody had to defend them.</p>
+
+    <h3>What to watch</h3>
+
+    <p>Four numbers told us most of what we needed about the queue. <em>Wait time by show</em>, not on average, because averages hide the quiet show behind the loud one. <em>Utilization</em>, so that idle slices are seen. <em>Wasted work from preemption</em>, in core-hours, so that the price of responsiveness has a figure on it. And <em>scheduler latency</em>, the time between a machine going idle and a task landing on it, which is the first thing to degrade when the database is unhappy.</p>
+
+    <p>And one habit, more useful than any of them. For every setting, ask what behavior it rewards. The ten-level priority rewarded asking for ten. The first-come rule rewarded submitting the biggest job at lunch. The unrestricted boost rewarded nothing in particular, which is the most dangerous reward of all.</p>
+
+    <div class="callout aside">
+      <span class="callout-label">Aside</span>
+      <p>For a while I believed we needed a smarter scheduler. Every time I looked closely, what we needed was a plainer policy.</p>
+    </div>
+
+    <h2 id="footnote" data-short="What's still unsolved">What's still unsolved</h2>
+
+    <p>I wish I could say the system is now fair. It is fairer, and some of it is still unresolved.</p>
+
+    <p>Fairness across <em>kinds</em> of work is the hardest. Fair share counts core-hours, and a ten-minute task and a three-day simulation are not the same kind of core-hour. One feels like a favor and the other like a commitment, and a policy that treats them identically will annoy the person running the simulation or the person running a hundred small tests, depending on how you tune it. We tuned it for the second group and the first group learned to split their work into pieces.</p>
+
+    <p>That's the second problem: <em>people optimize for the metric you publish</em>. We made the queue legible, and the artists, being smart, read it and adapted, which is exactly what it was for and also not always what we wanted. The hidden cost of preemption is the third, because wasted work that finishes in the logs is easy to ignore. The last one is that a farm built around CPU frames will have to learn new shapes as the unit of work changes. A task that wants a GPU is a different kind of packing problem, and a policy written for one shape will be quietly unfair to the next. <span class="xref">Ch. 31</span> will come back to that.</p>
+
+    <p>And one change is already on the way. Once usage is shown in cost terms, which is where <span class="xref">Ch. 22</span> begins, behavior will shift again, and some of what I've just described will need to be rewritten.</p>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>A few months after the page went up, a supervisor I like and respect sent me a message at 9:40 on a Tuesday. <em>“Can you bump my show up? Just for today.”</em> I replied with a link to the queue page and two lines: here is where you are, and here is the form for a reservation if you have a date this week. Nine minutes later she had filed it, with an end date, and her show moved up the line for exactly as long as it had said it would.</p>
+
+    <p>Nobody had to feel snubbed, and nobody had to take my word for anything.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">Takeaway</span>
+      <p>The scheduler doesn't create scarcity. It only makes it visible, and people don't love being shown.</p>
+    </div>
+
+    <p>We can now start a million tasks in a night. The next question is the uncomfortable one: what happens to the ones that don't finish? That is <span class="xref">Ch. 20</span>.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

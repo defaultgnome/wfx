@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crowds and Agents · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 13. A crowd is thousands of characters making plausible decisions. How an agent chooses, how variety is built, and how thirty thousand of them reach the renderer without eating the farm.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch13">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part IV · Simulation and Procedural Systems</p>
+    <p class="chap-num" aria-hidden="true">13</p>
+    <h1>Crowds and Agents</h1>
+    <p class="dek">Thirty thousand characters, each making a small decision, none of them animated by hand. How they choose, how they vary, and how they reach the renderer without eating the farm.</p>
+    <p class="meta"><span>Chapter 13</span><span>Continues from: Chapter 12</span><span id="reading-time">15 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">For fourteen frames, one man in the back of a battle walked calmly the wrong way. <em>Nobody noticed for two weeks.</em></p>
+
+    <p>He was a background soldier, one of the thirty thousand in the battle's widest shot, carrying a shield and heading against a charge that everyone else was running into. Fourteen frames is just over half a second. He was small, he was far from the camera, and the smoke was doing its best for him. Then a reviewer, in a dark room on an ordinary afternoon, said: “Who's that fellow with the shield?”</p>
+
+    <p>Nobody knew. By the end of the day he had a name, a bug number, and a modest reputation on the crowd team. We found out why he had turned (a goal point had landed inside a blocked area, so he gave up on it and wandered off to find another) and fixed it in an hour. It took two weeks and a stranger's good eyes to <em>find</em> him.</p>
+
+    <p>Chapter 12 simulated matter: water, fire, things falling down. This chapter simulates <em>decisions</em>. A crowd is a great many characters, each doing something plausible, none of them animated by hand. The problem splits into two halves. How do you give thirty thousand people behavior that looks like thinking? And how do you get all of them to the renderer in one piece? I'll argue that both are the same problem in different clothes: <em>a crowd is a distribution problem twice over.</em> You distribute behavior among the individuals, and you distribute cost among the frames. Get either wrong and your army looks like a queue at an airport.</p>
+
+    <p>A few terms first. An <dfn>agent</dfn> is a character with a small brain: it senses what is around it, picks a behavior, and carries it out. A <dfn>motion clip</dfn> is a short piece of pre-made animation, such as a walk cycle, a stumble, or a turn, usually captured from a real performer (<span class="xref">Ch. 16</span>). <dfn>Skinning</dfn> is the step where a character's skeleton pose bends its surface geometry into shape. <dfn>Instancing</dfn> is sharing one heavy copy of data among many placements, which you met in <span class="xref">Ch. 9</span>. <dfn>LOD</dfn>, level of detail, means using a cheaper stand-in for things that are far away.</p>
+
+    <h2 id="copies" data-short="“Crowds are just copies”">“Crowds are just copies”</h2>
+
+    <p>My first belief about crowds was a single word. Crowds, I thought, are <em>just</em> copies. Take a handful of characters, duplicate them, scatter them across the field, give each a different starting frame so they don't move in unison. Done by lunch.</p>
+
+    <p>It works, for about as long as it takes to render the first wide shot. A duplicated walk cycle with a shifted start looks fine for ten people. At a thousand, the eye finds the pattern: the same stride, the same arm swing, the same tilt of the head, repeating across the field like wallpaper. At thirty thousand the army marches in perfect step, like an extremely well-rehearsed accident. People don't know what they're seeing. They just feel that something is wrong with the army.</p>
+
+    <p>So “just copies” is the belief that lasted until the first wide shot, and I've been careful about the word “just” ever since. What replaced it was a small brain in every character, and a pipeline built around the fact that most of those brains matter very little.</p>
+
+    <h2 id="decides" data-short="How an agent decides">How an agent decides</h2>
+
+    <p>Here is the path of one agent, from the moment it is placed to the moment it appears in a frame. Keep this picture in mind, because the second half of the chapter is mostly about where on this path the cost lives.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 840 150" role="img" aria-labelledby="g1t g1d">
+          <title id="g1t">The path of one agent</title>
+          <desc id="g1d">Six boxes joined by arrows: placement, behavior, clip blend, pose, cache, render. A bracket over the first three and the cache marks cheap work done once; a bracket over pose and render marks expensive work done at render time.</desc>
+          <defs>
+            <marker class="ah" id="b1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+          <g class="node">
+            <rect x="10" y="50" width="115" height="48" rx="8"/><text x="67" y="79">Placement</text>
+            <rect x="150" y="50" width="115" height="48" rx="8"/><text x="207" y="79">Behavior</text>
+            <rect x="290" y="50" width="115" height="48" rx="8"/><text x="347" y="79">Clip blend</text>
+            <rect x="430" y="50" width="115" height="48" rx="8"/><text x="487" y="79">State cache</text>
+            <rect x="570" y="50" width="115" height="48" rx="8"/><text x="627" y="79">Skinned pose</text>
+            <rect x="710" y="50" width="115" height="48" rx="8"/><text x="767" y="79">Render</text>
+          </g>
+          <g class="flow">
+            <path d="M125 74 H148" marker-end="url(#b1)"/><path d="M265 74 H288" marker-end="url(#b1)"/>
+            <path d="M405 74 H428" marker-end="url(#b1)"/><path d="M545 74 H568" marker-end="url(#b1)"/><path d="M685 74 H708" marker-end="url(#b1)"/>
+          </g>
+          <g class="tick">
+            <text x="278" y="30">cheap, runs once</text>
+            <text x="697" y="30">expensive, runs at render time</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 13.1</b>One agent, left to right. The line between “cache” and “skinned pose” is the most important line in the chapter.</figcaption>
+    </figure>
+
+    <p>The brain has three jobs. It <em>senses</em>: who is near me, where is my goal, what is the ground doing under my feet. It <em>chooses</em>: a few rules or a small decision graph, with a dash of randomness so that no two agents decide in lockstep. Avoid the neighbor, keep heading for the goal, slow down on the slope, and if the goal is a wall, stop and look around. And it <em>acts</em>: pick the right motion clip, speed it up or slow it down to match the ground speed, and blend smoothly into the next clip when the choice changes.</p>
+
+    <p>That last step is where crowds earn their keep. A character that is walking, then told to run, cannot snap between two poses. It has to pass through a transition that looks like a human body doing it, with the weight shifting from one foot to the other at the right moment. Nearly every ugly crowd bug I've seen lives at a join like that. Foot-sliding, where the feet drift over the ground because the clip's speed doesn't match the agent's, is the famous one. The others are collisions between neighbors, synchronized walking, and the lone character who leaps for no reason because two clips were blended at the wrong moment.</p>
+
+    <p>There are two broad ways to give agents behavior. <em>Rule-based</em> brains use state machines, decision trees and simple steering (“avoid neighbors, seek the goal”). <em>Sampled</em> brains choose or synthesize motion from a library of captured data, and the rules are looser. Most real crowds mix both: rules decide <em>what</em> to do, and data decides <em>how it looks</em>. The motion library is the real asset in either case. A crowd is only as varied as the clips it draws from, and a library is built by people in a capture studio, one tedious take at a time.</p>
+
+    <h3>The dial I overshot</h3>
+
+    <p>There is a tension here that took me a full show to feel. The more autonomy you give agents, the less a supervisor can direct them. A supervisor doesn't want a surprise. They want “a charge from the left, slowing as it reaches the wall, with a few stragglers”, and they want it by Thursday. Emergent behavior is welcome only when it behaves.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 840 170" role="img" aria-labelledby="g2t g2d">
+          <title id="g2t">The dial from scripted to emergent</title>
+          <desc id="g2d">A horizontal scale from fully scripted on the left to fully emergent on the right. Examples placed along it: a parade and a stadium audience near the scripted end, a battle charge and a city street one third of the way along, a panicked market toward the emergent end. A marker shows where the team settled, about a third of the way up.</desc>
+          <rect class="belt" x="40" y="70" width="760" height="14" rx="7"/>
+          <g class="node done"><rect x="261" y="52" width="14" height="50" rx="4"/></g>
+          <g class="tick">
+            <text x="40" y="40" style="text-anchor:start">fully scripted</text>
+            <text x="800" y="40" style="text-anchor:end">fully emergent</text>
+            <text x="268" y="122">where we stopped</text>
+          </g>
+          <g class="say">
+            <text x="110" y="142">parade, stadium seats</text>
+            <text x="300" y="160" style="text-anchor:start">battle charge, city street</text>
+            <text x="620" y="142">panicked market, loose camp</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 13.2</b>Where shot types sit on the dial. We went about a third of the way up, and stopped because supervisors wanted direction.</figcaption>
+    </figure>
+
+    <p>My own early enthusiasm for emergence was considerable. Give every agent a goal and a few rules, I thought, and let the battle write itself. We found out what that costs. The behavior looked wonderful and nobody could aim it. A supervisor who asks for the left flank to arrive two seconds later cannot be told “change the neighbor-avoidance weights and see what happens.” So we went about a third of the way up the dial and stopped. Scripted paths and timings carry the foreground and the shape of the action. Autonomy fills in the texture: who steps around whom, who stumbles, who looks over a shoulder.</p>
+
+    <p>It paid off in the background and not in the foreground. Thirty thousand tiny decisions made a field feel alive without anyone placing a single soldier by hand. But whenever a shot had a story point, the point was hand-authored, and the crowd was told where to be.</p>
+
+    <h2 id="variation" data-short="The variation problem">The variation problem</h2>
+
+    <p>Decisions are half of what makes a crowd read as people. The other half is that they must look like <em>different</em> people. The eye spots repetition very fast, faster than it spots almost anything else, so variety is the whole game.</p>
+
+    <p>Our recipe builds each agent from parts:</p>
+
+    <div class="callout">
+      <span class="callout-label">The variation recipe</span>
+      <p><strong>Body:</strong> one of a few dozen builds and heights. <strong>Outfit:</strong> from a kit of tops, bottoms, armor pieces and headgear. <strong>Props:</strong> shield, spear, banner or nothing. <strong>Colors:</strong> a palette per faction, nudged slightly per agent. <strong>Style:</strong> a stride length, a slouch, a speed. <strong>Timing:</strong> an offset, so no two agents hit the same step together.</p>
+    </div>
+
+    <p>Rules keep the combinations believable. Nobody wears three hats. Nobody carries a banner and a two-handed spear. The rules are boring to write and they matter enormously, because the crowd's randomness is cheap and the world's patience is not.</p>
+
+    <p>With a decent kit, a library of fifty clips can feel like five thousand, because the clips arrive on different bodies at different speeds with different personal quirks. When can't it? When the action is the same one action. Thirty thousand soldiers charging means thirty thousand people running, and a run looks like a run. The eye forgives variety in outfits much faster than it forgives variety in motion, and variety in motion is the one you pay for in the capture studio.</p>
+
+    <p>And every variation has a cost that doesn't show up in the render. Each new outfit piece is an asset someone must build, version and test, and test <em>in combination</em> with every other piece. A kit of ten tops and ten bottoms is a hundred outfits to check, not twenty. This is the lane problem from <span class="xref">Ch. 4</span> again, in miniature: someone owns the helmet, someone owns the body it sits on, and the crowd has to trust that they fit.</p>
+
+    <h2 id="funnel" data-short="From thousands of agents to one frame">From thousands of agents to one frame</h2>
+
+    <p>Now the engineering core. Look back at Figure 13.1 and notice the shape of the data along it. Early on, an agent is a handful of numbers: where it is, where it's heading, which clip it's in, how far through that clip it is. A few hundred bytes. Late on, an agent is a deformed, textured, lit character with tens of thousands of polygons, and thirty thousand of them in memory at once is not a plan.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 840 190" role="img" aria-labelledby="g3t g3d">
+          <title id="g3t">The data funnel</title>
+          <desc id="g3d">A wide band on the left holds thirty thousand lightweight agent states. Arrows narrow through a visibility and distance filter into a few thousand renderable agents, then into a few shared geometry sources placed many times, ending at the renderer.</desc>
+          <defs>
+            <marker class="ah" id="b3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+          <g class="node">
+            <rect x="10" y="30" width="190" height="110" rx="8"/><text x="105" y="78">30,000</text><text class="sm" x="105" y="100">agent states</text>
+            <rect x="260" y="48" width="170" height="74" rx="8"/><text x="345" y="82">Camera and LOD</text><text class="sm" x="345" y="102">what is seen, how near</text>
+            <rect x="490" y="62" width="150" height="46" rx="8"/><text x="565" y="90">A few thousand</text>
+          </g>
+          <g class="node done"><rect x="700" y="72" width="130" height="30" rx="8"/><text x="765" y="92">Renderer</text></g>
+          <g class="flow">
+            <path d="M200 85 H258" marker-end="url(#b3)"/><path d="M430 85 H488" marker-end="url(#b3)"/><path d="M640 85 H698" marker-end="url(#b3)"/>
+          </g>
+          <g class="tick"><text x="420" y="170">shared geometry, placed many times</text></g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 13.3</b>Thousands of light states become a few heavy renderable scenes. The funnel is the design.</figcaption>
+    </figure>
+
+    <h3>Simulate once, render many</h3>
+
+    <p>The principle that holds the whole system together is the line in Figure 13.1: <strong>simulate intent once, express pose at render time.</strong> The crowd simulation runs all the brains, which is cheap, and writes down what each agent was doing on every frame: position, direction, clip, time within the clip, and the variation choices. That record is the <em>state cache</em>. It is not geometry. It is a few hundred bytes per agent per frame, and thirty thousand agents over a few hundred frames comes to a few gigabytes, where the geometry would be terabytes.</p>
+
+    <p>Geometry arrives much later, in the render. When the renderer reaches a frame, a small step reads the state cache, decides which agents the camera can see and how closely, and builds exactly those, posing each one from its clip and time. A state cache beats a geometry cache for the same reason a recipe beats a meal. It is small, it can be inspected, and it can be turned into something better later. When the supervisor changes the lighting, we re-render. When the supervisor changes the army, we re-simulate. We never regenerate thirty thousand deformed bodies as a middle step.</p>
+
+    <p>(That is the cache from the simulation side, not the storage cache of <span class="xref">Ch. 7</span>. The word is a nuisance.)</p>
+
+    <h3>Why a walking person is harder to share than a rock</h3>
+
+    <p><span class="xref">Ch. 9</span> taught us to share: one copy of a pine tree, placed ten thousand times. A rock can be shared completely, because every placement is the same shape. A soldier can't. Each one is in a different pose on every frame, so each one has different vertices. The shared part is the bind pose, the textures and the skeleton, which is the heavy, unchanging data. The unshared part is the deformation, which you compute per agent, per frame.</p>
+
+    <p>That is the nuance of instancing with deformation, and it explains the memory ceiling that shaped our design. Compute every agent's skinned shape and keep it all in memory, and a hero wide shot reaches the limit of even the high-memory pool. Compute it on demand, discard it, and share everything that can be shared, and the same shot fits in a normal node. We chose the second, and it is the reason the frame is built by that small step rather than loaded from disk.</p>
+
+    <h3>Four representations, by distance</h3>
+
+    <p>The third trick is simply not to build what nobody can see. Level of detail picks, for every agent on every frame, how much of it to make. Ours has four stops.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Distance</th><th>Representation</th><th>Rough cost per agent</th><th>Switches when</th></tr></thead>
+          <tbody>
+            <tr><td>Near (a few meters)</td><td>Full skinned character, real outfit, facial detail, props</td><td><span class="pips" data-n="4"></span><span class="size">heavy</span></td><td>The agent is large enough in frame to read a face</td></tr>
+            <tr><td>Mid</td><td>Simplified skinned mesh, merged outfit, no facial detail</td><td><span class="pips" data-n="3"></span><span class="size">moderate</span></td><td>A few dozen pixels tall</td></tr>
+            <tr><td>Far</td><td>Very low polygon body, baked pose, flat color and texture</td><td><span class="pips" data-n="2"></span><span class="size">light</span></td><td>Only a few pixels tall</td></tr>
+            <tr><td>Horizon</td><td>A card, or a few polygons, with a pre-rendered look</td><td><span class="pips" data-n="1"></span><span class="size">tiny</span></td><td>A speck; culled if outside the frame</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 13.1</b>Four representations of the same soldier. Costs are rough ratios, not measurements; the thresholds are tuned per show.</figcaption>
+    </figure>
+
+    <p>The pipeline picks automatically, per frame, from the camera and the agent's position. The trick is the transitions. An agent that crosses from mid to near must not visibly change, so the representations are built to match in silhouette and color, and artists spend an unglamorous week on exactly that. We also cull aggressively: anything outside the frame, or hidden behind a hill, isn't built at all. In a typical wide shot, a few thousand of the thirty thousand agents are anywhere near renderable detail. The funnel in Figure 13.3 is mostly LOD and culling doing arithmetic.</p>
+
+    <h3>Handing off to lighting</h3>
+
+    <p>The crowd reaches lighting as a layer, not a mass of characters. In the scene description (<span class="xref">Ch. 5</span>), a crowd shows up as a few references: the state cache, the kit of parts, and the rules for building each agent. Lighting sees one object, “the army”, that expands into its soldiers only at render time. That keeps scenes small enough to open and gives lighters a few controls rather than thirty thousand.</p>
+
+    <p>Capes and banners on a thousand agents are baked or faked. A cape cannot be simulated for every extra, so most are a few pre-simulated variations applied to many agents, or a shape-driven approximation. Real cloth, and the choice between simulating a costume and driving its shape, belongs to <span class="xref">Ch. 14</span>. Here it is enough to say that the extras get the cheap version, and that has held.</p>
+
+    <h3>The seam with effects</h3>
+
+    <p>The hardest seam in this chapter is not technical. In the battle, the charge ran across a field of simulated mud and into a surge of water from <span class="xref">Ch. 12</span>. The crowd had to step around the wave, and later be hit by it. Who owns that?</p>
+
+    <p>Our answer, after one unhappy week, was that crowds and effects share the seam and each owns one side of it. Effects publish the wave as a cache. Crowds read it, steer around it, and later pose the people it knocks over. And the crowd team never edits an effects cache. If a soldier is standing in the wrong place when the water arrives, they ask for a new cache. That sounds like bureaucracy and it saved us, because it kept a single answer to “who changed the wave”. It also meant that an effects artist could fix the wave without anyone's soldiers vanishing under it.</p>
+
+    <h2 id="review" data-short="Reviewing the unreviewable">Reviewing the unreviewable</h2>
+
+    <p>Which brings us back to the fellow with the shield, and to the question I couldn't answer for two weeks: how do you review thirty thousand people?</p>
+
+    <p>You don't, by eye. Nobody can watch thirty thousand soldiers across sixty frames and be sure. What you can do is have the machine look for the known bugs, so that human attention goes to the unknown ones.</p>
+
+    <p>We run automatic checks for the common failures. Foot-sliding is a number: how far a foot moved across the ground when the clip says it should have been planted. Intersections are a number: how many agents overlap beyond a tolerance. Repeated poses are a number too, the count of near neighbors in the same phase of the same clip. Each check flags agents, and each flagged agent gets a name and a frame range.</p>
+
+    <p>Then we review by sampling and by heat map. A heat map paints the field by how unusual each agent's behavior was: how much it turned, how far it strayed from the direction of its neighbors, how often it changed its mind. That is where the man with the shield would have glowed. A soldier who turns around against thirty thousand others is, statistically, a very bright spot.</p>
+
+    <p>Reviewers also have one move that no automation replaces. In dailies, the supervisor stops the frame, points at any single person in the crowd, and asks what they're doing. The agent had better have an answer. A dot with “running to the left flank, speed 3.1, clip 17” is an answer, and so is “stuck, goal unreachable.” Either is fine. What isn't fine is “I don't know”, which is how I came to hate that sentence from my own tools. The review room has its own chapter (<span class="xref">Ch. 23</span>); this is just the crowd's contribution to it.</p>
+
+    <p>There's a trust question underneath. Artists will accept a statistical argument (“the checks are clean across thirty thousand agents”) only after they've been burned by a visible failure that the checks should have caught (<span class="xref">Ch. 10</span>). We were burned twice, in the same shot. After that, the heat maps went into every dailies pack without anyone asking.</p>
+
+    <h2 id="hurts" data-short="What still hurts">What still hurts</h2>
+
+    <p>It isn't solved, and I'd be misleading you if I said it was.</p>
+
+    <p>Learned motion, a model that picks or synthesizes movement from capture data, is lovely until it isn't predictable. When it works, a crowd moves like people. When it doesn't, the supervisor's note is “change that” and the honest answer is “I'm not sure what I'd change.” We're watching it carefully and not betting a battle on it; <span class="xref">Ch. 31</span> picks up the thread.</p>
+
+    <p>Authoring a new motion library is slow. Capture, cleanup, labeling, transitions: weeks per library, and each new kind of crowd (a fantasy army, a modern street) starts nearly from scratch. Memory at the extreme wide shot still gets uncomfortably close to the ceiling, and we spend a fair amount of the show's early weeks arguing about which agents to drop to the horizon. And the tools are, frankly, runnable by two specialists. When one of them is on vacation during crunch, I think about that more than I'd like.</p>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>Today, if a soldier turned and walked against the charge for fourteen frames, the heat map would flag him in minutes, not weeks.</p>
+
+    <p>The rest of the chapter reduces to one habit. Nobody notices a good crowd, and everybody notices the one person walking into a wall. That means you don't need every agent to be good. You need the ones the camera can see to be good, and the rest to be cheap and not conspicuously wrong. The foreground agents get hand-placed direction, real clothing and full detail. The mid-field gets rules and plausible variety. The horizon gets a card.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">Takeaway</span>
+      <p>Spend your complexity on the ten percent of the crowd the camera can see.</p>
+    </div>
+
+    <p>Crowds are many bodies seen from afar. The next chapter goes the opposite way, close in, to what a single creature's skin, fur, feathers and muscle do when the camera is nearly touching them, and where a costume on a hero looks very different from one on an extra.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

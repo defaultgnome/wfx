@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Supporting a Show in Crunch · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 25. Crunch does not need heroes; it needs rehearsed boredom. How a pipeline team keeps a show alive in its last weeks by making every fix small, staged and reversible.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch25">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part VII · People and Process</p>
+    <p class="chap-num" aria-hidden="true">25</p>
+    <h1>Supporting a Show in Crunch</h1>
+    <p class="dek">Crunch doesn't need heroes. It needs rehearsed boredom, and a fix that is dull, small, reversible and announced.</p>
+    <p class="meta"><span>Chapter 25</span><span>Continues from: Chapter 24</span><span id="reading-time">13 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">The message arrived at 2:07 a.m., and it was reasonable. <em>Publishes are failing for lighting.</em></p>
+
+    <p>It came from a lighter working late on the giant's sequence, and it was polite, specific and accompanied by a screenshot. Every publish she tried ended in a path error. About two hundred artists were due to start at our second site in five hours, and a good share of them would open the same sequence. The show was eleven days from delivery, and the release date did not care about my night. (Deadlines that don't move are an old theme in this book, and <span class="xref">Ch. 19</span> shows what they do to a queue.) We had a freeze policy on paper, but it was six weeks old and mostly decorative, and the naming change had walked through it without anyone noticing.</p>
+
+    <p>I looked at it for four minutes. A naming change that afternoon had made some asset paths longer, and a limit in a shared service was rejecting anything past a certain length. The fix was three lines: raise the limit. I could see it clearly, and I have since learned to be afraid of exactly that feeling. A three-line change at 2 a.m. is the most dangerous object in the building, because it arrives looking so small.</p>
+
+    <p>I shipped it straight away. It fixed lighting. Then it broke compositing's reads, because compositing counted on that limit in a way nobody had written down. Then it broke the dailies media generation, which quietly depended on the same reads. By the time I understood the chain, about ninety artists had lost most of a morning, four hours in all, and I was reading rollback instructions I had never practiced.</p>
+
+    <p>This chapter is about that night, and about what we did so the next one would be duller. It is the human half of a story whose machine half is <span class="xref">Ch. 20</span>. The farm fails by weather; people fail by hurry.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>I used to believe that speed in crunch was a kindness. Something is broken, artists are waiting, so the kind thing is to fix it quickly, tell people afterwards, and be the sort of engineer who is awake when it matters. Nobody ever says thank you for a careful plan at 2 a.m. They say it for a fix.</p>
+
+    <p>There is something true in that. Artists in the last weeks of a show have no slack to absorb a tool problem. Review cycles shorten, the farm runs at a multiple of its normal load (the peaks of <span class="xref">Ch. 2</span>, arriving all at once), and a dozen departments are each a day from a deadline that cannot move. In the final weeks, a pipeline outage can leave up to 500 artists idle across both sites, with a creative team watching the clock alongside them. An hour lost in crunch costs far more than an hour lost in March. All of that is why speed felt like the whole job.</p>
+
+    <p>What I missed is that a fix is a change, and a change is a bet. Every change you ship during crunch is a bet placed with other people's deadline. When I was the only one awake, I was also the only one deciding whether to place it.</p>
+
+    <h2 id="collision" data-short="The fix that broke more">The fix that broke more</h2>
+
+    <p>Here is the tally, because the arithmetic is the lesson. One department, lighting, was blocked. Roughly forty artists were affected at the time of the first message. My fix unblocked them and then blocked compositing, about thirty more people, and dailies generation, which meant that the next morning's review would have run on yesterday's media. Add the people who started their day at the second site and found a half-working system, and the total came to about ninety artists and four hours.</p>
+
+    <p>That is a worse outcome than leaving it alone until 9 a.m. would have been. The lighting problem affected one team and had a workaround, as we later discovered: a one-line override that shortened a single naming prefix for that department. It took two minutes to apply and could be undone in one. I did not look for it, because I already had a better idea.</p>
+
+    <p>The rollback worked, and only because a colleague named Tamsin had once rehearsed it for a different change and left her notes where I could find them. I would like to claim planning. It was luck with a paper trail.</p>
+
+    <p>Looking back, the failure had a familiar shape, and I've since seen it in other people's nights too. Crunch fixes tend to go wrong in the same four ways:</p>
+
+    <ul>
+      <li><strong>Untested.</strong> Never tried against a real shot, only against the example in the bug report.</li>
+      <li><strong>Unannounced.</strong> Nobody downstream knew something had changed, so nobody connected the new breakage to its cause.</li>
+      <li><strong>Irreversible, or at least not reversible quickly.</strong> The undo existed on paper.</li>
+      <li><strong>Shipped by the only person awake.</strong> No second pair of eyes, and a tired pair in the first place.</li>
+    </ul>
+
+    <p>None of those are unusual, and none required bad intentions. The farm was never involved. The system failed because a decent engineer, alone, did the quick thing.</p>
+
+    <h2 id="radius" data-short="Reduce the blast radius">Reduce the blast radius</h2>
+
+    <p>The shift in my thinking was less dramatic than the incident. I stopped trying to make fixes perfect, because I can't, and started trying to make them <em>small, staged and reversible</em>. The useful idea is the <dfn>blast radius</dfn>: how many people a mistake reaches before you notice it. If my three-line change had been seen by one test shot first, it would have broken compositing's reads on one shot, and I would have noticed in ten minutes.</p>
+
+    <p>Everything we built afterward is a way of shrinking that radius. We even put it on a scale, so that "how far should this go?" became a decision with names on it instead of a feeling at 2 a.m.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Radius</th><th>Who sees it</th><th>How you find out you were wrong</th><th>Who may widen it</th></tr></thead>
+          <tbody>
+            <tr><td>One test shot</td><td>Me</td><td>I run a real shot through publish, compositing and dailies</td><td>Whoever is on call</td></tr>
+            <tr><td>Canary group</td><td>Three to five volunteers</td><td>They tell me, or the status channel does</td><td>Whoever is on call, with a second person aware</td></tr>
+            <tr><td>One department</td><td>Dozens of artists</td><td>Their lead asks, loudly</td><td>On call plus the department lead</td></tr>
+            <tr><td>One show</td><td>Hundreds</td><td>Everything in the status channel</td><td>Pipeline lead plus show leadership</td></tr>
+            <tr><td>Everyone</td><td>All artists, both sites</td><td>Pager</td><td>Same, and only in daylight</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 25.1</b>The blast radius scale. The point is the last column: someone, by name, decides when it widens.</figcaption>
+    </figure>
+
+    <p>Notice that the scale is slow on purpose. Moving from one radius to the next costs minutes or hours, and during crunch those feel expensive. The trade is that a mistake at the first rung costs a few minutes of mine, and a mistake at the last costs ninety people a morning.</p>
+
+    <h2 id="built" data-short="What we built and practiced">What we built and practiced</h2>
+
+    <h3>Freeze with a front door</h3>
+
+    <p>About six weeks before a delivery, we freeze. Tools, plugins, the renderer, the shared services: nothing changes without a reason. The word "freeze" suggests a locked door, and a locked door is the wrong model. People find windows. What works is a front door: a one-page exception form that takes five minutes to fill in, asks what changes, who is affected, how it is undone and who approved it, and gets a human answer within the hour.</p>
+
+    <p>The exception process matters more than the freeze. If the queue is the pressure valve (<span class="xref">Ch. 19</span>) and cloud burst is the extra capacity (<span class="xref">Ch. 21</span>), the freeze is the part that keeps people from tinkering with either. A freeze nobody can bend gets bypassed by someone with the right access and a good reason. A freeze with an easy, visible, slightly annoying exception gets used rarely and honestly.</p>
+
+    <p>Three examples from earlier chapters show what it looks like in practice. On the stage (<span class="xref">Ch. 17</span>), nothing changes in the week before a shoot, and a late display-driver update waits in a canary group of one machine until shooting day is over. For rigs (<span class="xref">Ch. 18</span>), a shoulder hotfix in crunch goes to a canary of three shots first. We learned that from a rig fix that had silently changed the look of 112 shots, none of which we had tested because the bug report only named one. And the renderer (<span class="xref">Ch. 10</span>) is frozen for the last six weeks of a show; the upgrade case file is in <span class="xref">Ch. 28</span>.</p>
+
+    <h3>Staged rollout, even in an emergency</h3>
+
+    <p>This is the habit that would have saved my 2 a.m. The protocol is short enough to put on the wall:</p>
+
+    <div class="callout">
+      <span class="callout-label">The 2 a.m. change protocol</span>
+      <p><b>1.</b> Say it out loud: post in the status channel that you are looking at it. <b>2.</b> Reproduce the failure on a real shot. <b>3.</b> Ask how you'd undo the fix before asking how you'd do it. <b>4.</b> Make the smallest possible change, and prefer a workaround for one department over a fix for everyone. <b>5.</b> Test it against a real shot, end to end, through publish, composite and dailies. <b>6.</b> Roll it out to the canary group. <b>7.</b> Watch for a set time, written down in advance. <b>8.</b> Announce what changed, in plain words, with the time of the next update. <b>9.</b> Keep the rollback one command away until the morning. <b>10.</b> Hand it over in writing; the real fix gets reviewed by someone who wasn't awake.</p>
+    </div>
+
+    <p>That is ten short steps of discipline and none of it is clever. Its virtue is that it is the same every time, so that a tired person is following a list rather than inventing one.</p>
+
+    <h3>A rollback you've actually rehearsed</h3>
+
+    <p>We started running game days: before each crunch, we pick a recent change and roll it back on purpose, in daylight, with a clock running. We assumed our rollback took five minutes. The first game day found it took fifty-five.</p>
+
+    <p>The fifty minutes were all boring. A configuration was cached in three places. One of them was only refreshed on a restart that needed an approval nobody had pre-arranged. Two steps lived in one person's memory. We fixed all of it, ran the drill twice more, and the rollback came down to six minutes. That first game day was a humbling hour, and I would pay for it again.</p>
+
+    <h3>Before the freeze: tuning and pinning</h3>
+
+    <p>The month before a delivery is when you do the unglamorous preparation. We check capacity, pin every dependency to a known version, and write a short list of known weak spots which we share with show leadership. They should hear "the publish service gets slow past eighty simultaneous users" from us on a Tuesday, not discover it themselves on a Saturday.</p>
+
+    <div class="callout aside">
+      <span class="callout-label">Crunch readiness checklist (one month out)</span>
+      <p>Freeze date announced and the exception form tested. Rollback for each shared service rehearsed within the last month, with timings. Dependencies pinned. Capacity checked against last show's peak plus a margin. Known weak spots listed and shared. On-call rota published, with a named backup for each person and a handover note template. Status page live and linked in every department channel. A named person who knows the renderer is reachable by phone. And someone has checked on the coffee, which is the one dependency nobody monitors.</p>
+    </div>
+
+    <h3>One place to look</h3>
+
+    <p>Artists under pressure ask the same question in six channels at once. We moved to a single status page and one status channel, written in plain language: what is affected, what is not, what to do in the meantime, and when the next update will come. The last part is the important one. "We're investigating" is a perfectly honest message, and it is also, after four hours, a message that makes people feel abandoned. The promise of the next update, even when there is nothing new in it, turned out to be worth more than the update itself. Pings dropped, and trust went up.</p>
+
+    <h3>What freezes cost</h3>
+
+    <p>I should be fair to the other side. A freeze holds back tools that could have saved time. During one show, a small fix to a slow cache would have saved artists about an hour a day. It waited behind the freeze for three days, and morale took a visible hit: some people took it as proof that the pipeline team had stopped caring. On another show, a risky upgrade we deferred for two weeks turned out to contain a bug that would have hit during final delivery. One freeze cost us, one saved us, and I cannot honestly tell you the ratio. I can only say that I would rather explain a held-back fix than a broken delivery.</p>
+
+    <h2 id="people" data-short="The people question">The people question</h2>
+
+    <p>The pipeline team works the same long hours as everyone else. I'd like to say that plainly, because it's tempting to write about crunch as something the pipeline team merely supports from a calm distance. We don't. The tired engineer is also the most likely source of the next incident. My own 2:07 a.m. fix is the evidence.</p>
+
+    <p>So we treat sustainability as an engineering requirement. There is a primary on-call, a secondary who is called if the primary hasn't responded in ten minutes, and a third person, designated in advance, who knows the renderer well enough to answer a question at any hour. The rotation is built so that the same three people aren't always the ones awake. Handover notes are short and written to be read half asleep. And there is a rule I'm fond of: the person who fixed it at 2 a.m. does not also review it at 9. That reviewer should arrive rested and a little suspicious.</p>
+
+    <p>We also agreed on what is worth waking someone for. It is a short severity scale based on lost artist time and delivery risk, not on how interesting the problem is:</p>
+
+    <ul>
+      <li><strong>Severity 1:</strong> a whole department or a delivery is blocked. Wake people.</li>
+      <li><strong>Severity 2:</strong> a team is slowed but has a workaround. Handle it at the start of the next shift.</li>
+      <li><strong>Severity 3:</strong> an annoyance. It goes in a queue and does not get a call.</li>
+    </ul>
+
+    <p>The rule we adopted, "escalate early, sleep first if you can", sounds soft, and it was the most effective change we made. Escalating early means a second person is awake before the fix, not after it. Sleeping first means that anything at Severity 2 or lower waits for someone with a clear head. After we adopted it, second incidents caused by a tired fix dropped to near zero over one whole show.</p>
+
+    <p>One more thing belongs here. "The one person who knows" is an outage waiting for a date. If a system has a single expert, crunch will find the day she has the flu. Part of preparing for crunch is quietly making sure two people have done each critical thing at least once. Error messages matter here too: a tool that says what went wrong in plain words is the best colleague a tired engineer can have, which is a story for <span class="xref">Ch. 23</span>.</p>
+
+    <h2 id="footnote" data-short="The honest footnote">The honest footnote</h2>
+
+    <p>None of this is solved. Some nights the right call is still a risky one: a delivery is hours away, the only fix is a bold one, and a canary group would take time we don't have. We make those calls with a named senior person aware, and we write down that we did. Freezes also get lifted for the loudest voice. By my count we granted "just this once" nine times on one show, which is how I know that the exception process mattered more than the freeze. And post-incident reviews fade once the show is delivered. We keep them blameless and short, thirty minutes with three questions (what happened, what made it easy, what would make it boring), and even so, attendance drops the week after delivery, which is exactly when the lessons are fresh. Hours are the hardest part. The deadline comes from outside, and no process fully protects people from it.</p>
+
+    <p>For the metrics side, time to restore and artists' lost hours, see <span class="xref">App. C</span>.</p>
+
+    <h2 id="stuck" data-short="What I'd tell my past self">What I'd tell my past self</h2>
+
+    <p>A message like the 2:07 one arrived again during the next show. This time the answer was a one-line workaround for one department, a canary group of three, a status message with the time of the next update, and the real fix at 9 a.m. after breakfast. The first rung of the scale did what it was built for: it was a boring night. Nobody outside the team ever knew. That is the highest compliment a crunch night can receive.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">What I'd tell my past self</span>
+      <p>The most useful thing you can say at 2 a.m. is "let's wait until we can undo this."</p>
+    </div>
+
+    <p>The people who answer these messages sit in a peculiar spot, half art and half engineering, and they are hard to hire and harder to keep. <span class="xref">Ch. 26</span> is about them.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

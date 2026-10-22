@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Research That Survives Contact with Production · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 27. A paper proves a method can work. Production asks whether it will work on Tuesday, for everyone, on the worst shot. A way to find out early and cheaply, and to say no kindly.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch27">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><em>Contents</em><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part VII · People and Process</p>
+    <p class="chap-num" aria-hidden="true">27</p>
+    <h1>Research That Survives Contact with Production</h1>
+    <p class="dek">A good idea and a good fit are different things. The work is finding out, early and cheaply, which one you have.</p>
+    <p class="meta"><span>Chapter 27</span><span>Continues from: Chapter 26</span><span id="reading-time">15 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">The room gasped. I remember that, because it doesn't happen often in a meeting about software.</p>
+
+    <p>A researcher on our small R&amp;D team had spent two months on a learned denoiser, a method that cleans up a noisy, half-finished render by guessing what the finished image would look like. On the big screen was a single frame from a pine forest, the kind of frame the giant would have been proud to walk through. A render that normally takes hours to settle had been cleaned up in minutes, and it looked finished. People leaned forward. Someone asked if they could see it again. I said, out loud and in front of everyone, “We should use this.”</p>
+
+    <p>A week later the same method met a real shot. It was the worst forest shot from our previous show, a dense, misty one with ten times the geometry of the demo frame. It took four hours and 300 GB of memory, which meant it could run only on the <span class="xref">Ch. 19</span> high-memory pool, our 1 TB nodes, because the standard 512 GB nodes would not have held it alongside everything else a node runs. The result drifted in color through the mist. An artist looked at it for a while and said, “That's interesting.” Anyone who has worked with artists knows what that word means.</p>
+
+    <p>This chapter is about the six months that follow the sentence “we should use this.” It is about why most of those months are spent finding out that the answer is no, and why that is a good use of them. The researcher is the other bridge in a studio, standing between the world of papers and the world of Tuesday afternoon. <span class="xref">Ch. 26</span> was about the person who translates between artists and engineers. This one is about the person who carries ideas in from outside, and about the polite, firm, well-written no they sometimes deserve.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>The belief goes like this: if it works in the paper, it will work in the pipeline. It is a lovely belief, and I held it sincerely for about five years.</p>
+
+    <p>It is also not quite fair to papers, which are doing their job. A paper has to show that an idea can work, so it shows the idea at its best, on examples chosen with care, usually by people who know exactly where the method is strongest. That is not deception. It is the form. The figure captioned “representative result” is representative of the method's good days, and nobody is lying.</p>
+
+    <p>Production lives on the other days. We spent <span class="xref">Ch. 2</span> on the long tail: the scene with ten times the usual geometry, the artist who uses a tool in a way nobody imagined, the one frame in a hundred thousand that is strange. A paper proves it can work. Production asks whether it will work on Tuesday, for everyone, on the worst shot. And every few months a new show arrives with a different look and a different director, and whatever we decided last time is up for argument again. That was the fourth of the Foreword's five differences, that every show is a new product, and <span class="xref">Ch. 3</span> built its build, buy or bolt-on criteria around it. Research gets re-tested every time, too. A method that flattered one show's soft, painterly look can look wrong on the next show's hard, gritty one, and nobody should be surprised when it does.</p>
+
+    <p>There is also the matter of effort. Porting a one-figure result into a facility of a thousand people and nine years of accumulated habit is a little like asking a very good sprinter to join a relay already in progress, in the dark, with the baton changing shape. The sprinter is fast. The relay has other concerns.</p>
+
+    <h2 id="collision" data-short="The worst shot">The collision with the worst shot</h2>
+
+    <p>When a promising method meets production, it tends to fail in the same five places, and none of them is in the paper.</p>
+
+    <p>The first is the data. The benchmark was clean, and ours isn't: cameras with odd lenses, plates with grain, scenes built by someone who left in a hurry. The second is scale. The authors tried their method on what fits on a research workstation, and we asked it to run on <span class="xref">Ch. 9</span>'s volumes and <span class="xref">Ch. 2</span>'s sixty frames times thirty passes, all before Friday's review.</p>
+
+    <p>The third is control. Our denoiser was, by its own lights, correct. But when a lighter said the mist looked a little flat, there was no knob to turn. A method that is right and cannot be nudged is a method artists switch off, which is the same lesson <span class="xref">Ch. 10</span> and <span class="xref">Ch. 14</span> taught us in other costumes. Artists don't want the correct answer. They want the answer the director asked for, and then a little less of it.</p>
+
+    <p>The fourth is everything downstream. A new behavior has to read and write our file formats, agree with the previewer (<span class="xref">Ch. 11</span>), show up in the right place in the review room, and not surprise the compositor who tuned her setup to the old noise. The fifth is support. Picture 2 a.m. during a crunch (<span class="xref">Ch. 25</span>), a task failing in a way nobody has seen, and the only person who understands the method is on holiday. The researcher isn't irresponsible. We just never asked who else should know.</p>
+
+    <p>I should own my part in this plainly. I praised the demo before I had seen the worst shot, and I said “we should use this” in front of the whole room, which turned a hypothesis into a commitment. The researcher didn't oversell. I did. It cost us about three weeks of a small team's time before anyone said out loud what the artist had already told us with one word.</p>
+
+    <p>There is a quiet cost under all five, which is the one nobody budgets: integration. Someone has to teach the method to read our formats, version it so an old shot can be re-rendered the way it was first approved (<span class="xref">Ch. 6</span> told that story the hard way), and make it run on the farm alongside a million other tasks a night. In my experience the idea is the smaller half of the work. The researcher's prototype is perhaps a fifth of what it costs to put the same idea into production, and the other four fifths are the unglamorous part that never appears in a figure.</p>
+
+    <h2 id="reframe" data-short="Cheap, early exits">The reframe: cheap, early, honest exits</h2>
+
+    <p>The shift in my thinking was small. The goal of the first prototype is not to prove the idea works. The goal is to find out how it breaks. Once you hold that, a lot of behavior changes. You stop rewarding the best demo and start rewarding the earliest honest no. You let an artist see the thing before an audience does, because the artist's skepticism is often the best test the method will ever get. And you design the stages so that the cheapest questions come first.
+
+    </p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <ol class="ladder">
+          <li style="--w:8%"><span class="rung">Read it. Does an artist have this pain today?</span><span class="cost">days</span></li>
+          <li style="--w:24%"><span class="rung">Prototype. How does it break?</span><span class="cost">weeks</span></li>
+          <li style="--w:46%"><span class="rung">Production data. Does it survive the worst three shots?</span><span class="cost">weeks</span></li>
+          <li style="--w:72%"><span class="rung">Live shot. Does an artist choose it when nobody is watching?</span><span class="cost">a month or two</span></li>
+          <li style="--w:100%"><span class="rung">Rollout. Does someone own it after the researcher moves on?</span><span class="cost">a quarter, then forever</span></li>
+        </ol>
+      </div>
+      <figcaption><b>Figure 27.1</b>The research ladder. Each rung has one question and a cheap way to say no. Most ideas should leave on the first three.</figcaption>
+    </figure>
+
+    <p>Notice that the first rung isn't about the method at all. It asks whether an artist already feels the pain. A solution looking for a problem can be extremely elegant and still never find one, and the ideas that make it all the way up are nearly always the ones where somebody was already complaining. This is also the second of the two ladders in this book. <span class="xref">Ch. 3</span>'s measured the cost of leaving a choice. This one measures how much we have to believe before we commit.</p>
+
+    <h2 id="now" data-short="What we do now">What we do now</h2>
+
+    <p>Habits, each with a price.</p>
+
+    <p>We keep a standing set of hard cases, which we call the worst-shots benchmark. It is the three or four ugliest shots from the last show, plus whichever one hurt most on the show before. Before any idea gets a demo, it runs on those. Running it takes a day or two of someone's time, and in my experience it ends more ideas than any meeting. Our denoiser died here, on the third rung, in the mist. The price is that researchers must now pay to find out what they'd rather not know, and the first time they do it, it feels like a tax. The second time, most of them ask for it.</p>
+
+    <p>We pair every prototype with a TD and an artist from the first week, not from the demo. This is where <span class="xref">Ch. 26</span> pays off: the TD is the translator, and a prototype that has only ever spoken to researchers is speaking a language the studio doesn't have. The price is the artist's time, which is never free in a crunch. We keep it to an hour a week and make it count.</p>
+
+    <p>We hand over deliberately. A short checklist: documentation someone else wrote down, tests someone else can run, a named owner, and a deprecation plan for the day the owner leaves. If nobody volunteers to own the thing, that is an answer, and it is usually the right one to act on. The price is that handover feels like bureaucracy to the person who built the idea, and some of them have told me so, with justification.</p>
+
+    <p>We measure success in artist time and shot outcomes rather than in benchmark numbers. “Ten percent faster” is a fine result in a paper. Ours is “lighters got an hour back per day on the forest sequences” or “two fewer retakes per week.” It is slower to measure and harder to fake.</p>
+
+    <p>And we run every candidate through the four doors of <span class="xref">Ch. 3</span>: adopt, build, buy or bolt on. Each new show's look can change the answer, so a verdict from last year is a starting point and not a ruling. Often the right answer is to wait. Open-source implementations of good papers tend to appear within a year, with community benchmarks attached and other people's bugs already found. A commercial option sometimes shows up that is better than anything we could write. When we do build, we try to contribute back what we can, partly out of courtesy and partly because a method other people use is a method other people fix.</p>
+
+    <h3 id="survivor" data-short="The dull survivor">The one that made it</h3>
+
+    <p>The idea that did survive was dull, and I am fond of it. A researcher noticed that our cache files (the sim caches of <span class="xref">Ch. 12</span>) took an absurd time to open, because the way they were read had been designed for small files. She wrote a faster reader. No gasp. It sped up reading big caches several times over, which on a single shot was a few minutes, and across a night of lighting tasks was a lot of core-hours.
+
+    </p>
+
+    <p>We ran it on the worst three shots from the previous show, with a TD alongside her. Artists noticed within a week, because it removed a pause they'd stopped complaining about. It had a named owner before it had a name, and it was adopted in a quarter. It earned more artist time than the dazzling denoiser ever would. I think about that comparison often. The dazzler was better research and the dull one was a better fit, and only one of those survives a Tuesday.</p>
+
+    <p>One caution on that first rung. The artist saying no is data, but so is the artist saying yes, politely, to be kind. We learned to ask a sharper question than “do you like it?” We ask, “would you choose this on a Friday night with a delivery due?” People answer that one honestly.</p>
+
+    <h2 id="no" data-short="Saying no kindly">How to say no kindly</h2>
+
+    <p>Killing a good idea is a skill, and I'd like to be better at it than I am. Ideas that fail on fit rather than merit deserve a respectful ending, because the person who had the idea will be back with the next one, and what they remember about the ending decides how they bring it.</p>
+
+    <p>My criteria for stopping, in rough order of how often they apply: no artist is pulling for it. The cost of integration is higher than the value. An open-source or commercial alternative is on its way. Or the idea needs a rewrite of something too central to touch, which is the exit-cost ladder of <span class="xref">Ch. 3</span> cashing in.</p>
+
+    <p>How you say it matters as much. We write a closing note, a page at most, and the researcher and I write it together.</p>
+
+    <div class="callout aside">
+      <span class="callout-label">A closing note</span>
+      <p>What we tried. What we learned, including what worked. Why we are stopping, in one honest paragraph. What would make us revisit it. Who to thank, by name. Where the prototype and the data are kept.</p>
+    </div>
+
+    <p>Then we keep the prototype and the data. We keep a shelf, a plain list of ideas stopped for now, each with the condition under which it should come back. “No” and “not yet” are different words, and the shelf is how we remember the difference.</p>
+
+    <p>An entry on the shelf is three lines long: the idea, the reason it stopped, and the trigger that would reopen it. “Learned upscaling for reference footage: failed two of three worst shots; revisit when a method handles film grain.” “Simulation acceleration: too slow to art-direct; revisit when a show's sims outgrow the farm.” A trigger should be something we can observe, not a date, because dates get forgotten and observations tend to arrive on their own. Twice a year I read the shelf aloud to the team. It takes ten minutes, and now and then someone says, “Wait, that was the thing, wasn't it?” The world catches up more often than you would expect, and when it does, the work is already half done.</p>
+
+    <p>Saying no also has a second audience, the people who were never in the project. A quiet closing note, posted where the studio can read it, tells the next researcher that ideas here are judged on fit and not on politics, and that a good attempt ends with thanks. I have seen that single habit change how early people bring us half-formed ideas, which is exactly when we most want them.</p>
+
+    <p>I once stopped a promising simulation-acceleration prototype after fourteen weeks. It had been described, on day one, as a quick prototype. I told the team in person, gave them the closing note first and my reasons second, and credited the work by name at the next all-hands. It landed badly for one day and fine for a week. One of the researchers kept the prototype on the shelf. A year later, when a show's sims got heavier, she was right to.</p>
+
+    <h2 id="footnote" data-short="What isn't solved">The honest footnote</h2>
+
+    <p>We aren't good at this yet. We killed one idea that later turned out to be right, and I own that, because I read the artist's lukewarm response as a verdict when it was a request for a different interface. We also shipped one that should have stayed on the shelf, a smart tool that was admired, adopted and quietly worked around for two years. That one is mine as well. I had grown fond of it and I skipped the third rung.
+
+    </p>
+
+    <p>The shelf is growing, and a shelf nobody visits is just a polite way of forgetting. And some research culture is lost whenever the people who held it move on. The ladder slows enthusiasm, which is a real cost, and I've seen a researcher decide the studio was a place where ideas go to be audited. I don't have a complete answer to that. The best I have is to make the ladder feel like a pair of hands and not a gate.</p>
+
+    <h2 id="again" data-short="The meeting again">The same meeting, a year later</h2>
+
+    <p>Last spring a researcher brought us another learned method, this time for upscaling reference footage, and I sat in the same room with the same screen. It was beautiful. People leaned forward.
+
+    </p>
+
+    <p>Then the worst shot went up beside it, and the room went quiet in a different and more useful way. We decided to run it for two weeks on the hard cases. It passed one and failed two. It is on the shelf now, with a note saying what would make us revisit it, and the researcher has a new project she likes better. Nobody lost an afternoon of faith.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">What I'd tell my past self</span>
+      <p>The best research outcome is sometimes a well-written no. Put the worst shot on the screen next to the demo, before you say a word about using it.</p>
+    </div>
+
+    <p>The demo is still the best part of the meeting, and I would not take it away. It is the worst shot beside it that tells us what to do next. Both belong on the screen, and the order matters: the demo makes people care, and the worst shot makes the caring useful.</p>
+
+    <p>That closes Part VII: the plugins that grow around the pipeline, the crunch that tests it, the bridge between artists and engineers, and the bridge to the outside world. The people, the tools and the processes are all in the room now. Part VIII turns to the hardest lessons, beginning with five migrations that nearly went wrong, in <span class="xref">Ch. 28</span>.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

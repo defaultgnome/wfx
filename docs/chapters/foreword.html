@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Foreword · Ten Thousand Shots a Year</title>
+<meta name="description" content="A short letter before we begin, about deadlines, directors, and the job of building software for people whose product is something else.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="foreword">
+<a class="skip" href="#content">Skip to the foreword</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Foreword</p>
+    <p class="chap-num mark" aria-hidden="true">i</p>
+    <h1>Why a Film Pipeline Is Not a Software Product</h1>
+    <p class="dek">A short letter before we begin, about deadlines, directors, and the odd job of building software for people whose product is something else.</p>
+    <p class="meta"><span>Foreword</span><span id="reading-time">5 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">At two in the morning, a week before delivery, an artist leaned over and asked me a very reasonable question. <em>“Why does it say pending?”</em></p>
+
+    <p>She had pressed Publish forty minutes earlier. The button had done what buttons do. Somewhere behind it, three systems were passing her work along like a bucket brigade: one written for a film that came out nine years ago, one we had adopted from outside the previous spring, and one a colleague had thrown together over a weekend, which had turned out, to everyone's surprise, to be load-bearing. One of the three had stopped, politely, and told no one.</p>
+
+    <p>I found it, fixed it, and watched her shot go through. She said thanks and went back to work. The whole exchange took six minutes, and nobody will ever know it happened. Somewhere in those six minutes I understood something about this job that took me years to put into words, and this book is, more or less, my attempt to say it properly.</p>
+
+    <p>Here it is, in one line. <strong>We build software for people whose product is something else, and the deadline doesn't move.</strong></p>
+
+    <h2 id="familiar" data-short="The familiar part">The familiar part</h2>
+
+    <p>If you're a developer, you'd feel at home in my world. We have repositories and code review, continuous integration, dashboards, on-call rotations, and post-mortems. We have standups too, and I'll admit we have a lot of them. A developer from a web company could sit down on Monday and be useful by Wednesday.</p>
+
+    <p>Then, sometime around Thursday, they notice that everything underneath is shaped differently. A film pipeline looks like a software product, but it behaves like something else. I count five differences, and each of them explains a decision you'll meet later in the book.</p>
+
+    <h2 id="five" data-short="Five differences">Five ways it isn't a software product</h2>
+
+    <p><strong>The deadline is a date on a poster.</strong> In most software, a deadline is a negotiation. Here it is printed. Cinemas are booked, trailers are cut, and people are flying in for a premiere. You can't slip a sprint. When the work isn't ready, the date does not move, so the work does, and usually in the direction of more weekends.</p>
+
+    <p><strong>The requirements change nightly.</strong> A film isn't built to a specification. It is discovered while it's being made. The requirement is a director's taste, and taste is allowed to update. Whatever was true of the giant on Monday may not be true on Thursday, and nobody has done anything wrong.</p>
+
+    <p><strong>The users' product is something else.</strong> Our users don't want our software. They want a picture. The software is plumbing, and nobody compliments the plumbing. When it works, the artist notices the shot. When it doesn't, the artist notices us. There is no version of success in which the pipeline receives a thank-you note, and I've found it healthy to make peace with that early.</p>
+
+    <p><strong>Every show is a new product.</strong> Each film has its own look, its own assets, and its own peculiar demands, and often its own tools. A pipeline team serves a rotating cast of tiny start-ups, each with a hard launch date and strong opinions.</p>
+
+    <p><strong>Software lives forever, and the work gets thrown away.</strong> This is the cruelest pair. The tool someone wrote in a hurry for one scene is still running nine years later. Meanwhile the thing it was built to help produce, the actual picture, is thrown away forty times before it ships.</p>
+
+    <p>None of this means film pipelines are harder than other software. I've met payments engineers who would run from my job as fast as I'd run from theirs. It means the <em>shape</em> is different, and shape explains choices: why we built what we built, bought what we bought, and regretted what we regretted.</p>
+
+    <p class="ornament" aria-hidden="true">· · ·</p>
+
+    <h2 id="book" data-short="What this book is">What this book is, and isn't</h2>
+
+    <p>I wrote it for developers. Web, games, infrastructure, data: if you've built something that had to keep running while people used it, you're my reader. You don't need to know anything about film. You do need to read a system diagram without flinching and tolerate a certain number of jokes.</p>
+
+    <p>It gives you <em>details, not code</em>. I want to show how each thing works and why we chose it, at a level you could argue with, and I've kept listings out entirely. It is a tour of problems, not a catalogue of products, so it won't tell you what to buy. And it includes what went wrong, because that is the part I always wanted to read and rarely found.</p>
+
+    <h2 id="read" data-short="How to read it">How to read it</h2>
+
+    <p>The book has eight Parts. The first explains what a pipeline is and how big it gets. Then come the data, the rendering, the simulation, the characters, the farm and the cloud, the people, and, last, the lessons. Chapters stand alone, and small tags like <span class="xref">Ch. 6</span> point sideways when something is explained elsewhere. Read front to back or jump to whatever hurts.</p>
+
+    <p>You'll also meet the giant again. He's a tree-giant from a shot we follow in Chapter 1, and he returns whenever the book needs a reminder of how much is hiding behind sixty frames. The tinted boxes you'll see are notes, asides, and takeaways. Skip them freely.</p>
+
+    <div class="callout aside">
+      <span class="callout-label">A word about honesty</span>
+      <p>Some stories here are blended, so that no one's confidential work, and no one's embarrassment, can be identified. Numbers are orders of magnitude, not audited figures. Opinions are mine, not any employer's. And whenever a technical decision in this book went badly, there's a fair chance I helped make it.</p>
+    </div>
+
+    <h2 id="thanks" data-short="Before we begin">Before we begin</h2>
+
+    <p>To the artists: thank you for your patience with the engineers. Your pictures are the reason any of this exists, and I have never once managed to make a shot look half as good as you do.</p>
+
+    <p>To the engineers: welcome. Come and see what's behind sixty frames.</p>
+
+    <p class="signoff">Jacob M. Miles<small>Working draft</small></p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

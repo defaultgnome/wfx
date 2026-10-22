@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hair, Fur, Feathers, Cloth, Muscle and Skin · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 14. Layers from muscle to the last feather, plus the cloth over all of it, and the standing negotiation between anatomy and art direction.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch14">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part IV · Simulation and Procedural Systems</p>
+    <p class="chap-num" aria-hidden="true">14</p>
+    <h1>Hair, Fur, Feathers, Cloth, Muscle and Skin</h1>
+    <p class="dek">The layers that make a creature look alive, the cloth it wears, and what to do when a perfectly accurate animal gets the note “it looks heavy.”</p>
+    <p class="meta"><span>Chapter 14</span><span>Continues from: Chapter 13</span><span id="reading-time">16 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">The note from the review was three words long: <em>“It looks heavy.”</em></p>
+
+    <p>We had spent weeks on that animal. It was a wolf-sized creature, the giant's smaller cousin, and its muscles, skin and pelt were driven by a simulation that did exactly what a real animal's body does. Each footfall sent a ripple through the shoulder. The fur settled the way fur settles. A biologist would have approved.</p>
+
+    <p>The director watched it twice and said it looked heavy. The supervisor, with a perfectly straight face, answered: “It is heavy. That's the problem.”</p>
+
+    <p>I remember the silence, because I was the one who had spent a month arguing that accuracy would end all arguments about this creature. It did not end them. It was the place they started. The rest of this chapter is about what we did next, and about a sentence I now repeat to new hires: real animals are not designed to look good on camera.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>Here is what I believed. If the anatomy is right and the physics is right, the picture will be right. Biology is the one art director nobody can overrule, so follow it and the notes will dry up.</p>
+
+    <p>It is a lovely belief, and for the first few shots it held. Then we reached a trot across a snowy ridge, and the pelt rippled over the ribs with the dull honesty of a real wolf carrying a real wolf's weight. The story needed a creature that felt light, quick and slightly dangerous. Biology gave us an animal that felt like it had a mortgage.</p>
+
+    <p>Nothing was broken. The simulation was correct. That was the uncomfortable part, because a bug has a fix, and an accurate simulation that looks wrong has only an opinion attached to it. So the real question was never how to make the animal accurate. It was how to make accuracy <em>cheap to leave</em>, so that when someone asks for something else, we can move without starting over.</p>
+
+    <h2 id="layers" data-short="Layers, inside out">Layers, from the inside out</h2>
+
+    <p>It helps to think of a creature as an onion that someone has been rude to. At the center is a skeleton, which moves because an animator or a motion-capture session (<span class="xref">Ch. 16</span>) told it to. Around that sits muscle, then fat, then skin, then hair, fur or feathers, and over all of it, if the creature has a rider or a cloak, <dfn>cloth</dfn>. Each layer is pushed around by the one beneath it, and each can be simulated, shaped by hand, or both.</p>
+
+    <p>The skeleton and its rig belong to <span class="xref">Ch. 18</span>, so I'll treat them as the engine under the floor. The other layers are where this chapter lives, and the useful thing to know about each is who owns it, how it's driven, and where artists push back.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Layer</th><th>What it is, as data</th><th>How it's usually driven</th><th>Cost</th><th>Owner</th><th>Where artists push back</th></tr></thead>
+          <tbody>
+            <tr><td>Muscle and fat</td><td>Volumes that bulge and jiggle</td><td>Shape-driven in most shots, simulated for hero close-ups</td><td>Moderate to high</td><td>Creature effects</td><td>“It reads as too soft” or “too heavy”</td></tr>
+            <tr><td>Skin</td><td>A mesh that slides, stretches and wrinkles</td><td>Follows the muscle layer, plus corrective shapes</td><td>Moderate</td><td>Creature effects</td><td>A small error turns uncanny very fast</td></tr>
+            <tr><td>Hair and fur</td><td>Curves, millions of them</td><td>A few thousand simulated guides, the rest interpolated</td><td>High, mostly storage and render memory</td><td>Grooming</td><td>Silhouette, clumping, how it catches light</td></tr>
+            <tr><td>Feathers</td><td>Small rigid-ish objects with structure and overlap</td><td>Hand-posed, with light simulation on the loose ones</td><td>Moderate</td><td>Grooming</td><td>Neighbors that collide, or refuse to</td></tr>
+            <tr><td>Cloth</td><td>A thin mesh, hundreds of thousands of points</td><td>Simulated for heroes, baked or faked for the background</td><td>High, and often rerun late</td><td>Cloth simulation</td><td>Hiding the silhouette, folding on the wrong beat</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 14.1</b>Typical arrangements. Which layers are simulated and which are shape-driven varies by facility, by show and by shot.</figcaption>
+    </figure>
+
+    <p>Notice how much of the right-hand column is about taste. That's not an accident. Every one of these layers makes a physical claim and an aesthetic one, and the physical claim is the only one a computer can check.</p>
+
+    <p>Two layers deserve a word on why the simulation is optional. Muscle and skin are expensive, and for a creature seen at a distance, a library of pre-sculpted shapes triggered by the pose looks nearly as good for a tiny fraction of the compute. We simulated them for hero close-ups only, and shape-drove the rest. We argued about where the boundary sat on almost every show, and we never settled it permanently. It moves with the camera.</p>
+
+    <h2 id="grooming" data-short="Grooming">Grooming: millions of strands, directed by hand</h2>
+
+    <p>The wolf had about two million <dfn>strands</dfn> of fur. Nobody placed them. A <dfn>groom</dfn> is the artist-directed arrangement of strands on a surface, and it is made the way a gardener works, not the way a bricklayer does. An artist paints where fur is dense, where it's short, which way it flows, where it clumps, and how its color varies from root to tip. The software then grows the millions of strands that obey those instructions.</p>
+
+    <p>That makes a groom a <em>recipe</em>, not a pile of curves. This matters more than it sounds. If the groom were stored as two million hand-placed curves, then the day modeling changed the shape of the haunch, the groom would be wrecked and someone would spend a week rebuilding it. Because it's a recipe of guides, density maps and parameters, the same recipe is simply grown again on the new body. This is the asset thinking of <span class="xref">Ch. 4</span> applied to hair: a groom has a version, a set of parameters and a clear owner, and it travels through the pipeline as a reusable thing.</p>
+
+    <h3>Simulate few, render many</h3>
+
+    <p>You cannot simulate two million strands. Or rather, you can, once, and then you will not be asked back. What we do instead is pick a few thousand <dfn>guide curves</dfn>, the strands that actually get simulated, and let every other strand follow its nearest guides by interpolation. The wolf had about three thousand. Three thousand are simulated; two million are along for the ride.</p>
+
+    <figure class="fig">
+      <div class="fig-box">
+        <svg viewBox="0 0 560 190" role="img" aria-label="A few simulated guide strands, shown thick, with many thin interpolated strands following them.">
+          <g fill="none" stroke-linecap="round">
+            <g stroke="currentColor" stroke-opacity=".28" stroke-width="1.2">
+              <path d="M60 40 Q80 100 70 160"/><path d="M75 40 Q95 100 86 160"/><path d="M90 40 Q112 100 100 160"/><path d="M105 40 Q127 100 116 160"/>
+              <path d="M170 40 Q190 100 180 160"/><path d="M185 40 Q205 100 196 160"/><path d="M200 40 Q222 100 210 160"/><path d="M215 40 Q237 100 226 160"/>
+              <path d="M290 40 Q312 100 300 160"/><path d="M305 40 Q327 100 316 160"/><path d="M320 40 Q342 100 330 160"/><path d="M335 40 Q357 100 346 160"/>
+            </g>
+            <g stroke="#c0502a" stroke-width="3">
+              <path d="M52 40 Q72 100 62 160"/><path d="M162 40 Q182 100 172 160"/><path d="M282 40 Q304 100 292 160"/><path d="M350 40 Q372 100 361 160"/>
+            </g>
+          </g>
+          <text x="400" y="70" fill="currentColor" font-size="13" font-family="Inter, sans-serif">Thick: simulated guides</text>
+          <text x="400" y="92" fill="currentColor" font-size="13" font-family="Inter, sans-serif" opacity=".7">Thin: interpolated, rendered</text>
+          <text x="400" y="130" fill="currentColor" font-size="12" font-family="Inter, sans-serif" opacity=".7">Risk: strands that cross</text>
+          <text x="400" y="148" fill="currentColor" font-size="12" font-family="Inter, sans-serif" opacity=".7">between guides, or clump.</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 14.1</b>A few guides do the physics. Everything else inherits their motion.</figcaption>
+    </figure>
+
+    <p>The trade-off is the usual one. Interpolation is cheap and mostly lovely, and it fails in two recognizable ways. Strands between guides can cross each other and poke through the skin. And neighboring strands that follow the same guide can pull into a visible clump, like wet hair that has been told to behave. Much of a hair technical director's life is finding the places where the cheap trick shows and adding a guide there.</p>
+
+    <h3>Feathers are a different animal</h3>
+
+    <p>Everything above is about curves. Feathers are not curves. A feather has a shaft, a vane and barbs, and it sits in a layered pattern where each one overlaps the next in a particular order. Get the order wrong and the bird looks like it's wearing a shingled roof put on by a stranger.</p>
+
+    <p>So feathers are mostly posed and ordered rather than simulated, with light dynamics on the loose ones at the wing tips, and the thing that matters most is collision between neighbors, far more than gravity. Hundreds of them have to slide past each other without any going through any other. I have come to think of a wing as a very small, very feuding committee: each member polite on its own, and all of them certain they should be on top.</p>
+
+    <p>One more thing about all of these. A groom is judged under particular lighting, and fur that looks soft under flat light can look like wire in a low sun. So every groom was tested early in the lookdev setup, not in a neutral gray room, which is a lesson from <span class="xref">Ch. 10</span> and <span class="xref">Ch. 11</span>.</p>
+
+    <h2 id="moving" data-short="Making it move">Making it move</h2>
+
+    <p>Strands move because we move guides. We simulate those few thousand with a body to collide against and a little wind, and the rest inherit it. <dfn>Secondary motion</dfn>, the trailing, lagging, jiggling response of fur, flesh and fabric to the main movement, is what makes the difference between a creature and a model of a creature. Animators can add it by hand, but nobody has ever matched the way a good simulation finds it for free.</p>
+
+    <p>Before any of it runs, though, the simulation needs a clean <dfn>rest pose</dfn>: the relaxed shape of the body and its coverings with nothing pushing on them. If the groom is slightly inside the skin at rest, every frame starts wrong. We lost a weekend once to a rest pose that was off by a fraction of an inch on one ear. Everything downstream was simulating a creature wearing its own pelt a little too tightly, and the farm cheerfully computed it for hours.</p>
+
+    <h3>The run-up nobody sees</h3>
+
+    <p>The stability problem is the least glamorous and most expensive. A creature may stand in one pose at the end of one shot and be mid-leap in the next, with a cut between. Simulation cannot teleport. It needs to start from rest and run for a stretch of frames to let everything settle, and the audience never sees those frames. We typically ran a few dozen unseen frames before frame one, on every simulation, on every version.</p>
+
+    <p>That is wasted compute, and an honest case for caching. The run-up is the same each time unless the animation changed, so the settled state is cached and reused, with the same versioning questions from <span class="xref">Ch. 12</span>: which animation was this cache made from, and is it still the current one?</p>
+
+    <h3>Finding the one rogue clump</h3>
+
+    <p>Debugging a pelt is a strange job, because the failure is one tuft out of two million. At frame 114 of one shot, a single clump of fur on the wolf's flank decided it had somewhere to be. The rest of the coat was perfect. It took an artist most of an afternoon to find it, and what found it was tooling: slow motion, a simplified display that shows only the guides, and a highlight that lights up any strand moving faster than its neighbors by a given margin. Debug views for simulation are a pipeline feature, not a luxury. We built ours after that afternoon.</p>
+
+    <h2 id="cloth" data-short="Cloth and clothing">Cloth and clothing</h2>
+
+    <p>Cloth is hair's close relative and its more demanding one. <dfn>Cloth simulation</dfn> treats a garment as a thin surface that must collide with the body underneath and with itself, while obeying gravity, wind and stiffness. Chapters 12 and 13 both pointed here, so let's settle it.</p>
+
+    <p>The difficulty, in pipeline terms, is that a thin surface hides every mistake in the wrong place. It needs a fine mesh, small time steps and a clean starting pose. A hero's cape is a few hundred thousand points, and not one of them may ever pass through the shoulder. When one does, you see it at once, because the cloth is what's on the outside.</p>
+
+    <h3>Simulate it or fake it</h3>
+
+    <p>Like muscle, cloth is a per-shot decision, made by distance and by how much the garment moves. A hero's cloak, in the foreground and whipping in wind, is simulated. A background extra's tunic, a hundred yards away, is baked: a pre-made animation cycle applied to the body, which is exactly the cheap end we met with the crowds in <span class="xref">Ch. 13</span>. Between them there is a gray zone where someone has to look at a layout and say honestly how many pixels the garment will occupy. We got that wrong in both directions. Simulated capes nobody could see cost a night each. A baked cloak in a close-up cost us a re-simulation of the whole sequence.</p>
+
+    <h3>A garment is an asset</h3>
+
+    <p>A garment, like a groom, has several parts that must travel together: a pattern layout, a fitted rest shape, and a simulation setup with its stiffness and weight. We version it exactly as we version a groom. The payoff is the same too. When the body changes, which it always does, the garment refits to the new shape through its recipe and does not get rebuilt by hand.</p>
+
+    <p>Cloth is also the layer most often rerun at the last minute. The body above it changes, then the animation changes, and now the cape that was approved on Tuesday is wrong on Thursday. The cache costs and the run-up costs are the same as for fur, but cloth takes the blame, because it is last in the chain and everyone upstream gets to say “it was fine when I handed it over.”</p>
+
+    <h3>The same direction problem</h3>
+
+    <p>Cloth has its own version of “it looks heavy.” A cape that obeys physics does exactly what a real cape would do, which includes hiding the character's silhouette at the one moment the director wants to see it. The answer is the same as for the wolf: controls for stiffness, wind and, most useful, “hold this fold through the cut,” not reruns. Garments can hold a pose for a few frames and release, which is nothing a real cape does, and nothing a director has ever complained about.</p>
+
+    <h2 id="negotiation" data-short="Anatomy vs. art">Anatomy versus art direction</h2>
+
+    <p>Now back to the wolf. The honest story is that we followed biology on purpose in some places and bent it on purpose in others. Weight and timing we kept close to life, because audiences feel them even if they can't say why. Silhouette, readability and emotion we bent without apology. A wolf's ears move to signal mood, and in a close-up we exaggerate them, because the camera is not a wolf.</p>
+
+    <figure class="fig">
+      <div class="fig-box">
+        <svg viewBox="0 0 560 150" role="img" aria-label="A dial from anatomical on the left to art-directed on the right, with feathers, muscle, skin, fur and cloth placed along it.">
+          <line x1="40" y1="70" x2="520" y2="70" stroke="currentColor" stroke-opacity=".4" stroke-width="2"/>
+          <g fill="#c0502a"><circle cx="110" cy="70" r="6"/><circle cx="210" cy="70" r="6"/><circle cx="310" cy="70" r="6"/><circle cx="400" cy="70" r="6"/><circle cx="490" cy="70" r="6"/></g>
+          <g fill="currentColor" font-family="Inter, sans-serif" font-size="12" text-anchor="middle">
+            <text x="110" y="52">Muscle</text><text x="210" y="52">Skin</text><text x="310" y="52">Fur</text><text x="400" y="52">Cloth</text><text x="490" y="52">Feathers</text>
+            <text x="60" y="110" text-anchor="start" opacity=".7">Anatomical</text>
+            <text x="500" y="110" text-anchor="end" opacity=".7">Art-directed</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 14.2</b>Where we tended to land, for one show. Your studio will place these differently, and so will your next show.</figcaption>
+    </figure>
+
+    <h3>Sliders, not rebuilds</h3>
+
+    <p>What fixed the wolf was not a better simulation. It was a knob. We added a control for sag, the amount the pelt and body lag behind and sink under the movement. The fix for “it looks heavy” was to turn it down by about a fifth, which the simulation artist did in minutes and the farm re-ran overnight. No rebuild, no argument about physics. The note was answered by the next morning's review.</p>
+
+    <p>Once we had one such control, we wanted all of them, and a short list of them became part of how we build every simulation:</p>
+
+    <div class="callout">
+      <span class="callout-label">Knobs worth building in from day one</span>
+      <p>Sag and weight. Stiffness. Wind strength and direction. Clump amount. Settle time. And “hold this shape through the cut.” None of these are physics. They are the places where someone will say “more like this” and where you would like the answer to be a number, not a restart.</p>
+    </div>
+
+    <h3>Who gets to say no</h3>
+
+    <p>Three people own pieces of the answer. The animator owns the performance, the simulation artist owns what the body and coverings do in response, and the supervisor owns the look the director asked for. On the wolf, the animator wanted the heavy footfalls, because they sold the weight of the character, and objected when we reduced sag in the pelt, because it fought the body language. The simulation artist found the compromise: reduce sag on the fur and the loose skin but not on the shoulder. The supervisor made the final call, and was right, and I'd like it noted that I was not consulted on whether this was a good idea.</p>
+
+    <p>The conclusion I keep coming back to: the more accurate the base, the more convincingly you can cheat from it. A physically right simulation with a slider turned a fifth of the way down still reads as believable. A fake that started fake has nothing to hold it up when the lighting changes. Accuracy was never the destination, but it is the best place to launch from.</p>
+
+    <h2 id="cost" data-short="The cost of a pelt">The cost of a pelt</h2>
+
+    <p>None of this is free, and the bill comes in three forms: compute, storage and people.</p>
+
+    <aside class="scale">
+      <span class="callout-label">Scale snapshot: a hero pelt</span>
+      <dl>
+        <div><dt>Strands on the wolf-sized creature</dt><dd>about 2 million</dd></div>
+        <div><dt>Simulated guides</dt><dd>about 3,000</dd></div>
+        <div><dt>Hair and cloth cache, one shot version</dt><dd>a few hundred gigabytes</dd></div>
+        <div><dt>The giant</dt><dd>several times that</dd></div>
+        <div><dt>A human head of hair, for scale</dt><dd>about 100,000</dd></div>
+      </dl>
+      <small>Orders of magnitude, not measurements. A strand count mostly tells you how large the memory problem will be at render time (<span class="xref">Ch. 9</span>).</small>
+    </aside>
+
+    <p>The surprise was which cost was largest. It was not the farm. It was artist time spent reviewing grooms, one lighting setup at a time, followed closely by the size of the caches. A few hundred gigabytes per shot version doesn't sound dramatic until you multiply by the versions a shot goes through and by the number of shots with the wolf in them. Storage was the cost we felt every week.</p>
+
+    <p>We cut what we could. We simulated fewer guides on distant shots, we cached at lower resolution for review versions, and we baked cloth for anyone beyond the middle ground. We also regretted some of it: baking the cape for a mid-ground character saved a night and cost a week when the director moved the camera closer. Baking is a loan, and the interest arrives with the notes.</p>
+
+    <p>One look ahead. A model that learns to predict muscle, skin or cloth motion from the rig's pose, in real time, is promising for previews, where speed matters more than fidelity. I'll pick that up in <span class="xref">Ch. 31</span>, as opinion rather than as something we run.</p>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>Return to the review. Today, if the same note came back, “it looks heavy,” the answer would take ten minutes and no argument: someone would turn the sag control down, the overnight run would finish before breakfast, and we would look at it again over coffee. We built the same animal, but with the knob already there.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">Takeaway</span>
+      <p>Accuracy is a starting point you can art direct from, not a destination. Make the biology available, and the overrides cheap.</p>
+    </div>
+
+    <p>The wolf is one creature on one hill. A real show asks for the hill, and the forest around it, and a city in the next sequence, with a hundred thousand objects that a single artist still has to be able to move. That is the next chapter: <span class="xref">Ch. 15</span>, on vegetation and environments.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

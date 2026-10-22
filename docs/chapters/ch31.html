@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Next Five Years · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 31. An opinion chapter: the technology will change faster than the pipeline's hard problems do.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch31">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part VIII · Hard-Won Lessons</p>
+    <p class="chap-num" aria-hidden="true">31</p>
+    <h1>The Next Five Years</h1>
+    <p class="dek">New renderers still need old disciplines.</p>
+    <p class="meta"><span>Chapter 31</span><span>Continues from: Chapter 30</span><span id="reading-time">16 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">A word before anything else: this chapter is opinion and speculation. I am an engineer, not a prophet, and thirty chapters of this book should have taught you to distrust anyone who sounds sure about next year.</p>
+
+    <p>My own record is the evidence. Early in my career I heard a confident forecast, from someone who knew far more than I did, that automatic matting would end rotoscoping, the craft of cutting a subject out of a plate frame by frame. The tools did arrive, and they were good. What happened next was not the end of the department. The work changed shape. Artists stopped drawing outlines and started reviewing and fixing the machine's outlines, which turned out to be a different skill and, in our case, needed more people, not fewer. The forecast was right about the technology and wrong about the shop.</p>
+
+    <p>I am about to make predictions of my own, and I know the odds. So I'll hedge where hedging is honest, say “likely” where I mean it, and leave out dates and adoption numbers entirely. Take what's useful; the chapter will tell you which part I'd keep.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>“This time it's different” comes in two flavors. One says nothing will change: the pipeline is a pipeline, the pixels are pixels, and every new idea is last decade's idea in a nicer jacket. The other says everything will change, and the careful nine-stage machinery of <span class="xref">Ch. 1</span> will dissolve into a prompt. Both are comforting, because both let you stop thinking.</p>
+
+    <p>My own view sits in an unglamorous middle. The technology will likely change faster than the pipeline's hard problems do. Data, people, time and trust were the bottlenecks nine years ago and I expect them to be the bottlenecks in five. New renderers still need old disciplines.</p>
+
+    <h2 id="ml" data-short="Machine learning, one stage at a time">Machine learning, one stage at a time</h2>
+
+    <p>The least fanciful way I know to think about learned tools is to walk the shot's journey from <span class="xref">Ch. 1</span> and ask, at each of the nine stages, one plain question: would I let this touch the giant? Learned tools sort into three groups, and I'd label them mature, emerging and experimental. The labels are my judgment and will age.</p>
+
+    <p>Mature is short. Learned denoising earned its place the way every tool earns it in this book, by being shadowed, then offered, then made the default, the same trust scale we used in <span class="xref">Ch. 10</span>. Cleanup and rough first passes, the tedious work nobody frames and hangs on a wall, are close behind. In each case the artist could still steer, and still say no.</p>
+
+    <p>Emerging is where I'd put the topics that earlier chapters left as open questions, and I'll name them rather than pretend I've solved them. Learned approximations of simulation (<span class="xref">Ch. 12</span>) and learned deformation (<span class="xref">Ch. 14</span>) look promising for previews, where fast and roughly right is exactly the job. Learned crowd motion (<span class="xref">Ch. 13</span>) we are watching carefully and not betting a battle on. Learned solvers (<span class="xref">Ch. 16</span>) can speed up cleanup and give a nicer first pass at a facial or body solve, and we've tried them. Each of these promises to turn hours of compute or days of hand work into something near interactive. Each also turns a deterministic step into one whose answer depends on what the model saw in training, and I'd keep the first-pass role and leave the final say with a person. Search and tagging of review media (<span class="xref">Ch. 23</span>) sits here too: finding “every take where the giant's left foot slips” is a real wish, and I'd rather someone else find it first.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Deferred topic</th><th>Where planted</th><th>My read, as opinion</th></tr></thead>
+          <tbody>
+            <tr><td>Learned denoising</td><td><span class="xref">Ch. 10</span></td><td>Mature</td></tr>
+            <tr><td>Accelerators for compute</td><td><span class="xref">Ch. 10</span> (one line)</td><td>Likely to take more of the farm; the hard part is scheduling</td></tr>
+            <tr><td>Learned or neural rendering</td><td><span class="xref">Ch. 8</span></td><td>Watched, not adopted</td></tr>
+            <tr><td>Neural previews</td><td><span class="xref">Ch. 11</span></td><td>An open question</td></tr>
+            <tr><td>Learned approximations of simulation</td><td><span class="xref">Ch. 12</span></td><td>Emerging</td></tr>
+            <tr><td>Learned crowd motion</td><td><span class="xref">Ch. 13</span></td><td>Watched, not bet on</td></tr>
+            <tr><td>Learned deformation</td><td><span class="xref">Ch. 14</span></td><td>Emerging</td></tr>
+            <tr><td>Learned solvers (cleanup, first-pass solves)</td><td><span class="xref">Ch. 16</span></td><td>Emerging</td></tr>
+            <tr><td>Search and tagging of review media</td><td><span class="xref">Ch. 23</span></td><td>Emerging</td></tr>
+            <tr><td>Review formats</td><td><span class="xref">Ch. 23</span> (one line)</td><td>Changing; the room will inherit it</td></tr>
+            <tr><td>Testing a research idea against production</td><td><span class="xref">Ch. 27</span></td><td>The method for all of the above</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 31.1</b>The deferrals this chapter owns. Anything not in the table, I'm not claiming.</figcaption>
+    </figure>
+
+    <p>Everything else is experimental, and the engineering problems are ones we've met before. Training and reference data is data volume again (<span class="xref">Ch. 7</span>). Farm scheduling gets harder when the unit of work isn't a CPU task (<span class="xref">Ch. 19</span>). And artist trust is the same trust as before: a tool that can't be steered isn't a tool.</p>
+
+    <p>How should a facility bring in something opaque? The way we brought in the denoiser. Shadow it first: run it beside the trusted path on real shots, show nobody the result, and compare. Then offer it, as an option an artist can pick and a supervisor can veto. Only after a few shows of boring results do you make it the default, and even then the old path stays on the shelf for a while. It's slow, and it has saved us from enthusiasm more than once. The test I'd apply to every row in the table above is whether it can survive that sequence, not whether the demo was impressive. Demos are tuned to the one shot the model likes; production is the other nine thousand nine hundred and ninety-nine.</p>
+
+    <p>If I drew the usual hype curve for these tools, I'd mark my own past forecasts on it in a different color and label them “probably wrong.” Expectation climbs faster than the pipeline can absorb anything, it falls when the first show tries to use it, and the useful version arrives later, quieter and in a smaller role than anyone promised. The unit of time in all of this is “five years,” which is always both too short and too long: too short to rebuild a pipeline, too long to trust a forecast.</p>
+
+    <p>Two points belong to the pipeline team, whatever the models can do. The first is that a model is a dependency with no source diff. A new version changes pixels, and nothing in a code review will tell you which ones. I can easily picture the dailies where a model update has quietly changed every frame of the giant, and nobody can say why the left foot looks different. The answer is the one from <span class="xref">Ch. 6</span>: record which version of which model made this pixel, and be able to run the old one again. The second is training data. Knowing where it came from is a pipeline problem as much as a legal one, and it's far cheaper to track from the first day than to reconstruct in year three.</p>
+
+    <p>The labor, legal and ethical debates around all of this are real and important, and they are not what this book is qualified to settle. I'll say only that they will shape what gets adopted at least as much as the engineering does, and that a facility that ignores them is making a decision too.</p>
+
+    <p>One more habit from the denoiser is worth keeping, and it is about who gets to say no. The artist who owns the shot should be able to turn any learned step off without filing a ticket, and the pipeline should be able to show what the shot looks like without it. That sounds like a courtesy and is closer to insurance. When a learned step misbehaves on a crunch week, the fastest fix is the one that does not need the person who trained it, and a facility that has never practiced the fallback will discover on that week that the fallback quietly rotted. We rehearse the old path for exactly that reason, the way we rehearse restoring from backup, and for the same reason: nobody believes in either until the day they need it.</p>
+
+    <p>It also helps to be plain about what a model changes in the economics of a team. A conventional tool has a maintainer; a model has a maintainer and a data source and a training run that someone has to schedule on the same farm that is rendering the shots. Those three do not always sit in the same department, and when the answer to “who owns this?” has three halves, the question tends to be asked first by a producer, at the worst possible time. I'd write the ownership down before the first demo, in the same plain words we use for every other tool.</p>
+
+    <h2 id="neural" data-short="Neural rendering and control">Neural rendering and the question of control</h2>
+
+    <p>In <span class="xref">Ch. 8</span> I described learned and neural rendering as “watched, not adopted,” and that's still my honest position. In <span class="xref">Ch. 11</span> I left neural previews as a question. I'll try not to answer either one too confidently here.</p>
+
+    <p>The pitch is real. Speed, new kinds of capture, editing a scene that was recorded rather than built. If even half of it holds up at feature scale, it will matter. But the question a lighter asks is smaller and sharper than the pitch: can I move this one light and have only that change? A renderer we trust gives that answer by construction. A learned representation may give it approximately, mostly, and differently after the next training run. Art direction depends on small, predictable edits, and a director who says “a little less blue in the shadows” is not asking for a new draw from a distribution.</p>
+
+    <p>So my reframe is that control and repeatability are the product, and speed is the feature. What I can't tell you is how quickly the control problem gets solved, or whether it gets solved at the renderer or around it. What I'd expect, and again it's an expectation, is that these methods first sit beside the renderer: previews, look exploration, reference, and the kinds of shots where nobody will ask to move a single light.</p>
+
+    <h2 id="realtime" data-short="Real-time convergence">Real-time convergence</h2>
+
+    <p>Game-engine technology and the film pipeline have been drifting toward each other for years. On set (<span class="xref">Ch. 17</span>) the engine already shows something close to final, and in previews (<span class="xref">Ch. 11</span>) it keeps getting closer. I expect that trend to continue.</p>
+
+    <p>What keeps the two apart, as far as I can see, is not cleverness but three stubborn facts. Fidelity: matching the final renderer's look, not an impressive one. Scene size: our shots carry the memory appetites described in <span class="xref">Ch. 9</span>, and a real-time budget leaves little room for that. And review rhythm: a film shot is looked at by many departments across many weeks, and each look has to mean the same thing.</p>
+
+    <p>There is a quieter reason the gap persists, which is that the two worlds count different things as success. A game engine is judged by whether the frame arrives on time, every time, and a missing detail is a trade made on purpose. A film pipeline is judged by whether the frame is right, and a late frame is a trade made on purpose too, just in the other direction. Neither is wrong. But a shared renderer would have to carry both promises at once, and I suspect the first honest version of convergence is two modes of one tool, with a clear and boring switch between them, rather than a single mode that is secretly both.</p>
+
+    <p>Each side has something to teach the other. Real-time teams are better than we are at fast iteration and at keeping an interactive view honest. We are better at provenance, at scale and at saying what “final” means. A pipeline that lets artists work in the fast view and trust the slow one is the version I'd bet on, though not with money I need.</p>
+
+    <h2 id="standards" data-short="Open standards, take two">Open standards, take two</h2>
+
+    <p>With the scene-format migration of <span class="xref">Ch. 5</span> behind us, I can say what interchange bought and what it didn't. It bought a shared language between departments and between facilities, and it ended a surprising number of arguments that were really about translation. It did not buy agreement on meaning: two tools can read the same file and disagree about what a material is supposed to look like. Standards move the seam; they don't remove it.</p>
+
+    <p>I expect scene description and materials to keep drifting toward shared infrastructure, and I think that's good, with the caveat that the interesting work moves to the edges, where each facility's habits live. A healthy relationship with an open project, for a facility our size, is ordinary: use it, contribute fixes when you've earned an opinion, and track upgrades on a schedule instead of discovering them. That last part is the one we were slowest at.</p>
+
+    <p>Review formats, planted in <span class="xref">Ch. 23</span> as a loose end, get one sentence too: higher dynamic range, new kinds of display and remote or immersive review are all likely to arrive in the review room, and the room's job of making each look mean the same thing to everyone will not change.</p>
+
+    <p>Compute and cost follow a similar pattern. Accelerators, which <span class="xref">Ch. 10</span> left as an open question about how much of the farm they will take, along with cloud and energy (<span class="xref">Ch. 21</span>, <span class="xref">Ch. 22</span>), will likely keep changing the price of a pixel, and I'll leave it at that because it's the kind of forecast that ages worst. What matters for the pipeline is the shape of the work: when the unit isn't a CPU frame, the scheduler of <span class="xref">Ch. 19</span> needs new ideas about what a task is and where it can run.</p>
+
+    <h2 id="constant" data-short="What will not change">What will not change</h2>
+
+    <p>If the first half of this chapter is a guess about what moves, this half is a firmer bet about what holds.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Likely to move</th><th>Likely to hold</th></tr></thead>
+          <tbody>
+            <tr><td>How pixels are produced</td><td>Review, retakes and the non-linear shot (<span class="xref">Ch. 1</span>, <span class="xref">Ch. 23</span>)</td></tr>
+            <tr><td>Which tools sit at which stage</td><td>Provenance, now with models as inputs (<span class="xref">Ch. 6</span>)</td></tr>
+            <tr><td>The unit of work on the farm</td><td>Failure as the normal case, with new failure modes (<span class="xref">Ch. 20</span>)</td></tr>
+            <tr><td>The price of compute</td><td>Artist trust and art direction</td></tr>
+            <tr><td>The shape of a department</td><td>The fixed deadline</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 31.2</b>What moves and what holds. The right-hand column is the one I'd invest in.</figcaption>
+    </figure>
+
+    <p>A version-forty shot will still be a version-forty shot, because directors change their minds in every medium. Someone will still have to answer “which version of which model made this pixel?” while the client waits. And the deadline will still be the part of the system that never gets an upgrade.</p>
+
+    <h2 id="prepare" data-short="What the team should do now">What the pipeline team should do now</h2>
+
+    <p>Preparation here is practical, not prophetic. Start with five questions to put to any new technology, from the humblest plug-in to the most ambitious model.</p>
+
+    <div class="callout">
+      <span class="callout-label">Questions for any new technology</span>
+      <p>Can it be directed by the artist who owns the shot?<br>
+      Can it be reproduced next month, and by someone else?<br>
+      Can it be explained to a director in one minute?<br>
+      What does it do to storage, compute and review?<br>
+      What does it look like in year three?</p>
+    </div>
+
+    <p>Then a handful of habits. Treat models as versioned artifacts with owners, exactly as we treat tools. Keep experiments small and killable, with the exit criteria written before the first demo (<span class="xref">Ch. 27</span>). Make cost and energy visible before adoption, not after the first invoice (<span class="xref">Ch. 22</span>). Invest in the people who sit between art and research (<span class="xref">Ch. 26</span>), because they will be the ones who can tell whether a clever result is a usable one. And keep the seams clean and the exit doors open (<span class="xref">Ch. 3</span>, <span class="xref">Ch. 28</span>, <span class="xref">Ch. 29</span>), so that when a part turns out to be wrong, it can be swapped without a rebuild of everything around it.</p>
+
+    <p>None of this is exciting, which is rather the argument for it.</p>
+
+    <p>If I had to pick one thing for a team to do this quarter, it would be unglamorous: pick one learned tool you already use, write down its version, who owns it and what you'd do if it changed overnight. You'll likely find, as we did with so many things in <span class="xref">Ch. 30</span>, that the answer is not written anywhere. That is a small, cheap discovery, and a far better one to make on a quiet Tuesday than in the dailies on a crunch week, with the client waiting and a model that has quietly become a different model.</p>
+
+    <p>I'd also budget, quietly, for the people. Whatever the tools do, the work of reviewing, fixing and explaining their output lands on artists and on the TDs beside them, as it did with matting. Plan for the new jobs, not only for the new machines, and ask the people doing the work what they'd want from a tool before deciding what to buy. We learned that one in <span class="xref">Ch. 26</span> and again in <span class="xref">Ch. 30</span>, and I expect to learn it a third time.</p>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>The third difference in the foreword is the one claim I'll repeat, because I think it's the only forecast here I'd sign: we build software for people whose product is something else, and the deadline doesn't move. That will be true in five years, whatever the pixels are made of.</p>
+
+    <p>I expect to be wrong about some of this. If you keep one part of the chapter, keep the questions, and feel free to discard the forecasts. When you disagree with a forecast in a few years, write down which one and why; that's a better use of it than agreeing.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">What stuck</span>
+      <p>The tools will turn over. The questions won't.</p>
+    </div>
+
+    <p>Thank you for reading this far. Somewhere right now an artist is throwing away version twenty-three of something, as artists do about forty times before a shot ships, and ten thousand shots a year is made of those quiet rejections. The giant, for the record, is finished. Version forty went out the door on a Thursday afternoon, and somebody was already asking for a change to the next shot.</p>
+
+    <p>For further reading, see Appendix D.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vegetation and Environments · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 15. How a forest of two million trees assembles itself, and why the hard part is letting an artist move just one of them.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch15">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part IV · Simulation and Procedural Systems</p>
+    <p class="chap-num" aria-hidden="true">15</p>
+    <h1>Vegetation and Environments</h1>
+    <p class="dek">Forests, cities and grass to the horizon are never placed by hand. The generator makes the million; the hard part is letting an artist move the one.</p>
+    <p class="meta"><span>Chapter 15</span><span>Continues from: Chapter 14</span><span id="reading-time">15 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">The director loved one tree. <em>There were two million others.</em></p>
+
+    <p>It stood on the left of the frame in the giant's forest, a crooked old pine with a broken top, and in review the director said something every pipeline engineer eventually learns to dread: “I love that tree. Can it be two meters to the left?” Two meters. A TD (technical director) picked it up, nudged it, and the shot looked right at last. The giant, I should say, was not consulted.</p>
+
+    <p>That night, an unrelated change went in. A colleague working on a clearing two hundred meters away adjusted how steeply trees were allowed to grow on a slope, so that the clearing would stop looking like a parking lot. The forest rebuilt itself overnight, as procedural forests do. By morning the favorite tree was gone from the left of the frame. It had reappeared in a stream, standing in about thirty centimeters of water, with a different neighbor on each side.</p>
+
+    <p>We found it in morning review, which is a polite way of saying the director found it. We restored the tree in an hour and spent the following weeks making sure the same thing could never happen quietly again. The generator, I want to be clear, had done nothing wrong. It had followed its rules perfectly. We had simply never asked it to remember what a human said.</p>
+
+    <p>A few words first, since this chapter leans on them. <dfn>Procedural</dfn> means made by a set of rules rather than by hand: you describe how a forest behaves, and the computer builds one. To <dfn>scatter</dfn> is to place many objects across a surface according to those rules. An <dfn>instance</dfn> is a lightweight copy of an object that shares its shape with every other copy, which is how one leaf can be tens of millions of leaves (<span class="xref">Ch. 9</span> has the memory story). A <dfn>seed</dfn> is the starting number for the computer's dice rolls. And <dfn>LOD</dfn>, level of detail, means using a simpler version of something when it is far from the camera.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>In the planning document, “procedural” was a synonym for “finished.” The forest would be procedural, so nobody would need to place trees. Environments would be procedural, so a new show would get a new world nearly for free. I believed this too, and I'd like it noted that I wrote part of that document.</p>
+
+    <p>The first time a rebuild erased an afternoon, we learned what the sentence leaves out. Procedural removes the boring work: nobody wants to place a million blades of grass. It does not remove the decisions. The director's opinion about the tree on the left is not boring work, it is the whole point of the job, and a system that regenerates from rules has no place to put it.</p>
+
+    <p>That is the thesis of this chapter, and I'll say it once plainly. A procedural world is only as good as the artist's ability to override it. Procedural means the computer does the boring part. <em>Directable</em> means it lets you undo it.</p>
+
+    <h2 id="recipes" data-short="Worlds as recipes">Worlds as recipes</h2>
+
+    <p>A procedural environment is not a model. It is a recipe plus parameters. The recipe starts with terrain, then a set of <dfn>masks</dfn>, which are maps painted over the terrain saying things like “wet here,” “rocky there,” “keep this clear.” On top of that sit rules (tall trees thin out near the cliff, ferns like shade, moss prefers the north side of a trunk), a library of base species that supplies the realism, and seeds that make every plant different from its neighbors. Change any ingredient and the world rebuilds.</p>
+
+    <p>If that sounds familiar, it should. It is the dependency problem from <span class="xref">Ch. 6</span> in a leafy disguise: change something upstream and everything downstream has an opinion about it. The difference is that here the downstream data is two million trees, and nobody reviews two million trees. They review the frame, and the frame changes when you weren't looking.</p>
+
+    <h3>Layers of scale</h3>
+
+    <p>The trick that makes this manageable is to build the world in layers, each generated on top of the one beneath, from the biggest and slowest-changing thing to the smallest and busiest. Terrain comes first, then the large features such as rock faces, streams and clearings, then trees, then ground clutter, then the fine detail. A wide shot of the giant's forest looked roughly like this.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Layer</th><th>Typical count, one wide shot</th><th>How it's generated</th><th>How it's directed</th></tr></thead>
+          <tbody>
+            <tr><td>Terrain</td><td>one surface</td><td>Sculpted, then eroded by rules</td><td>By hand, rarely changed</td></tr>
+            <tr><td>Large features</td><td>dozens</td><td>Mostly placed by hand</td><td>Individually</td></tr>
+            <tr><td>Trees</td><td>about two million</td><td>Scattered by rules and masks</td><td>Painted density, plus per-tree overrides</td></tr>
+            <tr><td>Ground clutter</td><td>tens of millions</td><td>Scattered by rules</td><td>Painted masks only</td></tr>
+            <tr><td>Fine detail</td><td>tens of millions of leaves, blades and needles</td><td>Instanced at render time</td><td>Global parameters</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 15.1</b>Layers of the giant's forest, from the bottom up. Counts are illustrative. Note that the more there is of something, the less directly anyone touches it.</figcaption>
+    </figure>
+
+    <p>That last observation turns out to be the design rule for the whole chapter. Nobody can direct tens of millions of leaves one at a time, so you direct them with a few global dials. The two million trees are too many to place and few enough to care about individually, which is exactly why they cause trouble.</p>
+
+    <h3>The rebuild question</h3>
+
+    <p>Every procedural system eventually forces the same question: when you change a rule, how much of the world should change? The honest answer is “as little as possible, but we can't always tell you which.” A slope rule that touches trees on slopes will touch every tree on a slope, and in a forest that is most of them.</p>
+
+    <p>So what do you store? There are three choices. Keep only the recipe, and the world is tiny, always consistent with the latest rules, and always at risk of changing under you. Keep only the result, and the world is stable, but you've lost the knobs. When the director wants it denser, somebody starts again. Keep both, and you pay for storage and for the discipline of knowing which one is the truth today. We keep both, because the alternative is losing either the knobs or the decisions, and I've now done each of them.</p>
+
+    <h2 id="control" data-short="Keeping the artist in charge">Keeping the artist in charge</h2>
+
+    <p>Our first attempt at direction was the obvious one: let artists edit the generated forest directly. Pick up a tree, move it, save the scene. It worked beautifully until the next rebuild, which regenerated the forest from the recipe and quietly discarded every hand edit, because the edits lived in the result and the result was the thing being rebuilt. We had stored the product and the decision in the same place, and the product always wins that argument.</p>
+
+    <p>The reframe was to treat the recipe, the edits and the result as three different things.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 840 220" role="img" aria-labelledby="f15t f15d">
+          <title id="f15t">Recipe, overrides and result</title>
+          <desc id="f15d">Two boxes on the left, labeled recipe and overrides, both feed an arrow labeled rebuild into a box on the right labeled result. The recipe and overrides are marked as stored and versioned; the result is marked as regenerated.</desc>
+          <defs>
+            <marker class="ah" id="a15" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+            <marker class="ah-loop" id="a15l" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+          <g class="node">
+            <rect x="20" y="30" width="230" height="60" rx="8"/><text x="135" y="55">Recipe</text><text class="sm" x="135" y="75">terrain, masks, rules, seeds</text>
+            <rect x="20" y="130" width="230" height="60" rx="8"/><text x="135" y="155">Overrides</text><text class="sm" x="135" y="175">keep, remove, nudge</text>
+          </g>
+          <g class="node done">
+            <rect x="590" y="80" width="230" height="60" rx="8"/><text x="705" y="105">Result</text><text class="sm" x="705" y="125">the forest the camera sees</text>
+          </g>
+          <g class="flow">
+            <path d="M250 60 C330 60 340 110 400 110" marker-end="url(#a15)"/>
+            <path d="M250 160 C330 160 340 110 400 110" marker-end="url(#a15)"/>
+            <path d="M400 110 H588" marker-end="url(#a15)"/>
+          </g>
+          <text class="say t" x="495" y="100">rebuild</text>
+          <path class="loop" d="M705 142 C705 215 135 215 135 192" marker-end="url(#a15l)"/>
+          <text class="say" x="420" y="212">notes become overrides, never edits to the result</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 15.1</b>What is stored and what is regenerated. The two boxes on the left are versioned data. The one on the right can be thrown away and rebuilt on any night.</figcaption>
+    </figure>
+
+    <h3>Overrides as data</h3>
+
+    <p>An artist's hand edit is recorded as a small, boring instruction in a list. There are only three kinds, and we resisted the urge to invent a fourth.</p>
+
+    <div class="callout">
+      <span class="callout-label">The override list</span>
+      <p><strong>Keep.</strong> This tree exists, whatever the rules now say. <strong>Remove.</strong> This tree must not exist, however much the rules want it. <strong>Nudge.</strong> This tree goes here instead: a small move, a rotation, a scale. After every rebuild, the list replays on top of the fresh result, like a stencil laid over a new drawing.</p>
+    </div>
+
+    <p>The list is small, it is human-readable, and it is versioned like any other asset (the habit from <span class="xref">Ch. 4</span> and <span class="xref">Ch. 6</span>), which means it has history and an author. “Who moved that tree, and when?” is a question we can now answer. For a long time it was a question we answered by asking around.</p>
+
+    <h3>Stable identity</h3>
+
+    <p>An override needs something to attach to. “Move tree number 1,407,212” means nothing if tree 1,407,212 is a different tree after the next rebuild, and in our first version it was, because the number came from the tree's position in a list, and the list changed whenever anything upstream did. Add one tree near the cliff and every number after it shifts by one. Our favorite tree wandered because its neighbors were sorted differently.</p>
+
+    <p>The fix was to give each tree an identity that came from where it was seeded, not from where it fell in the list. Roughly: the identity is derived from the location on the terrain where the rules tried to plant it, so adding or removing a tree elsewhere does not disturb it. This is the quiet point about seeds. I used to believe a good random number generator was itself a design decision, and I held that view with surprising confidence for my first year. It isn't. One tree's randomness must not depend on how many trees came before it. Seeds are an asset. They are versioned alongside the recipe, and a forest with an unrecorded seed is a forest you can never get back.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 840 250" role="img" aria-labelledby="f15bt f15bd">
+          <title id="f15bt">The same forest, rebuilt twice</title>
+          <desc id="f15bd">Two panels of small circles representing trees. In the first, the favorite tree sits at the left, highlighted. In the second, after a rule change, most trees have moved or changed, but the highlighted tree is back at the same place and its neighbors are different.</desc>
+          <g class="node">
+            <rect x="20" y="20" width="380" height="190" rx="10"/>
+            <rect x="440" y="20" width="380" height="190" rx="10"/>
+          </g>
+          <g class="rivet">
+            <circle cx="80" cy="70" r="7"/><circle cx="130" cy="140" r="7"/><circle cx="190" cy="90" r="7"/><circle cx="250" cy="160" r="7"/><circle cx="300" cy="70" r="7"/><circle cx="350" cy="130" r="7"/><circle cx="220" cy="185" r="7"/>
+            <circle cx="520" cy="95" r="7"/><circle cx="560" cy="170" r="7"/><circle cx="640" cy="60" r="7"/><circle cx="690" cy="150" r="7"/><circle cx="740" cy="85" r="7"/><circle cx="780" cy="175" r="7"/><circle cx="620" cy="185" r="7"/>
+          </g>
+          <g class="node done">
+            <circle cx="60" cy="115" r="11"/>
+            <circle cx="480" cy="115" r="11"/>
+          </g>
+          <text class="say" x="210" y="40">Rebuild 1</text>
+          <text class="say" x="630" y="40">Rebuild 2, after a slope rule change</text>
+          <text class="say" x="60" y="145" style="text-anchor:middle">the tree</text>
+          <text class="say" x="480" y="145" style="text-anchor:middle">same tree, same spot</text>
+          <text class="say t" x="420" y="238" style="text-anchor:middle">Most others moved. That is fine; nobody was asked about them.</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 15.2</b>Stable identity in miniature. The highlighted tree is the only one anybody has an opinion about, and it is the only one that must come back.</figcaption>
+    </figure>
+
+    <h3>Painting instead of editing</h3>
+
+    <p>Overrides suit single trees. For anything broader, we gave artists brushes. Density and species maps are painted directly on the terrain, so “fewer trees here, more birch over there, a clearing by the stream” takes two minutes instead of two thousand edits. Painting is a way of directing the forest without touching a single object, and it survives rebuilds for the same reason the recipe does: a map is data, and data can be stored.</p>
+
+    <p>The practical rule we settled on is that the level of directness should match the count. A global dial for the leaves. A brush for the groves. An override for the tree. Never make an artist move a million leaves to move one branch, and never make them paint a mask to move one tree.</p>
+
+    <h3>When an override loses its footing</h3>
+
+    <p>Sometimes the override can no longer make sense. The hill under a nudged tree was flattened by a terrain change, or the rule that grew the tree no longer plants anything near that spot. Now there is a keep instruction for a tree that has nowhere to stand.</p>
+
+    <p>Our first version silently dropped these, which is the same disappearing-tree bug wearing a better disguise. The version we kept reports them. After every rebuild, any override that lost its anchor shows up in a short list, with the shot it affects and who made it, and a person decides what it should become. The cost is a slightly larger recipe and a slower rebuild, because identity has to be carried and checked. In exchange, nothing vanishes without somebody being told. It is a cheap trade, and I'd make it again.</p>
+
+    <h2 id="render" data-short="Making it render">Making it render</h2>
+
+    <p>A single wide shot of the giant's forest held tens of millions of leaves, blades of grass and needles. Nobody models tens of millions of anything. Behind them sat a few thousand unique meshes (the shared shapes), each used over and over, with small changes in size, rotation and tint to hide the repetition. That is instancing, and <span class="xref">Ch. 9</span> covers the memory side of it. The environment's part of the bargain is to keep the library of base shapes varied enough that the eye doesn't spot the pattern, and to keep it small enough that the renderer's memory survives it.</p>
+
+    <p>Level of detail does the rest. The tree ten meters from the camera is a full model with individual leaves; the tree a kilometer away is a handful of flat cards. The camera decides what exists this frame, and often the system generates geometry only at the moment the renderer asks for it, rather than storing it. Storing all of it would cost more disk than the show has, and most of it would never be seen.</p>
+
+    <p>Things also have to move. Wind through foliage is a cheap, global effect: a few controls, applied to everything, with small random offsets. Hero plants, the ones the giant actually brushes past, get real treatment, with simulated motion cached as in <span class="xref">Ch. 12</span>, and the background gets a cheap fake that nobody will ever scrutinize. Choosing which tree gets which is a camera question, and it changes whenever the camera does.</p>
+
+    <p>The last piece is previews. Nobody can judge a forest that takes three hours to render. Artists work with a coarse stand-in, with trees as simple shapes and leaves reduced to a tint, and see the real forest only at intervals. This is the same trade as <span class="xref">Ch. 11</span>, with the same hazard: the preview is always more forgiving than the final. We have approved plenty of forests that looked wonderful as colored cones.</p>
+
+    <h2 id="hand" data-short="Procedural and hand-built, together">Procedural and hand-built, together</h2>
+
+    <p>The best environments I've seen are procedural at the back and hand-made at the front. The distant ridge, the thousandth tree and the carpet of needles come from rules. The fallen log the giant steps over comes from a modeler. Anywhere the camera lingers, someone made it with their hands, because the eye forgives a rule much more readily at a distance.</p>
+
+    <p>Artists always find the seam. It's the line where the hand-built set piece meets the generated surroundings, and it shows up as a change in texture, density or tint that nobody can quite name. We don't have a clever answer. We have a habit: the hand-built piece writes a mask into the generator, clearing and blending the area around it, so the world adapts to the set piece rather than the other way round.</p>
+
+    <p>Cities are the contrast case, and a short one. A generated city is rules about streets, blocks and building heights, and it has the same disease in another costume: the generator knows nothing about the one hero building the story happens in front of. The cure is the same, and the lesson is not about vegetation at all.</p>
+
+    <p>Libraries cross show boundaries, too. A pine built carefully for one show reappears three shows later, a little older and quietly retextured. This is mostly good, since it is how you get realism cheaply, and mostly fine, apart from licensing terms on source material and a consistency problem: the same tree in two shows had better be the same tree, or somebody must say why not.</p>
+
+    <h2 id="hurts" data-short="What still hurts">What still hurts</h2>
+
+    <p>A full rebuild of the giant's forest takes a few hours. We've made it faster, but every rule change still costs an overnight run, and a slow rebuild changes behavior in a particular way: people stop trying things. Experiments that would take a minute on a small test area take half a day on the real one.</p>
+
+    <p>Determinism is also less absolute than I'd like. The same seeds and the same recipe give the same forest tomorrow, but only if nothing else changed, and some results shift between software versions in ways no rule of ours caused. We pin versions and compare rebuilds for exactly that reason, and we still get surprised.</p>
+
+    <p>The libraries need constant upkeep, because a tree species with a broken texture is broken in every shot that uses it. The expertise sits with a handful of people who understand the recipes, and when one of them goes on vacation the forest becomes nobody's job. And there's the temptation I know best: to make everything procedural because we can. Not every rock needs a rule. Some rocks need a person and an afternoon.</p>
+
+    <aside class="scale">
+      <span class="callout-label">Scale snapshot</span>
+      <dl>
+        <div><dt>Trees in one wide shot</dt><dd>about 2 million</dd></div>
+        <div><dt>Leaves, blades, needles</dt><dd>tens of millions</dd></div>
+        <div><dt>Unique meshes behind them</dt><dd>a few thousand</dd></div>
+        <div><dt>Full rebuild</dt><dd>a few hours</dd></div>
+        <div><dt>Override kinds</dt><dd>three</dd></div>
+      </dl>
+      <small>Illustrative and approximate; counts shift a great deal between shows and cameras.</small>
+    </aside>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>The favorite tree is back on the left of the frame, two meters from where it started, and it has survived about a dozen rebuilds since. Nobody mentions it any more, which is how we know it works.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">Takeaway</span>
+      <p>Procedural systems should be forgetful about the work and faithful to the decisions. Store the rules and the edits separately, and rebuild the product whenever you like.</p>
+    </div>
+
+    <p>That closes Part IV, and the four chapters have one theme in different clothes. Physics, crowds, anatomy and forests all produce results that someone with taste must be able to change. The principle underneath each of them is to keep the human decision and the original separate from the regenerated product. We'll meet it again in <span class="xref">Ch. 16</span> and look at it from a distance in <span class="xref">Ch. 30</span>.</p>
+
+    <p>Next, the characters themselves. Chapter 16 starts with an actor in a capture suit and follows a performance through ten steps, on its way to becoming something the giant could not have done on his own.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

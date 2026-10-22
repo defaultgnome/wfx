@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rigs as Software · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 18. A rig is a program whose users are animators and whose bugs show up on a monster's face. Versions, contracts, tests and profiling for the thing that moves the character.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch18">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part V · Characters and Performance</p>
+    <p class="chap-num" aria-hidden="true">18</p>
+    <h1>Rigs as Software</h1>
+    <p class="dek">The control structure between performance and picture looks like an art asset and behaves like a program. Treating it like one is what lets a character survive a year of production.</p>
+    <p class="meta"><span>Chapter 18</span><span>Continues from: Chapter 17</span><span id="reading-time">15 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">The fix was correct. <em>That is not the same as safe.</em></p>
+
+    <p>On a Monday evening a rigger fixed a shoulder. On one of our creatures, a lumbering, long-armed thing from a show a few shows back, the shoulder pinched when the arm went above the head. Animators had been working around it for weeks, nudging the arm down a hair in every shot. The rigger found the cause, corrected it, published the character and went home, pleased. It was good work.</p>
+
+    <p>The next day, a hundred and twelve approved shots had a creature whose arm sat about two centimeters differently from the day before. Nobody had touched those shots. The animation data was the same. Only the thing underneath it had moved. It took twenty-six hours before an animator, on shot ninety-something of her own sequence, asked why the creature seemed to be shrugging at everything.</p>
+
+    <p>Nobody had done anything wrong. The rigger fixed a bug. The animators used the character. The system did exactly what we had built it to do, which was to hand everyone the newest version of everything. That was the problem. We had called the change a <em>fix</em> and never called it a <em>release</em>, and a release is something people get warned about.</p>
+
+    <p>This chapter is about what we changed afterwards, and it begins with an admission: for years we treated the thing that moves the character as a piece of art. It is a piece of software.</p>
+
+    <h2 id="chair" data-short="The chair we imagined">The chair we imagined</h2>
+
+    <p>A <dfn>rig</dfn> is the control structure of a character: the handles an animator grabs, and the machinery behind them that turns a few hundred small decisions into millions of moving points on a surface. We met rigs in passing in <span class="xref">Ch. 13</span>, <span class="xref">14</span> and <span class="xref">16</span>, in crowds, anatomy and capture. Here is the deep treatment, because this is where Part V has been heading. A performance is captured, carried live to a stage, and now it needs something to land on.</p>
+
+    <p>The belief I started with was simple. A rig is an asset, like a chair or a tree. You build it, you publish it, and you are done. Occasionally someone finds a wobble and you tighten a screw.</p>
+
+    <p>It is a reasonable picture for a tree. It is a poor one for a chair that gets a software update every Tuesday while a hundred people are sitting on it. And that is what a rig is: built early, used in hundreds of shots, and improved continually for as long as the show lasts. A hero character may carry thousands of controls and be touched by dozens of people across a year. It will be fixed more often than almost anything else in the pipeline, and it is a shared asset with one of the largest blast radii we have (the same fan-out we met in <span class="xref">Ch. 1</span>, only with a face).</p>
+
+    <h2 id="program" data-short="Why a rig is a program">Why a rig is a program</h2>
+
+    <p>If you have ever used a spreadsheet, you already understand a rig. A few cells hold inputs. Other cells hold formulas that depend on those inputs and on each other. The spreadsheet works out an order, evaluates the cells, and shows you the result. Change an input and everything downstream recomputes.</p>
+
+    <p>A rig is that, for a body. The animator's inputs are <dfn>controls</dfn>: this elbow bends, that jaw opens, this finger curls. Behind the controls sits a graph of operations. Some move a skeleton. Others, called <dfn>deformers</dfn>, push the surface of the character around the skeleton, so that a bent elbow bulges at the right place instead of folding like a paper tube. At the end, a mesh comes out. Working through that graph, in dependency order, for one frame is called <dfn>evaluation</dfn>, and it happens every time the animator moves anything.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 230" role="img" aria-labelledby="g1t g1d">
+          <title id="g1t">A tiny rig next to a tiny build</title>
+          <desc id="g1d">On the left, three controls feed two deformers, which feed one mesh. On the right, three source files feed two compile steps, which feed one program. The shapes are the same.</desc>
+          <defs>
+            <marker class="ah" id="g1a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+          <text class="say t" x="190" y="18">A rig</text>
+          <text class="say t" x="630" y="18">A build</text>
+          <g class="node">
+            <rect x="10" y="40" width="90" height="38" rx="8"/><text x="55" y="64" style="font-size:13px">Elbow</text>
+            <rect x="10" y="96" width="90" height="38" rx="8"/><text x="55" y="120" style="font-size:13px">Shoulder</text>
+            <rect x="10" y="152" width="90" height="38" rx="8"/><text x="55" y="176" style="font-size:13px">Jaw</text>
+            <rect x="170" y="68" width="100" height="38" rx="8"/><text x="220" y="92" style="font-size:13px">Arm bulge</text>
+            <rect x="170" y="130" width="100" height="38" rx="8"/><text x="220" y="154" style="font-size:13px">Face shape</text>
+            <rect x="330" y="98" width="80" height="38" rx="8"/><text x="370" y="122" style="font-size:13px">Mesh</text>
+            <rect x="450" y="40" width="90" height="38" rx="8"/><text x="495" y="64" style="font-size:13px">a.src</text>
+            <rect x="450" y="96" width="90" height="38" rx="8"/><text x="495" y="120" style="font-size:13px">b.src</text>
+            <rect x="450" y="152" width="90" height="38" rx="8"/><text x="495" y="176" style="font-size:13px">c.src</text>
+            <rect x="610" y="68" width="100" height="38" rx="8"/><text x="660" y="92" style="font-size:13px">Compile 1</text>
+            <rect x="610" y="130" width="100" height="38" rx="8"/><text x="660" y="154" style="font-size:13px">Compile 2</text>
+          </g>
+          <g class="node done"><rect x="740" y="98" width="70" height="38" rx="8"/><text x="775" y="122" style="font-size:13px">Program</text></g>
+          <g class="flow">
+            <path d="M100 59 L168 83" marker-end="url(#g1a)"/><path d="M100 115 L168 91" marker-end="url(#g1a)"/><path d="M100 171 L168 149" marker-end="url(#g1a)"/>
+            <path d="M270 87 L328 110" marker-end="url(#g1a)"/><path d="M270 149 L328 126" marker-end="url(#g1a)"/>
+            <path d="M540 59 L608 83" marker-end="url(#g1a)"/><path d="M540 115 L608 91" marker-end="url(#g1a)"/><path d="M540 171 L608 149" marker-end="url(#g1a)"/>
+            <path d="M710 87 L738 110" marker-end="url(#g1a)"/><path d="M710 149 L738 126" marker-end="url(#g1a)"/>
+          </g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 18.1</b>Three inputs, two operations, one output, on each side. The rig is the one that smiles back.</figcaption>
+    </figure>
+
+    <p>Once you see it, the resemblances pile up. Rigs have dependencies, and a rig can lean on another rig, a texture, or a script someone wrote last year. They have side effects, because a node that quietly stores a number and uses it later is hidden global state in a different coat. And they have the classic "works on my machine" bug: a rig that behaves in the rigger's session and differently in the animator's, because one of them has a slightly different version of something underneath.</p>
+
+    <p>Where they differ matters just as much. A rig is built visually, by moving things around, not by typing. It is saved as a binary file inside a creative tool. There is no compiler to complain about a mistake, and no diff you can read. The check that tells you a rig is correct is somebody looking at it and saying "that looks right," and we know how that goes by Wednesday.</p>
+
+    <p>There is also a cultural gap, and I'd rather name it than pretend it isn't there. Riggers think in shape and motion: does the shoulder roll like a shoulder? Engineers think in contracts: what is promised to whom, and what happens if it changes? Both are right. Many riggers are strong programmers, and the point of this chapter is practice, not talent. The work sits between the two views, and nobody had been asked to stand there.</p>
+
+    <h2 id="contracts" data-short="Versions and contracts">Versions and contracts</h2>
+
+    <p>The first practice we borrowed was the oldest in software: say what kind of change this is.</p>
+
+    <p>Libraries do this with three numbers, and we adopted the idea almost whole. A <em>major</em> release changes the look of the character. A <em>minor</em> release adds something without disturbing what was there. A <em>patch</em> release fixes something and promises, in writing, that approved shots will not change. The shoulder fix should have been a patch, except that it moved a shoulder, which means it was never a patch. It was a major release wearing a patch's clothes, and the three tiers would have forced us to say so.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Release</th><th>What it may do</th><th>Example</th><th>Approved shots</th></tr></thead>
+          <tbody>
+            <tr><td>Major</td><td>Change the look or motion of the character</td><td>New shoulder shape; a controls rename</td><td class="who">Stay pinned until someone opts in</td></tr>
+            <tr><td>Minor</td><td>Add controls or features, change nothing existing</td><td>An extra finger-spread control</td><td class="who">Unchanged, may adopt</td></tr>
+            <tr><td>Patch</td><td>Fix a defect without changing what a shot looks like</td><td>A crash on one extreme pose</td><td class="who m">Unchanged, safe to take</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 18.1</b>Three tiers, and the promise each one makes. The third column was the argument; the fourth was the point.</figcaption>
+    </figure>
+
+    <p>Introducing this to a roomful of artists went about as you'd expect. Engineers explained major, minor and patch numbering to people who had never wanted to know it, and for twenty minutes it was clear nobody wanted to. Then someone asked whether it would have stopped the shrugging creature, we said yes, and it was adopted before the end of the meeting. Nobody likes a version number. Everybody likes not being surprised.</p>
+
+    <p>The second practice is the <dfn>contract</dfn>. Everything that touches a rig depends on a surface that rarely appears in writing: the names of its controls, the range each can move through, the units they use, their default values, and how animation data is stored against them. Animation depends on it. Capture retargeting, from <span class="xref">Ch. 16</span>, drives it. The live stage from <span class="xref">Ch. 17</span> drives it too, and simulation reads it. If a control is renamed, every piece of animation stored against the old name quietly stops finding it. The shot does not crash. It just looks different, or the control is ignored and the arm hangs at its default.</p>
+
+    <p>So renaming a control is a breaking change, and we say it loudly, in the same way and place every time. A rename, a changed range or a changed default is a major release. A new control is a minor one. Anything that doesn't touch the contract can be a patch.</p>
+
+    <p>Third, <em>pinning</em>. A shot should be able to stay on the rig version it was approved with, and move forward by choice. This leans on the provenance work from <span class="xref">Ch. 6</span>: the question "which rig did this shot use?" now has a recorded answer, so it can be honored. Our old default of "everyone gets the newest" became "everyone keeps what they have, and upgrading is something you do on purpose."</p>
+
+    <p>When a fix <em>should</em> reach old shots, we offer an opt-in migration with a visible difference: here is the character before, here it is after, here is what moves. The animator, and where it matters the supervisor, decide shot by shot. That is slower than a silent update, and that is the point.</p>
+
+    <p>It isn't free. Pinning keeps several versions of a character alive at once, and every one of them costs storage and someone's attention when it misbehaves. On our busiest character that meant five live versions at one point. We accepted it. We also learned to retire versions deliberately, with a date, rather than letting them pile up like old receipts.</p>
+
+    <h2 id="testing" data-short="Testing something with no code">Testing something with no code</h2>
+
+    <p>You can test a rig, and the word "test" does not need a text editor. It needs a few things you can say out loud.</p>
+
+    <p>First, a <em>pose library</em>: a standard set of extreme poses and a range-of-motion sweep, such as arms overhead, deep crouch, jaw wide, hand clenched, the twisted awkward pose from the last show's disaster. On every release, the rig is put through all of them automatically. The result is compared against the previous version, point by point. If any region of the surface has moved more than a tolerance we've agreed on, the release stops until a human looks.</p>
+
+    <p>Second, we compare by picture as well as by number. A number can tell you that a few thousand points moved a millimeter; it cannot tell you that the movement is a visible dent. So the same run produces a turntable, an automatic render of the character rotating, and the difference between old and new is overlaid in color. Some failures are only visible to a person looking at a picture, which is a humbling thing to write in a chapter about automation.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 250" role="img" aria-labelledby="g2t g2d">
+          <title id="g2t">A pose test, old and new</title>
+          <desc id="g2d">Two simple outlines of a raised arm side by side, labeled previous release and new release. A third panel overlays them, with the shoulder region marked as a highlighted patch showing a two centimeter shift.</desc>
+          <g class="node">
+            <rect x="10" y="30" width="240" height="190" rx="10"/>
+            <rect x="290" y="30" width="240" height="190" rx="10"/>
+            <rect x="570" y="30" width="240" height="190" rx="10"/>
+          </g>
+          <text class="say t" x="130" y="20">Previous release</text>
+          <text class="say t" x="410" y="20">New release</text>
+          <text class="say t" x="690" y="20">Difference</text>
+          <g class="flow" style="fill:none">
+            <path d="M80 200 L110 130 L130 80 L190 50"/>
+            <path d="M360 200 L390 130 L412 76 L470 44"/>
+            <path d="M640 200 L670 130 L690 80 L750 50" style="opacity:.45"/>
+            <path d="M640 200 L670 130 L692 76 L750 44"/>
+          </g>
+          <ellipse cx="692" cy="100" rx="34" ry="30" class="loop" style="fill:none;stroke-width:3"/>
+          <text class="say" x="692" y="160" style="text-anchor:middle">shoulder: 2 cm</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 18.2</b>The same pose, two releases. The old and new arms look alike in a quick glance. The difference layer is what would have saved us a hundred and twelve shots. (Schematic.)</figcaption>
+    </figure>
+
+    <p>Third, <em>contract checks</em>. Does every expected control still exist, under the same name, with the same range and default? This is the cheapest test we have and the one that catches the worst mistakes.</p>
+
+    <p>Fourth, stress. Extreme values, odd combinations, and the pose that an animator will find on day two that no one on the rig team imagined. We keep a growing folder of those, each one a small scar from a real incident, and every release runs through them. Whenever an animator finds a new way to break a character, the pose goes in the library, and that class of failure never comes back unnoticed.</p>
+
+    <p>What we did not try to automate was judgment. Whether a face reads as sad, whether a walk has weight, whether a shoulder looks like it belongs to the same creature as the last release: tests catch <em>changes</em>. People judge <em>quality</em>. A test suite will tell you the shoulder moved. Only a rigger and an animator, together, can tell you whether it moved the right way.</p>
+
+    <h2 id="profiling" data-short="Speed is a feature">Speed is a feature</h2>
+
+    <p>The second practice borrowed from software is profiling, and it connects directly to the last chapter.</p>
+
+    <p>An animator working at five frames a second instead of twenty-four does not just work more slowly. They animate differently, and worse: they cut corners on timing they cannot see, they pose less, they trust the thing less. Rig speed shapes the performance. In <span class="xref">Ch. 17</span> we said the live stage's character count is limited by how fast a rig evaluates; this is where that number comes from, and where we do something about it.</p>
+
+    <p>So we measure. A profile of a rig shows time spent in each node, and nearly always shows the same shape: a long tail of cheap nodes and a few expensive ones. On one hero character, a thousand-control rig, the profile had a surprise. A single corrective node, added late to fix the way a wrist twisted, was taking about forty percent of the evaluation time. It did far more than its name suggested, recalculating a large part of the forearm on every frame. The fix took an afternoon. Nobody had looked, because nobody had known there was something to look at.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 270" role="img" aria-labelledby="g3t g3d">
+          <title id="g3t">Where the time goes in an illustrative rig</title>
+          <desc id="g3d">A horizontal bar chart of evaluation time per node group. One corrective node, the wrist twist, takes about forty percent. The rest are small bars: skeleton, spine, shoulder deformer, hands, face, and a long tail.</desc>
+          <g class="rowl">
+            <text x="10" y="42">Wrist twist (corrective)</text><text x="10" y="82">Skeleton and spine</text><text x="10" y="122">Shoulder deformers</text>
+            <text x="10" y="162">Hands</text><text x="10" y="202">Face</text><text x="10" y="242">Everything else</text>
+          </g>
+          <rect class="bar redo" x="210" y="26" width="360" height="22" rx="4"/>
+          <rect class="bar" x="210" y="66" width="162" height="22" rx="4"/>
+          <rect class="bar" x="210" y="106" width="108" height="22" rx="4"/>
+          <rect class="bar" x="210" y="146" width="90" height="22" rx="4"/>
+          <rect class="bar" x="210" y="186" width="108" height="22" rx="4"/>
+          <rect class="bar" x="210" y="226" width="72" height="22" rx="4"/>
+          <g class="tick">
+            <text x="580" y="42" style="text-anchor:start">40%</text><text x="382" y="82" style="text-anchor:start">18%</text><text x="328" y="122" style="text-anchor:start">12%</text>
+            <text x="310" y="162" style="text-anchor:start">10%</text><text x="328" y="202" style="text-anchor:start">12%</text><text x="292" y="242" style="text-anchor:start">8%</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 18.3</b>A profile of an illustrative rig. One corrective node, built to fix one wrist, took forty percent of the evaluation time. Figures are illustrative.</figcaption>
+    </figure>
+
+    <p>The same rig has three speed requirements, and treating them as one is how you get a character that suits nobody. Animators need it fast enough to play back interactively, at or near the film's frame rate. The live stage needs it faster still, because it has to keep up with a performer in real time and leave room for the rest of the scene. Final render can be slower, since that evaluation runs once per frame on the farm and nobody is waiting on it with a mouse in their hand. One rig, three budgets. The best arrangements we found were rigs with settings, so that a heavier, finer evaluation can be switched on at the end and a lighter one used while people work.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Where the rig runs</th><th>Speed target (illustrative)</th><th>What gets traded away</th></tr></thead>
+          <tbody>
+            <tr><td>Animation</td><td>Near the frame rate, 24 per second or close</td><td>Some fine corrective detail</td></tr>
+            <tr><td>Live stage</td><td>Faster than real time, with headroom</td><td>Most corrective detail, simpler face</td></tr>
+            <tr><td>Final render</td><td>Whatever the farm can afford, once per frame</td><td>Nothing: this is the full-quality evaluation</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 18.2</b>Three requirements for one character. Numbers vary by show and by character.</figcaption>
+    </figure>
+
+    <p>A rig that is fine alone can crawl in a scene of twenty characters, since everything adds up. The trick that saved us there is the same idea as level of detail for crowds, in <span class="xref">Ch. 13</span>, applied to rigs, which that chapter did not cover: lighter versions of the same rig for characters in the distance or the background. A character fifty meters from the camera does not need finger controls. It needs to look like it has fingers. Light versions are published with the heavy one and tested by the same suite.</p>
+
+    <p>I should be honest about the trade-off, since it is the part nobody enjoys. Quality and speed pull against each other, and someone has to decide which shoulder is worth a frame per second. We eventually gave that decision to an animator and a rigger together, on a character-by-character basis, with the profile in front of them. It is a conversation, not a calculation, and the conversation is the useful part.</p>
+
+    <p>One last clause on speed, as a hand-off to what comes next. Every one of those rig evaluations also happens on the farm, for every frame of every shot, and it adds up to a large number of machine-hours that nobody had been counting. That belongs to the next Part.</p>
+
+    <h2 id="release" data-short="The release process, and the people">The release process, and the people</h2>
+
+    <p>None of this worked until it was routine, so we built a modest release process and kept it modest on purpose. A rig is built, the tests above run automatically, and a rigger and an animator review the result together, which takes about as long as a coffee. It is published, announced, and a changelog goes to the artists, written in plain language: "Elbows no longer flip past ninety degrees. Nothing else changes. Your shots are untouched." No jargon, no ticket numbers.</p>
+
+    <p>That sentence, "your shots are untouched", turned out to be the most valued line we published all year. People read the changelog now. Before, no one did, because it was never about them.</p>
+
+    <p>Then comes <em>hotfix etiquette</em>, which matters most when it is hardest to follow, in crunch. A fix is urgent, a delivery is tomorrow, and the temptation is to publish into the live character. The rule we settled on is short. Ship the fix as a new version. Pin every approved shot to the old one. Tell the people who need it, by name, that a new version exists and what it changes. Everything else is left alone. It takes ten extra minutes, and it is the ten minutes that would have saved the shrugging creature. The same etiquette applied to crunch in general appears in <span class="xref">Ch. 25</span>, where the rig is one of several cases.</p>
+
+    <p>Then ownership. A character needs a maintainer for the length of its show, one named person who is on call for it. The first time a rig misbehaved at nine at night and nobody knew whom to ask, we learned that "the rig team" is not a person. Now a character acquires a maintainer when it is first published, and it keeps one until the show wraps.</p>
+
+    <p>And finally, reuse. A rig that was excellent for one film can be a liability on the next. The creature was rigged for the demands of a particular show, with that show's camera distances and that director's preferences, and on a new show with different needs those choices are inherited rather than made. Each show gets a decision about its characters: reuse as-is, reuse with changes, or rebuild. We got that wrong once, reusing a rig whose face had been tuned for wide shots on a show full of close-ups, and found out in the third week of animation. It cost us about three weeks. We rebuilt the face.</p>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>The giant has the same shoulder. In <span class="xref">Ch. 17</span> someone improved it on a Tuesday, and the stage's copy quietly went stale. That is now a process, not a surprise. His rig goes through the same release process, and the same pose library protects the shot's forty versions from the next well-meant tweak.</p>
+
+    <p>The shrugging creature got its second chance, too, when someone found the same sort of fix a few months later. This time it was a patch release with a visible diff. A hundred and twelve shots stayed pinned and were left alone. A note went into the artists' channel, in plain words. Nobody noticed, and that was what success looked like.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">Takeaway</span>
+      <p>The most valuable thing we did for rigs was call them software.</p>
+    </div>
+
+    <p>That closes Part V. The performance is captured, carried live, and now built to last. The character is posed and ready. But every frame of it still has to be rendered, and there are a very large number of frames. <span class="xref">Chapter 19</span> opens Part VI, the farm, with the question of how a million tasks a night find a machine to run on.</p>
+
+  </article>
+
+<nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

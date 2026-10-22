@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Scale We Actually Deal With · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 2. Scale is not one number but four, and bytes are rarely what hurt you first. A tour of what really breaks as a film pipeline grows.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch2">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part I · The Shape of the Problem</p>
+    <p class="chap-num" aria-hidden="true">02</p>
+    <h1>The Scale We Actually Deal With</h1>
+    <p class="dek">Scale isn't one number. It's four, on different axes, and each breaks a different part of the system. The first thing to break is rarely the one you'd guess.</p>
+    <p class="meta"><span>Chapter 2</span><span>Continues from Chapter 1</span><span id="reading-time">12 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">Let's multiply the giant. <em>It won't take long, and it ruins the next hour.</em></p>
+
+    <p>Our giant's shot is sixty frames long: two and a half seconds at 24 frames a second. Each frame is rendered as roughly thirty separate layers (lighting passes, depth, masks, the usual cast), so one full render of the shot is about 1,800 images. The shot went through about forty versions before the director stopped finding things to love and change. Every version re-renders everything, so the shot's life adds up to around 72,000 images. For two and a half seconds of film.</p>
+
+<p>Now widen the lens. A show has somewhere between 800 and 2,000 shots, most of them cheaper than the giant. But pretend, for the arithmetic, that all 2,000 were giants: that's 144 million images for one show. Say only a tenth survive as complete renders, 14 million files, and we have about eight shows in flight at once. That's some 115 million files, and at tens of megabytes each, typical for high-resolution floating-point images, a few petabytes of pictures alone. We haven't mentioned a single simulation cache. And the studio makes about ten thousand shots a year, which is where the title of this book comes from; if every one of them were a giant, the studio would be minting 720 million images a year, for the renders alone.</p>
+
+<figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 310" role="img" aria-labelledby="g1t g1d">
+          <title id="g1t">The giant's arithmetic, on a log scale</title>
+          <desc id="g1d">Five horizontal bars on a logarithmic axis. Sixty frames, multiplied by thirty layers gives 1,800 images, multiplied by forty versions gives 72,000, multiplied by two thousand shots gives 144 million, and if a tenth survive across eight shows in flight, 115 million files.</desc>
+          <!-- decade grid: x = 220 + 62*k -->
+          <g class="grid">
+            <path d="M220 20V268"/><path d="M282 20V268"/><path d="M344 20V268"/><path d="M406 20V268"/><path d="M468 20V268"/>
+            <path d="M530 20V268"/><path d="M592 20V268"/><path d="M654 20V268"/><path d="M716 20V268"/><path d="M778 20V268"/>
+          </g>
+          <path class="axis" d="M220 268H790"/>
+          <g class="tick">
+            <text x="220" y="290">1</text><text x="406" y="290">1,000</text><text x="592" y="290">1 million</text><text x="778" y="290">1 billion</text>
+          </g>
+
+          <g class="blabel">
+            <text x="10" y="53">Frames in the shot</text>
+            <text x="10" y="103">× ~30 layers a frame</text>
+            <text x="10" y="153">× ~40 versions</text>
+            <text x="10" y="203">× ~2,000 shots in a show</text>
+            <text x="10" y="253">…a tenth kept, × 8 shows</text>
+          </g>
+
+          <rect class="bar" x="220" y="34" width="110" height="28" rx="4"/>
+          <text class="bval" x="338" y="53">60</text>
+
+          <rect class="bar" x="220" y="84" width="202" height="28" rx="4"/>
+          <text class="bval in" x="414" y="103" text-anchor="end">1,800</text>
+
+          <rect class="bar" x="220" y="134" width="301" height="28" rx="4"/>
+          <text class="bval in" x="513" y="153" text-anchor="end">72,000</text>
+
+          <rect class="bar hot" x="220" y="184" width="506" height="28" rx="4"/>
+          <text class="bval in" x="718" y="203" text-anchor="end">144 million</text>
+
+          <rect class="bar teal" x="220" y="234" width="500" height="28" rx="4"/>
+          <text class="bval in" x="712" y="253" text-anchor="end">115 million files</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 2.1</b>Each step multiplies the one before. Note the log scale: every gridline is ten times the last, so the bars understate how fast this grows. Treat the figures as orders of magnitude.</figcaption>
+    </figure>
+
+    <p>When our storage team first saw projections like these, they wanted to talk about terabytes. I wanted to talk about the other number. A hundred and fifteen million files isn't a size problem. It's a <em>counting</em> problem, and counting turns out to be an entirely different discipline.</p>
+
+    <div class="callout">
+      <span class="callout-label">A word on the numbers</span>
+      <p>As in Chapter 1, the giant is a heavy composite, and the figures here are orders of magnitude, not audited totals. An average shot costs a small fraction of what he does. The point of the exercise is the <em>shape</em> of the growth, not the third significant digit.</p>
+    </div>
+
+    <h2 id="belief" data-short="The disks fantasy">The disks fantasy</h2>
+
+    <p>For a good while, I believed scale was a procurement problem. Things get big, so you buy bigger things. There is a spreadsheet, a purchase order, a loading dock, and a satisfying moment when someone wheels in a very large box that blinks.</p>
+
+    <p>This approach works beautifully for exactly one of the ways a system can fail, and it happens to be the least interesting one. Running out of space is loud, obvious, and fixed with money. Most of what actually goes wrong at scale is quiet, strange, and not fixed with money at all. To tell the difference, it helps to stop saying “scale” as though it were a single dial.</p>
+
+    <h2 id="four" data-short="Four kinds of big">Four kinds of big</h2>
+
+    <p>In a pipeline, I find it useful to separate scale into four axes. Each has its own numbers, and each fails in its own way.</p>
+
+    <h3>Bytes</h3>
+
+    <p>Petabytes per show. Chapter 1's table showed where the bulk lives: simulation caches and rendered layers, both made by machines. The dangerous failure here isn't running out, which is loud and gets fixed. It's the quiet habit of keeping everything “just in case,” until the cost of the case becomes one of the largest lines in the budget. <span class="xref">Ch. 22</span></p>
+
+    <h3>Objects</h3>
+
+    <p>Hundreds of millions of files over a show's life. Directories holding a hundred thousand entries. Millions of versions, and millions more rows in the databases that describe them. Reading a file is cheap if you know where it is. Finding out what's <em>there</em> is the expensive part: listing, checking, opening. A tool that politely “just looks in the folder” can bring a file system to its knees, because ten thousand polite tools did it at once. <span class="xref">Ch. 7</span></p>
+
+    <h3>Compute</h3>
+
+    <p>Here is the farm, stated once so the rest of the book can lean on it: about 5,000 nodes (machines), each with 64 cores, so about 320,000 cores. A standard node carries 512 GB of memory, and a smaller high-memory pool carries 1 TB; whenever a later chapter mentions a truly large per-task footprint, that is where it runs. Across the facility that adds up to a few hundred million core-hours a year, and one big show alone can use tens of millions.</p>
+
+    <p>On a busy night the farm works through about a million <dfn>tasks</dfn>, the individual units of work such as one frame of one layer. Artists don't submit them one at a time. They submit <em>jobs</em>, requests of about 240 tasks each, so that million tasks is roughly 4,000 jobs. (Chapter 19 untangles the two words; until then, I'll say tasks.) Frames take hours each, and the farm is a shared utility with a permanent queue. The failure isn't “too slow.” It's “too contended.” Two shows in crunch want the same thousand machines on the same night, and the interesting engineering becomes politics conducted through a queue-based scheduler. <span class="xref">Ch. 19</span></p>
+
+    <p>Two more ideas belong here. The first is the long tail: most shots are ordinary and a few are monsters, a crowd of thousands or a simulation that fills a rack of memory, and it's the monsters, the 99th percentile, that set your infrastructure limits. The second is the rate of change. It isn't only how much data exists but how fast it is created, rewritten and read, and a quiet archive is a very different animal from a folder that thirty people touch every minute.</p>
+
+    <h3>People</h3>
+
+    <p>About 500 artists across two sites (roughly 300 at one and 200 at the other), a few dozen pipeline engineers, about a thousand staff in all, and one review room. This is the axis nobody puts on a capacity chart, and it's the one that eventually binds. You cannot watch more shots in dailies than the day has hours. At some point your farm can produce more candidate shots than the humans can judge, and the bottleneck quietly migrates from machines to eyeballs, where no amount of hardware helps.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Axis</th><th>Typical size</th><th>What hurts first</th><th>Where we deal with it</th></tr></thead>
+          <tbody>
+            <tr><td>Bytes</td><td>Petabytes per show</td><td>The cost of keeping everything</td><td class="who">Ch. 7, 22</td></tr>
+            <tr><td>Objects</td><td>Hundreds of millions of files</td><td>Listing, not reading</td><td class="who">Ch. 4, 6, 7</td></tr>
+            <tr><td>Compute</td><td>5,000 nodes, a million tasks a night</td><td>Contention between shows</td><td class="who">Ch. 19, 21</td></tr>
+            <tr><td>People</td><td>500 artists, two sites, one review room</td><td>Throughput of decisions</td><td class="who">Ch. 23, 25</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 2.1</b>Four axes, four different failure modes.</figcaption>
+    </figure>
+
+    <h2 id="peaks" data-short="Peaks, not averages">Peaks, not averages</h2>
+
+    <p>Every number above is an average, and averages are the least useful thing you can know about a production. A show doesn't produce work evenly. It ramps up slowly, sits through a long plateau where things are busy but manageable, and then, in the last stretch before delivery, and most savagely in the final six weeks, load climbs like a wall, a multiple of a normal week.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 300" role="img" aria-labelledby="g2t g2d">
+          <title id="g2t">Load on the farm over the life of a show</title>
+          <desc id="g2d">A curve that rises gently over the first months, plateaus below a dashed capacity line, then climbs steeply in the final weeks before delivery, far above capacity, and drops to nearly nothing at delivery.</desc>
+          <defs><clipPath id="above"><rect x="60" y="0" width="720" height="150"/></clipPath></defs>
+
+          <rect class="band" x="660" y="36" width="120" height="214"/>
+          <path class="axis" d="M60 250H790"/>
+          <path class="area" d="M60 240 C120 238 140 206 180 200 S270 176 300 174 S390 170 420 170 S510 166 540 166 S620 156 660 140 S700 100 720 80 S740 52 750 50 L780 230 L780 250 L60 250 Z"/>
+          <path class="over" clip-path="url(#above)" d="M60 240 C120 238 140 206 180 200 S270 176 300 174 S390 170 420 170 S510 166 540 166 S620 156 660 140 S700 100 720 80 S740 52 750 50 L780 230 L780 250 L60 250 Z"/>
+          <path class="curve" d="M60 240 C120 238 140 206 180 200 S270 176 300 174 S390 170 420 170 S510 166 540 166 S620 156 660 140 S700 100 720 80 S740 52 750 50 L780 230"/>
+          <path class="cap" d="M60 150H780"/>
+
+          <text class="mono" x="60" y="22">LOAD ON THE FARM</text>
+          <text class="note t" x="70" y="141">capacity, if you size for the average</text>
+          <text class="note a" x="648" y="62" text-anchor="end">what delivery asks for</text>
+          <text class="note a" x="720" y="30" text-anchor="middle">the crunch</text>
+          <g class="tick">
+            <text x="60" y="272">Start</text><text x="240" y="272">Month 6</text><text x="420" y="272">Month 12</text><text x="600" y="272">Month 18</text><text x="770" y="272">Delivery</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 2.2</b>A stylized show. A farm that looks comfortable for most of a show looks very different in the last six weeks. The shaded area above the dashed line is work that has to wait, or be paid for.</figcaption>
+    </figure>
+
+    <p>This shape poses an awkward question. If you provision the farm for the peak, it sits half-idle for most of the show, which is expensive. If you provision for the average, it is a lovely, efficient machine for most of a show and a catastrophe for the last six weeks, which is exactly when nobody can afford one. There isn't a free answer, and we'll come back to the least bad ones, including renting capacity only when you need it. <span class="xref">Ch. 21</span></p>
+
+    <p>There's a second rhythm on top of the first. Artists work in broadly the same hours, so load also surges every day, when a few hundred people hit Publish before the evening review. And shows overlap: while one is in its crunch, the next has begun to ramp. A system sized for “normal” rarely meets normal.</p>
+
+    <h2 id="breaks" data-short="What breaks first">What breaks first</h2>
+
+    <p>So much for the theory. Here is the list I wish someone had handed me in my first year: five things that tend to break as a pipeline grows, roughly in the order they appear. I've learned to expect most of them in some form, and I still keep getting surprised.</p>
+
+    <ol class="stages">
+
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">1</span>
+        <h3>A very long directory listing</h3>
+        <p class="kitchen">Shows up early, when a folder passes ~100,000 entries</p>
+        <p>One of our texture folders grew to about 200,000 entries, each one a small file. A tool that politely “just checked the folder” every time it launched began asking the file system “what's in here?” and waiting minutes for the answer. It wasn't broken; it was thinking. Because artists and render nodes share the same file servers, everyone's tools slowed together, including the ones that never went near that folder, and the floor lost most of an afternoon.</p>
+        <p>My first move was to order faster disks. The disks were fine. The data was tiny; the pain was entirely in the number of files, and the fix was a directory layout rule and a short lecture to myself.</p>
+        <dl>
+          <div><dt>Why it surprised us</dt><dd>Nothing was big. The pain was entirely in the bookkeeping about the data.</dd></div>
+          <div class="trouble"><dt>The dull fix</dt><dd>Spread files across directories by design, and teach tools to look things up instead of listing them. <span class="xref">Ch. 7</span></dd></div>
+        </dl>
+      </li>
+
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">2</span>
+        <h3>The hot file</h3>
+        <p class="kitchen">Shows up when the farm gets big</p>
+        <p>A single scene file or texture that three thousand render tasks open at the same moment. Each task needs only a few megabytes. Together they ask one server for the same bytes in the same second, and the server answers them, correctly, in a line. The farm sits there waiting for storage, with CPU graphs that look like a calm sea. Everything is healthy and nothing is happening.</p>
+        <dl>
+          <div><dt>Why it surprised us</dt><dd>Every individual request was reasonable. The problem lived entirely in their sum.</dd></div>
+          <div class="trouble"><dt>The dull fix</dt><dd>Caching close to the machines, and never trusting one copy to serve a crowd. <span class="xref">Ch. 7</span></dd></div>
+        </dl>
+      </li>
+
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">3</span>
+        <h3>The license</h3>
+        <p class="kitchen">Shows up when the farm outgrows its contracts</p>
+        <p>Some commercial tools need a license for each running process. A farm can have ten thousand idle cores and eight hundred licenses, and then the limit isn't hardware or code but a number in a contract. Tasks sit “ready,” machines sit empty, and the only thing missing is permission. It's a non-technical limit that behaves exactly like a technical one.</p>
+        <dl>
+          <div><dt>Why it surprised us</dt><dd>You can't profile a contract.</dd></div>
+          <div class="trouble"><dt>The dull fix</dt><dd>Treat licenses as a schedulable resource, like memory, and make their consumption visible. <span class="xref">Ch. 19</span></dd></div>
+        </dl>
+      </li>
+
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">4</span>
+        <h3>The scheduler's own database</h3>
+        <p class="kitchen">Shows up when the queue holds a million tasks</p>
+        <p>The system that tracks a million tasks a night has to be faster than the work it tracks. Our queue-based scheduler spent one stretch of its life as the slowest thing on the entire farm, mostly occupied with writing down that it was busy. A scheduler that can't keep up with its own bookkeeping makes the whole farm look broken while every machine in it is fine.</p>
+        <dl>
+          <div><dt>Why it surprised us</dt><dd>We'd been optimizing the work. The thing managing the work was the bottleneck.</dd></div>
+          <div class="trouble"><dt>The dull fix</dt><dd>Group tasks into jobs, summarize rather than record, and treat the control plane as a product with its own capacity. <span class="xref">Ch. 19</span></dd></div>
+        </dl>
+      </li>
+
+      <li class="stage">
+        <span class="stage-no" aria-hidden="true">5</span>
+        <h3>The review room</h3>
+        <p class="kitchen">Shows up when everything else finally works</p>
+        <p>At some point the farm was healthy, the storage was calm, and shots arrived faster than anyone could look at them. The queue of “ready for review” kept growing. The throughput of <em>decisions</em> had become the cap on the whole show. The most valuable optimization that month was not a faster renderer but a better way to decide what the director should look at first.</p>
+        <dl>
+          <div><dt>Why it surprised us</dt><dd>It meant every earlier optimization had a ceiling, and the ceiling wasn't a machine.</dd></div>
+          <div class="trouble"><dt>The dull fix</dt><dd>Better triage, better tools for the reviewers, and a plain acknowledgement that people have limits. <span class="xref">Ch. 23</span></dd></div>
+        </dl>
+      </li>
+
+    </ol>
+
+    <p>My own record at guessing the next bottleneck is, I'm sorry to say, about one in three, and the folder story above is how I learned to say so out loud. I've stopped trying to predict. I try to measure early, so that the next surprise arrives as a graph rather than as a phone call.</p>
+
+    <p>One more honest footnote on the whole exercise. Every item on this list got fixed, and none of the fixes were permanent. A directory rule holds until someone invents a new way to make a folder large, and a cache holds until the farm doubles. Scale doesn't get solved so much as rescheduled, and the useful question is always which count will hurt next year.</p>
+
+    <h2 id="thinking" data-short="Thinking about scale">Thinking about scale</h2>
+
+    <p>If there's a skill hidden in all this, it's less about knowing the answers than about asking the right small questions early. I've settled on three habits, all cheap. They sit on a way of thinking in orders of magnitude, on a log scale, as in Figure 2.1, where a thousand and a million are a few steps apart rather than a chasm.</p>
+
+    <p><em>Budget per frame, per file, per second.</em> A big number is impossible to reason about, and the same number divided into small pieces becomes something you can argue over. “A hundred million files” is a mood. “One file every ten milliseconds, for a week” is a design constraint.</p>
+
+    <p><em>Count the objects before you weigh them.</em> Ask “how many?” before “how big?” Most of the nasty surprises in this chapter came from counts, not sizes.</p>
+
+    <p><em>Design for ten times; be suspicious of a hundred.</em> A design that handles ten times today's load usually has comfortable headroom. A design that has to handle a hundred times is usually a different design, and it's much cheaper to learn that on a whiteboard.</p>
+
+    <div class="callout aside">
+      <span class="callout-label">Before building anything, ask</span>
+      <ul>
+        <li>How many of these will there be, and how many at the same moment?</li>
+        <li>What happens to the hundred-thousandth one?</li>
+        <li>Who, or what, has to wait for it?</li>
+        <li>What does “the last six weeks” look like for this?</li>
+      </ul>
+    </div>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>I think about the giant, multiplied by a thousand, more than is probably healthy. He's patient about it. What strikes me most is how unglamorous the work turns out to be. Most of the engineering in this book is not cleverness; it is counting things, noticing which count is about to hurt, and moving it out of the way before it does.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">Takeaway</span>
+      <p>Bytes are rarely what hurt you first. Count the things.</p>
+    </div>
+
+    <p>It also changed how I read a plan. When someone shows me a design now, I skip to the numbers slide and ask how many of each thing there will be on the worst night of the last month of the biggest show. Nobody has ever been offended by the question. A few have gone quiet and then gone off to do some arithmetic, which is the right reaction, and the one I had myself in front of a folder with 200,000 entries.</p>
+
+    <p>Which leaves a question. If a problem is this big and this strange, who builds the tools to deal with it, and what do you simply buy? That's Chapter 3, and it's where I get to confess some of my worst decisions.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

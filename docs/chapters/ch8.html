@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why We Wrote Our Own Path Tracer · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 8. Why a facility ends up owning its renderer, what it cost, and why the hardest part of the switch was never the mathematics.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch8">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part III · Rendering</p>
+    <p class="chap-num" aria-hidden="true">08</p>
+    <h1>Why We Wrote Our Own Path Tracer</h1>
+    <p class="dek">We didn't set out to write a renderer. We set out to stop fighting one, and the hardest part of the switch was never the mathematics.</p>
+    <p class="meta"><span>Chapter 8</span><span>Continues from: Chapters 3 and 7</span><span id="reading-time">14 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">The senior lighter pulled up the light rig for the giant's forest shot and let me count. <em>Thirty-four lights. Nine of them were lying.</em></p>
+
+    <p>She wasn't embarrassed, and she shouldn't have been. The nine were bounce lights: small, dim lamps placed where light <em>would</em> have bounced off the forest floor and onto the giant's chin, if the renderer had known how to bounce light. It didn't, so she had told it where to pretend. One lamp was named after a colleague who had left the studio years earlier, because he had built the trick and nobody dared rename it. The shot looked wonderful. It also could not be moved to another shot without about a week of careful work, because the lamps had been placed for <em>this</em> giant, in <em>this</em> mist, from <em>this</em> camera.</p>
+
+    <p>I remember thinking that the picture was fine and the process was the problem. Then I thought something that sounds naive and turned out to be the whole chapter: <em>what if the scene simply behaved like light?</em></p>
+
+    <p>Part III is about rendering, the stage where a described scene becomes pictures, and the stage that eats most of the farm's core-hours (<span class="xref">Ch. 2</span>). It opens with the one difference from the Foreword that matters most in this room: the artists' product is the picture, not the software. A renderer is therefore judged less by how it scores than by how the picture feels to make. This chapter tells the story <span class="xref">Ch. 3</span> only pointed at, with the costs left in.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>For years I believed a renderer was a commodity. You pick a good one, bolt on what the studio needs, and spend your scarce engineering time on things that are actually yours. It's a sound instinct, and it is the same one that makes us buy modelling and animation packages without a second thought (<span class="xref">Ch. 3</span>). Nobody builds a spreadsheet to run a budget.</p>
+
+    <p>For a long time it held. We bought a commercial renderer, it did its job, and the vendor's support line knew our names. The belief didn't fail in a single dramatic week. It failed the way a bridge fails from rust: slowly, and then on a Tuesday.</p>
+
+    <h2 id="tricks" data-short="Years of tricks">Years of tricks</h2>
+
+    <p>A word about how pictures were made, because the pain only makes sense once you've seen it. The renderers of that era, and the early hybrid ones we moved to after them, were descendants of <dfn>rasterization</dfn>, the approach every games developer knows: project triangles onto the screen and shade them quickly. It is fast, and it is honest about being an approximation. Shadows come from a separate image of the scene as the light sees it (a shadow map). Soft ambient darkness in corners is calculated ahead of time and stuck onto the surfaces (baked occlusion). Light that bounces around a room is not calculated at all; an artist adds a lamp where the bounce ought to be.</p>
+
+    <p>Each of these is a trick, and each trick is a good one. Artists became extraordinarily skilled at them, and a lighter who could make a forest feel lit by one tired sun using nothing but cheats was, in every sense, a craftsperson. The trouble was what the tricks added up to. Every shot became a bespoke construction. Assets looked right only under the lighting they had been built and tested in. A shot was less a scene than a delicate arrangement, and arrangements don't travel.</p>
+
+    <p>Here is where it hurt, concretely. When the director asked for the camera to move a step to the left, and with it the shadow maps, the baked occlusion and half of the bounce lamps, all of which had been tuned to the old camera. Re-baking, re-tuning and re-praying took a day or two for a small change. And the baked files were not small. Shadow maps and caches multiplied across the storage we met in <span class="xref">Ch. 7</span>: one shot could carry thousands of them, nobody was sure which were current, and some were left behind by versions that no longer existed.</p>
+
+    <p>Then there was the reproducibility problem, which <span class="xref">Ch. 6</span> will make familiar. A render setup built from forty hand-placed exceptions is nearly impossible to reproduce. Six months later, when the director wanted the giant's shot back for a trailer, the answer to “can you render it exactly as before?” was “we can render it, and then we'll see what it looks like.”</p>
+
+    <p>I should be careful here, because none of this was anyone's fault. The tools made the tricks necessary, and the artists made them beautiful. We only gradually noticed that the studio was spending its best people's skill on holding a fragile arrangement together.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Same shot, same look</th><th>Tricks rig</th><th>Physically based rig</th></tr></thead>
+          <tbody>
+            <tr><td>Lights in the scene</td><td>34</td><td>8</td></tr>
+            <tr><td>Lights that exist only to fake bounce</td><td>9</td><td>0</td></tr>
+            <tr><td>Special-case passes and baked files</td><td>about a dozen kinds</td><td>none</td></tr>
+            <tr><td>Time to first good picture</td><td>about 5 days</td><td>about 1 day</td></tr>
+            <tr><td>Time to move the rig to another shot</td><td>about a week</td><td>an afternoon</td></tr>
+            <tr><td>Render time per frame</td><td>shorter</td><td>longer</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 8.1</b>The giant's forest shot lit twice, illustrative figures. The last row is the one to remember: we gained the first five and paid for them there.</figcaption>
+    </figure>
+
+    <h2 id="reframe" data-short="The scene as source of truth">The scene as source of truth</h2>
+
+    <p>The reframe, when it came, wasn't “make rendering faster.” Faster would have been welcome and would have changed nothing about the arrangement problem. It was this: <strong>make the scene the source of truth.</strong></p>
+
+    <p>If materials and lights obey physical rules, the renderer does the work the artist used to do by hand. Let me say what that means without any mathematics. The approach is called <dfn>path tracing</dfn>. For each pixel, the renderer follows a ray of light backwards from the camera into the scene, watches it bounce off whatever it hits, and keeps going until it reaches a light or gives up. It does this thousands of times per pixel along different random paths and averages the results. The idea is simple. The cost is brutal. And the payoff is that soft shadows, light bleeding from a green wall onto a white one, and reflections that agree with each other all arrive without anyone placing a single lamp. Nothing was faked, so nothing needed to be un-faked.</p>
+
+    <figure class="fig">
+      <div class="fig-box">
+        <svg viewBox="0 0 640 260" role="img" aria-labelledby="f1t f1d">
+          <title id="f1t">One path through the scene</title>
+          <desc id="f1d">A camera on the left sends one ray into the scene. It hits the forest floor, bounces to the giant's shoulder, bounces again, and reaches a light at the top right. Several fainter alternative paths are shown in outline.</desc>
+          <defs>
+            <marker class="ah" id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+          <g class="node">
+            <rect x="10" y="100" width="90" height="44" rx="8"/><text x="55" y="127">Camera</text>
+            <rect x="500" y="14" width="120" height="44" rx="8"/><text x="560" y="41">Light</text>
+            <rect x="270" y="130" width="110" height="44" rx="8"/><text x="325" y="157">Giant</text>
+          </g>
+          <rect class="belt" x="120" y="222" width="500" height="14" rx="7"/>
+          <text class="say" x="370" y="254">forest floor</text>
+          <g class="flow">
+            <path d="M100 122 L206 222" marker-end="url(#a1)"/>
+            <path d="M206 222 L290 176" marker-end="url(#a1)"/>
+            <path d="M300 130 L498 46" marker-end="url(#a1)"/>
+          </g>
+          <g class="dep">
+            <path d="M100 122 L420 222"/>
+            <path d="M100 122 L330 130"/>
+          </g>
+          <text class="say" x="150" y="190">bounce 1</text>
+          <text class="say" x="400" y="86">bounce 2, then the light</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 8.1</b>One of the thousands of paths behind one pixel. The pixel's color is the average of what all of them find. The faint lines are paths that found less.</figcaption>
+    </figure>
+
+    <p>Two more words, defined in a clause each, because you'll meet them again. <dfn>Physically based</dfn> means that materials conserve energy (a surface can't reflect more light than hits it) and that lights have real units, so an asset looks right under any lighting rather than only under the one it was tested in. <dfn>Spectral</dfn> means the renderer tracks light by wavelength instead of by three color channels, which removes a whole category of surprises where two colors that match in one light stop matching in another.</p>
+
+    <p>Why does “correct by default” matter at a facility's scale? Because the unit of reuse changes. In the old world the unit was the shot: you could reuse a lighting setup if you were lucky and the new shot resembled the old one. In the physical world the unit is the asset. A giant built once, with physically sensible materials, works in a thousand shots without per-shot rework. At ten thousand shots a year, that is not a nicety. It is the difference between a department that scales and one that doesn't.</p>
+
+    <p>The honest part: this trades artist control for correctness. A physically based renderer does exactly what physics says and nothing to make you feel better, like a very honest colleague. When a shot looks wrong, there is no lamp to nudge. Chapter 10 is where that bill arrives.</p>
+
+    <h2 id="doors" data-short="The four doors, applied">The four doors, applied</h2>
+
+    <p>We didn't jump to building. Chapter 3 gave us four doors, and we went through them in an order that now looks almost embarrassingly textbook.</p>
+
+    <p><strong>Buy.</strong> A commercial renderer gave us a great deal: years of someone else's work on the hard parts, support, and a community that had met most problems before us. It stopped being enough in three places. The first was the data model: it was designed for scenes that fit comfortably in one machine's memory, and ours increasingly didn't (<span class="xref">Ch. 9</span>). The second was integration: the way it wanted to read a scene was not the way our pipeline wrote one. The third was time. When we needed something fixed, we joined a queue behind customers with larger invoices, which is entirely reasonable and entirely unhelpful on a delivery week.</p>
+
+    <p><strong>Bolt on.</strong> So we wrapped it. In-house shaders, custom light types, plugins that changed how it read its input. This worked, for years, and it drifted into exactly the trap Chapter 3 describes: without ever deciding to, we had an unofficial platform of our own, maintained by a few people who knew where the bodies were buried and carried the pager for it. Every renderer update became a small negotiation with our own plugins.</p>
+
+    <p><strong>Adopt.</strong> Then we tried an open-source renderer, as a trial on a single show. It was a good piece of software with good people behind it. What closed this door was not quality. The maintainers' roadmap and ours diverged on the data model within a season, and we saw the future clearly: a private fork, carried alone, with all of the costs of owning the thing and none of the control. Chapter 3 lists that as a signal to stop, and we stopped.</p>
+
+    <p><strong>Build.</strong> Only after “adopt” closed did “build” get a serious hearing, and I want to state the case for it without pride, because pride was in the room. The case was never that ours would be faster. It wouldn't be, and I'd distrust anyone who says it as a reason. The case was threefold. We could design the data model for our scenes. We could make the renderer read what the pipeline already wrote and write what the pipeline needed back (<span class="xref">Ch. 5</span>, <span class="xref">Ch. 6</span>). And we could fix things on our own schedule, which on a delivery week is worth more than any benchmark.</p>
+
+    <p>The cost was just as plain. A team, a pager, a research tail that never ends, and the retraining of every artist who lit a shot. Chapter 3's exit-cost ladder has a rung for this, and the renderer sits near the top. But the surprise was what made it so expensive. The code was not the hard thing to leave. The <em>look</em> was. Every shot we had finished had a look that had been tuned, by hand and over years, to what the old renderer did. The real cost of changing renderer was never the software. It was keeping the pictures the same.</p>
+
+    <div class="record">
+      <span class="callout-label">Decision record · reconstructed after the fact (illustrative)</span>
+      <h4>Write our own renderer?</h4>
+      <dl>
+        <div><dt>Context</dt><dd>Scenes were outgrowing the commercial renderer's data model, bolt-ons had become an unofficial platform, and an open-source trial had just diverged from our roadmap.</dd></div>
+        <div><dt>Options considered</dt><dd>Stay with the commercial renderer and keep bolting on. Adopt an open-source renderer. Build a path tracer of our own. Buy a second commercial renderer.</dd></div>
+        <div><dt>Decision</dt><dd>Build, with a small core and a plug-in boundary.</dd></div>
+        <div><dt>Because</dt><dd>The data model, the pipeline integration and the ability to fix things on our schedule were things nobody could sell us. Faster was not on the list.</dd></div>
+        <div><dt>We'd change our mind if</dt><dd>The team could not stay at a handful of people, or a vendor offered the data model and the integration we needed without the fork.</dd></div>
+        <div><dt>Review</dt><dd>After the first full show on the new renderer.</dd></div>
+      </dl>
+    </div>
+
+    <p>I have to be straight about that box. We did not write one at the time. We reconstructed it afterward, and the exercise was humbling: it showed us which arguments we had been repeating in meetings for two years, and which of them nobody could actually support. “It will be faster” was the first to go. Having it on paper while the decision was live would have saved us a few of those meetings. <span class="xref">Ch. 30</span> returns to this habit, and to how late we came to it.</p>
+
+    <h2 id="shape" data-short="What we built, in shape">What we built, in shape</h2>
+
+    <p>I'll describe the shape and spare you the contents, because the shape is the part a developer can borrow.</p>
+
+    <p>At the center is a path tracer with physically based, spectral materials. It is the part everyone imagines when they hear “we wrote a renderer,” and it is the smallest part of what the team does all day. Around it sits a <strong>plug-in boundary</strong>. Shaders, light types and other things artists and TDs want to invent live outside the core, behind a narrow, stable interface, so the core can change without breaking a hundred people's tools. This is the lesson of the bolt-on years applied on purpose: if everyone is going to extend it, decide where.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 840 170" role="img" aria-labelledby="f2t f2d">
+          <title id="f2t">The renderer in the pipeline</title>
+          <desc id="f2d">Scene description flows into the renderer. Inside the renderer are a core path tracer and a plug-in layer for shaders and lights. Tasks are scheduled on the farm. Layered images with provenance metadata flow on to compositing and review.</desc>
+          <defs>
+            <marker class="ah" id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+          <g class="node">
+            <rect x="10" y="62" width="130" height="48" rx="8"/><text x="75" y="83">Scene</text><text x="75" y="100">description</text>
+            <rect x="190" y="30" width="280" height="110" rx="10" style="fill:none;stroke-dasharray:5 4"/>
+            <rect x="210" y="56" width="110" height="48" rx="8"/><text x="265" y="77">Core path</text><text x="265" y="94">tracer</text>
+            <rect x="340" y="56" width="110" height="48" rx="8"/><text x="395" y="77">Plug-ins</text><text x="395" y="94">shaders, lights</text>
+            <rect x="520" y="62" width="130" height="48" rx="8"/><text x="585" y="91">Farm</text>
+            <rect x="700" y="62" width="130" height="48" rx="8"/><text x="765" y="83">Compositing</text><text x="765" y="100">and review</text>
+          </g>
+          <text class="say" x="330" y="22">the renderer</text>
+          <g class="flow">
+            <path d="M140 86 H188" marker-end="url(#a2)"/>
+            <path d="M470 86 H518" marker-end="url(#a2)"/>
+            <path d="M650 86 H698" marker-end="url(#a2)"/>
+            <path d="M322 80 H338" marker-end="url(#a2)"/>
+          </g>
+          <text class="say" x="675" y="136">layers + provenance</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 8.2</b>Where it sits. The renderer reads what the pipeline already writes, and writes what the pipeline later needs to explain a frame.</figcaption>
+    </figure>
+
+    <p>On the input side, the renderer reads the scene description we met in <span class="xref">Ch. 5</span>. That work had started first, and the renderer followed, with the two overlapping. The renderer read the new scene format where it existed and a translator where it did not. We had planned four months of overlap and needed nine, and the overlap, not the renderer, is where most of the story lives (<span class="xref">Ch. 28</span> tells the order once, properly). On the output side, the renderer writes layered images carrying the metadata <span class="xref">Ch. 6</span> needs, so that months later a frame can say what went into it.</p>
+
+    <p>And the team. A handful of people is the realistic size, and I'd be suspicious of a much larger one for a studio like ours. They are best described as a handful of people and a dependency on all of physics. What they do all day is mostly not rendering. They answer questions from lighters, chase the odd frame that came out wrong on one machine in the farm, keep the plug-in boundary honest, review other people's shaders, carry a pager, and read papers. The plug-in boundary and the small team are simply the shape we landed on. I'm not recommending them. I am only reporting that they've held.</p>
+
+    <p>The trade-off, named plainly: we bought control and fit, and we pay for them in years of maintenance.</p>
+
+    <h2 id="habits" data-short="Throwing away years of intuition">Throwing away years of intuition</h2>
+
+    <p>Everything so far was the cheap part. This section is the expensive one, and I'd rather you take one thing from the chapter than any of the architecture.</p>
+
+    <p>The people who lit our shots were experts at the old cheats, and we were now telling them that the cheats no longer applied. Think about what that asks. It's like telling a chef who has spent years mastering one stove that the new stove has no knobs, and that it will simply do the correct thing. She may be right that the dish will be better. She is also right that she no longer knows how to make it taste the way she wants.</p>
+
+    <p>We did the one thing that could tell us whether we were succeeding, which was a <strong>look-matching program</strong>. We took finished shots and reproduced them on both renderers, then put the old and the new side by side with a third image showing the difference, and argued about which difference was wrong. It's slower than it sounds. A difference might be the new renderer being right, the old renderer's trick being a deliberate artistic choice, or a bug in ours. You cannot tell which from the picture. You need a person who knows the shot.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Shot</th><th>Old</th><th>New</th><th>Difference</th><th>Verdict</th></tr></thead>
+          <tbody>
+            <tr><td>Giant, forest, wide</td><td>approved</td><td>close</td><td>chin too dark</td><td>Missing bounce. Real, and fine.</td></tr>
+            <tr><td>Mist, low sun</td><td>approved</td><td>close</td><td>glow at the edges</td><td>Ours was wrong. A bug.</td></tr>
+            <tr><td>Interior, night</td><td>approved</td><td>different</td><td>colors drift</td><td>The old one was wrong. Artists miss it.</td></tr>
+            <tr><td>Water, close-up</td><td>approved</td><td>different</td><td>reflections agree now</td><td>Better, and unpopular.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 8.2</b>A few rows of the look-match board, in words (illustrative). The verdict column is where the arguments lived.</figcaption>
+    </figure>
+
+    <p>I'll admit the moment I doubted it. Midway through the migration we pinned the first full look-match board to a wall, a grid of old, new and difference for several dozen shots, and it had more red than green. Red meant a difference nobody could yet explain. I stood in front of it with the quiet certainty that we had built the wrong thing, at the wrong time, at the wrong cost. Over the next weeks the red turned out to be three bugs of ours, a handful of tricks that had never been written down, and a stubborn stripe of real preference. None of that was visible from the wall.</p>
+
+    <p>There was a stranger finding, too. In several shots the new renderer was <em>better</em> and artists liked it less, because it was less forgiving. The old tricks hid mistakes. A slightly wrong model, a slightly wrong texture, a light placed a little carelessly: all of it had been quietly absorbed by the approximations. A correct renderer shows you exactly what you built. That is a virtue and it is not always pleasant.</p>
+
+    <p>Three practices helped, and they are practices we settled on, not laws. We <strong>paired renderer engineers with lighting leads</strong>, so that each difference had a person who understood the picture and one who understood the code looking at it together. We kept a <strong>library of before-and-after shots</strong>, so a lighter could see how a familiar problem was solved the new way and not have to take our word for it. And we adopted one rule: <strong>a cheat must be requested, never silently ported.</strong> If an artist wants a fake light back, she can have one, and it is named as a cheat, visible and reviewable. We would not carry old tricks into the new world without anybody noticing, because that was how we had gotten here.</p>
+
+    <p>The moment I keep returning to involved a senior lighter and her favorite fake-bounce light. She had built it years before, it was very good, and she was fond of it in the way you're fond of something that has saved you a hundred times. She spent a week trying to port it to the new renderer. Then she came to my desk and asked to delete it. Nobody had asked her to. She had simply looked at the shot without it, and it was right.</p>
+
+    <p class="pullquote">Physically based rendering removed the tricks, and the tricks were where the artists lived.</p>
+
+    <p>I don't think I will ever be able to write down what that week cost her, or what it gave her back. I only know the company that let her find it herself was a better one than the one that would have ordered it.</p>
+
+    <h2 id="footnote" data-short="The honest footnote">The honest footnote</h2>
+
+    <p>What isn't solved. Render times grew as quality rose, because an honest renderer invites you to ask for more, and artists did. The gap between what an artist expects and what physics does has narrowed but will not close, and every new show finds a new corner of it. Owning the thing costs weekends, every year, with no end date. I'd make the same call again, but I wouldn't make it the same way: I'd write the decision record on the first day, I'd plan more than four months of overlap, and I'd start the look-matching sooner than felt necessary.</p>
+
+    <p>One more thing, which is the sort of promise this book tries to keep modest. Learned rendering, where neural networks stand in for parts of what we compute, is something we have watched, not adopted. That is all I can honestly say, and <span class="xref">Ch. 31</span> picks it up as the opinion it is. And the migration itself, with its overlap and its translator, gets a short retelling in <span class="xref">Ch. 28</span> alongside the others.</p>
+
+    <div class="callout aside">
+      <span class="callout-label">Aside · why spectral</span>
+      <p>With three color channels, two materials can look identical under one light and visibly different under another, a trick of the eye known as metamerism. A spectral renderer tracks wavelengths, so the two materials behave the way they would on set. It costs more, and it removed an entire category of “why did the blue go purple?” tickets.</p>
+    </div>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>I went back to the giant's forest shot after the migration. The same shot, lit with eight lights. No bounce lamps, no colleague's name on anything. The senior lighter looked at it for a moment and said, a little wistfully, that the chin had been nicer with the old trick. Then she opened the next shot.</p>
+
+    <p>The code was the cheap part. The habits were the migration. A renderer is a few years of engineering and a lot of careful mathematics, and the people who wrote it will tell you it was hard. They'll be right. But it took longer to unlearn a trick than to write the thing that made the trick unnecessary, and the unlearning was done by the artists, not by us.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">Takeaway</span>
+      <p>The code was the cheap part. The habits were the migration.</p>
+    </div>
+
+    <p>A correct renderer has one more demand, and it's a heavy one. It wants the whole world in memory at once: every tree, every blade of moss, every hair on the giant's shoulder. Chapter 9 is about what happens when the world doesn't fit.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

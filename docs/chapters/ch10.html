@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Noise, Time and Artist Trust · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 10. Noise is not a quality problem, it is a budget problem, and the budget is time. How we negotiated physically correct with the people who own the look.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch10">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part III · Rendering</p>
+    <p class="chap-num" aria-hidden="true">10</p>
+    <h1>Noise, Time and Artist Trust</h1>
+    <p class="dek">Noise is not a quality problem, it is a budget problem. And “physically correct” turned out to be a starting position that we had to negotiate, one shot at a time.</p>
+    <p class="meta"><span>Chapter 10</span><span>Continues from Chapter 9</span><span id="reading-time">16 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">The supervisor stopped the clip, leaned toward the screen, and pointed at the upper left corner. <em>“The grain moves wrong.”</em></p>
+
+    <p>It was dailies, and the clip was the giant's mist: sixty frames of pale vapor curling around his ankles as he stepped out of the pines. Nobody in the room could name a defect. The shot was clean by every measure we had. But the grain in that corner drifted from frame to frame in a way that read as slightly alive, like a faint crawl of insects, and a trained eye reads that as <em>wrong</em> even when it cannot say why.</p>
+
+    <p>The note was reasonable and so was the response. We sent the shot back and re-rendered it with three times the samples. It cost a night and a half of a large slice of the farm. When the new version came up the next day, the supervisor watched it twice, tilted their head, and said, “Same.” Three times the money had bought no visible improvement at all.</p>
+
+    <p>That shot is the reason this chapter exists. In Chapter 8 we adopted a renderer that simulates light the way light behaves, and in Chapter 9 we made its frames fit in memory. What neither chapter mentioned is the price of that realism, which is that the pictures arrive covered in static. Dealing with the static turned out to be the easy part. Dealing with the people who had to believe the result took longer.</p>
+
+    <h2 id="belief" data-short="Render until it's clean">Render until it's clean</h2>
+
+    <p>My belief going in was simple and, for one frame on one workstation, correct: if the picture is noisy, let it keep rendering until it isn't. Noise is just the renderer not having finished thinking. Give it more time and it gets there.</p>
+
+    <p>It is a wonderful rule. It needs no judgment, no negotiation and no opinion from anyone. It also works perfectly right up until you multiply one frame by a hundred thousand frames and a delivery date. I held that belief for about two shows after the renderer arrived, and I held it with the confidence of someone who had been on the physics side from the very first day. “Physically correct” was, in my mind, a complete specification. If the light was right, the picture was right. Everything else was taste, and taste was somebody else's department.</p>
+
+    <h2 id="budget" data-short="Noise is a budget">Noise is a budget</h2>
+
+    <p>Here is why the static exists. A path-tracing renderer estimates the light at each pixel by firing random rays into the scene and averaging what they find. Each ray is one <dfn>sample</dfn>. Fire a few and the average is rough, because you happened to hit a bright spot or miss one. Fire a lot and the average settles toward the truth. The roughness you see in between is noise, and it is not a bug. It is the visible shape of a statistical estimate that has not yet had enough data.</p>
+
+    <p>What matters is how slowly it settles. To cut the noise in half, you need about four times the samples. To halve it again, four times more. The first few samples buy a huge improvement, and each later improvement costs far more than the one before. The last stretch of cleanliness, the part where you stop being able to see grain on a good monitor in a dark room, can eat most of the render time for a frame.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 330" role="img" aria-labelledby="f10a f10b">
+          <title id="f10a">Noise falling against render time</title>
+          <desc id="f10b">A curve that falls steeply at first, then flattens. Three vertical dashed markers show where good enough lands for a dark interior, a misty exterior, and a bright close-up, at increasing render times.</desc>
+          <path class="grid" d="M70 30V270H790" fill="none" style="stroke:var(--ink-3)"/>
+          <path d="M70 40 C110 150 160 200 260 228 C400 252 560 262 780 268" fill="none" style="stroke:var(--accent);stroke-width:3"/>
+          <g style="stroke:var(--teal);stroke-width:1.5;stroke-dasharray:5 5">
+            <path d="M190 30V270"/><path d="M400 30V270"/><path d="M620 30V270"/>
+          </g>
+          <g class="tick">
+            <text x="190" y="294">Dark interior</text>
+            <text x="400" y="294">Misty exterior</text>
+            <text x="620" y="294">Bright close-up</text>
+          </g>
+          <text class="say" x="150" y="100" style="text-anchor:start">Cheap, huge gains</text>
+          <text class="say t" x="430" y="180" style="text-anchor:start">The long tail: most of the bill</text>
+          <text class="tick" x="12" y="150" transform="rotate(-90 12 150)" style="text-anchor:middle">noise</text>
+          <text class="tick" x="430" y="318">render time per frame</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 10.1</b>Noise against time. Each dashed line is a shot's own “good enough.” Where it falls on the curve is a decision, not a measurement.</figcaption>
+    </figure>
+
+    <p>The reframe that helped me was to stop calling this a quality problem. It is a <em>budget</em> problem, and the currency is time. We have a farm of about 320,000 cores, and a show of a thousand-odd shots is promised a share of the core-hours in Chapter 2's arithmetic, a share that is finite and, in the last weeks before delivery, shrinking. Every sample is a few seconds of that currency. Asking “is it clean?” is asking the wrong question. The right one is “how much is this shot worth, and what is the cheapest picture that's good enough for it?”</p>
+
+    <p>Not every frame deserves the same spend. A bright lamp over a plain wall converges almost immediately. A dim room lit by one window, with glossy furniture reflecting the glare, can take twenty times longer for the same apparent cleanliness. Spending evenly across the image wastes effort on the easy pixels. <dfn>Adaptive sampling</dfn> fixes that by checking, as it goes, which pixels are still jumpy and sending the next rays there. It was one of the cheapest wins we ever had: the renderer simply stops working on what is already done. (It also quietly interacts with the memory limits from Chapter 9, since a frame that finishes unevenly holds its large data for longer.)</p>
+
+    <p>Where does noise hide? In soft shadows, indirect light bouncing around a room, glossy reflections, and fog and mist, which is why the giant's forest was a hard case from the start. Depth of field and motion blur add their own. And then there are <dfn>fireflies</dfn>, which we'll get to.</p>
+
+    <p>So we began giving each shot a noise budget, and, importantly, we started saying it out loud. Every shot has one, whether we write it down or not, and every artist already carries an intuition about it. The work was to make the two agree before anyone pressed render.</p>
+
+    <h2 id="denoising" data-short="Denoising: the clever shortcut">Denoising: the clever shortcut</h2>
+
+    <p>The other way to get a clean picture is to stop waiting for the renderer to find it and have something guess. A <dfn>denoiser</dfn> looks at a noisy image and works out what it would look like clean, using the neighboring pixels and extra information the renderer can hand over for free: the surface color, the direction each surface faces, how far away it is. Think of restoring a photo from a grainy scan. You can't recover what the scan never captured, but you know a wall is flat and a face has an edge, and you smooth accordingly.</p>
+
+    <p>It changed the economics overnight. A frame rendered at a fraction of the samples and then denoised could look as good as one rendered at several times the cost. For a pipeline that thought in core-hours, it was the closest thing to free money we had seen. (Chapter 22 covers the arithmetic of what a sample costs.)</p>
+
+    <p>It also lied, in specific and learnable ways. These are the failures we saw, each with the symptom an artist sees:</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Failure</th><th>What it is</th><th>What the artist sees</th></tr></thead>
+          <tbody>
+            <tr><td>Smearing</td><td>Fine texture treated as noise and averaged away</td><td>Stubble, hair and fabric go soft</td></tr>
+            <tr><td>Lost detail</td><td>Small bright features judged to be stray samples</td><td>Specular glints and distant lights vanish</td></tr>
+            <tr><td>Flicker</td><td>Each frame cleaned independently, with different guesses</td><td>A shimmer that only shows in motion</td></tr>
+            <tr><td>Wobble</td><td>Detail resolved differently from frame to frame</td><td>Fine patterns crawl across surfaces</td></tr>
+            <tr><td>Budget mismatch</td><td>Neighboring shots rendered at different sample counts</td><td>A cut where the grain suddenly changes character</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 10.1</b>How a denoiser's guesses go wrong, in the order we met them.</figcaption>
+    </figure>
+
+    <p>We got the first one wrong in a way I still wince at. The first denoiser we tried was an off-the-shelf one, and we chose it because it was available and our team was a handful of people. On a close-up it erased the fine stubble on a character's jaw so thoroughly that the face looked airbrushed, and nobody on our side noticed until a lighter pointed at it. On a different show, it turned a field of grass into smooth green felt. The denoiser was working exactly as designed: grass at that scale looks a great deal like noise.</p>
+
+    <p>That led to the choice we had to make: use a general-purpose denoiser or build one tuned for our own renderer, which knows its own noise better than any outsider. It is the same build-or-buy question from Chapter 3, and we ran it with the same questions. Off-the-shelf was quicker and had somebody else maintaining it. Tuned was better matched and cost people we didn't have a lot of. We started off-the-shelf and let the failures tell us what a tuned one would need to do.</p>
+
+    <p>The unglamorous fix mattered more than the choice. We stopped treating the denoised picture as the picture. Every render now writes out the <em>un-denoised</em> layers alongside the cleaned ones, and keeps them. The compositor can blend the two, restoring the stubble through a mask or pulling the glints back in. Nothing is lost for good. Rule of thumb: a tool that guesses must leave the original on the table.</p>
+
+    <div class="callout aside">
+      <span class="callout-label">Hardware, briefly</span>
+      <p>Denoisers, and increasingly the renderer itself, lean on dedicated accelerator hardware for this kind of work. We bought a few. They sped some things up. How much of the farm they will eventually take is a question I'll answer in Chapter 31, where it is an opinion and not a plan.</p>
+    </div>
+
+    <h2 id="fireflies" data-short="Fireflies, clamps and honesty">Fireflies, clamps and the honesty problem</h2>
+
+    <p>The strangest noise is the kind that doesn't look like noise at all. A <dfn>firefly</dfn> is a single pixel that is vastly brighter than its neighbors, a white dot where nothing should be. It comes from a rare light path: a ray bounces just right off a polished surface and finds a small, intense light. That sample is real, physically speaking, but so rare that averaging it in produces a speck instead of a glow. More samples dilute it slowly. Some stay for hours.</p>
+
+    <p>The standard answer is to <dfn>clamp</dfn>: cap how bright any single sample can be, and the dots disappear. It works wonderfully and it is a cheat. Throwing away the brightest samples throws away some of the light, so the picture is cleaner and a little darker and a little less true. The loss is usually tiny. It is also not zero, and that is exactly the problem.</p>
+
+    <p>This is the negotiation in miniature. Somebody has to decide how much energy to discard, and then somebody has to tell the lighter that it was discarded. The wrong way is to set a sensible default, ship it, and let the lighter discover months later that their highlights are quietly capped. The principle we settled on was that every compromise must be <em>visible, named and switchable</em>. If the renderer clamps, the artist can see a clamp setting with a name. If a shot is denoised, the shot says so. And anyone can turn it off and see what the unmodified picture looks like, at whatever cost that implies.</p>
+
+    <p>The table below collects the knobs we ended up exposing, with what each one saves and what it risks. None is wrong. All of them are trades.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Knob</th><th>What it saves</th><th>What it risks</th></tr></thead>
+          <tbody>
+            <tr><td>Sample count</td><td>Time, directly</td><td>Grain, and a look that shifts between shots</td></tr>
+            <tr><td>Adaptive threshold</td><td>Effort on easy pixels</td><td>Uneven noise from one region to the next</td></tr>
+            <tr><td>Clamping</td><td>Fireflies, and many hours of dilution</td><td>A little real light, and some highlight punch</td></tr>
+            <tr><td>Denoiser strength</td><td>Large amounts of render time</td><td>Smearing, flicker, lost fine detail</td></tr>
+            <tr><td>Per-light budgets</td><td>Samples wasted on minor lights</td><td>A subtle light that renders grainier than the rest</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 10.2</b>The settings we exposed to artists. Each saves something and risks something, and each is visible in the scene.</figcaption>
+    </figure>
+
+    <h2 id="negotiation" data-short="Negotiating “physically correct”">Negotiating “physically correct”</h2>
+
+    <p>Now for the part I got wrong the longest. When the renderer arrived, we said the output was physically correct, and I assumed that settled things. It didn't, and the reason was a conversation I had with a supervisor on the giant's show.</p>
+
+    <p>The previous week, we had shown a sequence in a particular look. The sky was soft and a little warm and the giant's shadow fell in one lazy shape on the moss. The director had loved it. Then a renderer update made the light bounce more accurately, and a new render of a neighboring shot came back with a slightly cooler shadow and a harder edge. It was, by any measure I had, <em>more correct</em>. The supervisor looked at it and asked me, politely, if I could make it match last week's look instead.</p>
+
+    <p>I said it was more correct. The supervisor said, with great patience, that the director had approved last week's look and had never once approved physics. I remember the pause. It was not an argument I could win, because I had been defending the wrong thing. Physics was the means. The product was a picture the director believed in, delivered by a date.</p>
+
+    <p>That did not make physics the enemy. A physically based renderer is a very good starting position, and it saves lighters enormous effort because things behave sensibly by default. But the starting position isn't the destination. There is always a shadow that should be a bit darker for the scene's mood, a reflection that is too sharp for the character's face, or a light that should simply be brighter “for the story.” Art direction wins those arguments, and it should. We had to build the tools to let it win without breaking everything else.</p>
+
+    <p>Three mechanisms did most of the work:</p>
+
+    <ul>
+      <li><strong>Artist-facing overrides, with limits.</strong> A lighter can bend a light, a shadow or a reflection beyond what physics would give, within a range, and the override is visible in the scene. Break the limits and a human has to approve it.</li>
+      <li><strong>Per-shot noise targets, agreed in advance.</strong> Before the shot's first real render, a supervisor and a lighter decide what clean means for it, using reference frames from similar earlier work.</li>
+      <li><strong>Reference frames as the gold standard.</strong> A few frames per sequence, rendered far past any reasonable budget, so that “is it the same?” has an answer that is not an opinion.</li>
+    </ul>
+
+    <p>The tools were the easy half. Getting people to trust them was the real work, and we found that trust has a rhythm, a ramp you walk one step at a time and never skip.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Step</th><th>What happens</th><th>What earns the next step</th></tr></thead>
+          <tbody>
+            <tr><td>1. Pilot</td><td>One show, hardest shots first, with the old way still available</td><td>Failures found and shown openly, not hidden</td></tr>
+            <tr><td>2. Visible switch</td><td>A clear “off” control and a clear label in every scene</td><td>Artists use the switch and nothing breaks</td></tr>
+            <tr><td>3. Opt-out default</td><td>On unless you turn it off</td><td>A season of shots where nobody asks to turn it off</td></tr>
+            <tr><td>4. Default</td><td>The normal path, with the switch kept</td><td>Never finished: the switch stays</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 10.3</b>The trust ramp. We piloted the denoiser on our worst shots, not our best, on purpose.</figcaption>
+    </figure>
+
+    <p>The ramp was not painless. Three things backfired, and all three taught us something. Some tools were too clever: a feature that tried to guess the right sample count for each shot made decisions nobody could predict, and artists, quite reasonably, refused to use it. Some defaults changed silently between versions, so the same scene rendered slightly differently on Tuesday and Wednesday, and nobody could say what had changed. And one time we upgraded to a better denoiser in the middle of a sequence.</p>
+
+    <p>That one was on us. The new denoiser was, by every still-frame comparison, an improvement. But it broke temporal stability on a sequence already in progress: shots finished with the old one were cut against shots finished with the new one, and the grain character changed at the cut. The artists who warned us were right. This is why un-denoised data is always kept, and why mid-sequence changes of that kind are now frozen, a policy we return to in Chapter 25 and a case we'll revisit in Chapter 28.</p>
+
+    <h2 id="good-enough" data-short="Measuring “good enough”">Measuring “good enough”</h2>
+
+    <p>You might expect metrics to settle all this. They help, but they don't settle it. We use numbers to triage: an automated check scores each frame against its noise target and flags the ones that look off. The flag goes to a person, who looks. The metric never approves anything on its own, because measures of noise are famously good at agreeing with each other and sometimes bad at agreeing with a supervisor. A frame can score beautifully and still have grain that moves wrong. (Appendix C lists a few metrics that misled us.)</p>
+
+    <p>What we actually care about is consistency across a sequence. A slightly noisier shot that matches its neighbors will usually pass. A slightly cleaner one that doesn't will usually be sent back. Film is judged in motion and in context, so a single frame that looks perfect proves almost nothing.</p>
+
+    <p>That leads to a subtler idea that the rest of the book relies on. Two renders of the same shot are never identical. Sampling is random, software changes, and the farm may run the frame on different hardware. So what does “the same” mean? We settled on a definition we can live with: the same means <em>within a tolerance a supervisor would sign</em>. It is the tolerance Chapters 5 and 6 point to when they promise that an old shot will come back looking the way it did, and it is the sense of “same” that Chapter 28 depends on when we move to a new renderer.</p>
+
+    <h2 id="footnote" data-short="What still isn't solved">What still isn't solved</h2>
+
+    <p>I would like to say we finished this. We didn't. Temporal flicker on the very hardest shots, the ones with fine hair in dim mist, still needs human eyes, and sometimes a re-render with the un-denoised layers carrying more of the load. Budgets still get set too tight on the day a director changes the lighting after approval, because the noise target was agreed against a picture that no longer exists. And there remains a gap between what an algorithm calls clean and what a supervisor calls clean. We have made that gap smaller and visible. We have not closed it.</p>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>Some months after the review that started this chapter, a different shot of the giant came back with the same sort of mist. The same supervisor stopped the clip and looked at the corner. I held my breath. But this time there was a reproducible un-denoised pass underneath, a reference frame beside it, and a noise target the supervisor had agreed to before the first render. The grain was reproduced on request, one layer at a time. The supervisor watched it once and said, “That's fine.” Nobody in the room noticed that it was a small, quiet victory. That is, in a review, what a victory looks like.</p>
+
+    <p class="pullquote">A render isn't done when it's converged. It's done when someone trusts it.</p>
+
+    <p>Artists, it turned out, never distrusted the renderer. They distrusted surprises: the default that changed overnight, the setting nobody had named, the clever tool that decided on its own. Give them a picture they could predict, a switch they could reach, and a note on what had been traded away, and they were more willing to use physics than I had been to bend it.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">Takeaway</span>
+      <p>Noise is a budget, not a flaw. Agree the target before the shot, keep the original, and never ship a compromise the artist can't see.</p>
+    </div>
+
+    <p>The best way to avoid a surprise is to see the picture sooner and cheaper, before the expensive render has the chance to disagree with anyone. Chapter 11 is about a previewer that tries to agree with the final render, and about the many ways it doesn't.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

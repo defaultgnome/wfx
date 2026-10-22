@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What We’d Do Differently · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 30. Most of our expensive mistakes were good choices made on a wrong assumption about scale, people or time, and kept past their date.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch30">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part VIII · Hard-Won Lessons</p>
+    <p class="chap-num" aria-hidden="true">30</p>
+    <h1>What We’d Do Differently</h1>
+    <p class="dek">We were rarely wrong about the technology. We were often wrong about how long it would stay right.</p>
+    <p class="meta"><span>Chapter 30</span><span>Continues from: Chapters 28 and 29</span><span id="reading-time">15 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">If someone handed me a time machine that could go back exactly one meeting, I would not pick a launch, an outage or a bad night on the farm.</p>
+
+    <p>I'd pick a Tuesday afternoon in a room with a bad projector, early in the renderer decision (<span class="xref">Ch. 8</span>). Eight reasonable people agreed on a direction. Nobody wrote down why. Everyone left with a slightly different memory of what had been decided, and for the next several months we held the same argument four more times, each time with a little less goodwill and a little more certainty about what “we all agreed” back then.</p>
+
+    <p>Technically, the meeting was uneventful. That's the point. When I make the list of meetings I'd revisit, the surprise is how long it is, and how few of them were about technology. I know now that the renderer record in <span class="xref">Ch. 8</span> was reconstructed after the fact. We wrote it when the arguments were already on their second lap, and it was more a peace treaty than a decision record. “In hindsight” is the most expensive phrase in engineering, and this chapter is mostly an attempt to spend it carefully.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>The belief goes like this: with more experience we would have chosen better tools. A better scheduler, a better file format, a better storage layer, and nine years of pain would have shrunk to a footnote.</p>
+
+    <p>It's a flattering story, because it makes the problem technical, and I know how to talk about technical problems. But go back through the chapters of this book and look at what actually hurt. The scene format was a sound choice (<span class="xref">Ch. 5</span>). So was the renderer (<span class="xref">Ch. 8</span>). The old scheduler (<span class="xref">Ch. 19</span>) ran a million tasks a night for years without drama. None of them was foolish. Each was a good answer to the question we were asking on the day we asked it.</p>
+
+    <p>What went wrong was that the question changed and we didn't notice, or noticed and decided we'd deal with it after the next delivery. The thesis of this chapter is a claim about our own history, not a rule: <em>most of our expensive mistakes were good choices made with a wrong assumption about scale, people or time, and kept past their date.</em> Hindsight is unfair, of course. The facts I have now weren't available then. So I'll try to separate the decisions that were bad from the decisions that merely aged, and I'll admit up front that sorting them is harder than it sounds.</p>
+
+    <h2 id="regrets" data-short="Regrets, by what they were about">The regrets, by what they were really about</h2>
+
+    <p>I sorted them into three piles: scale, people and time. I expected a pile of technology too, and it never formed. A few items that looked technical on first read turned out to be one of the three wearing a lab coat.</p>
+
+    <h3>Assumptions about scale</h3>
+
+    <p>The mistake here is always the same one: we sized a system for the average show instead of the monster shot or the crunch week. It's the most forgivable kind, because an average is real and a crunch week is a rumor until it arrives.</p>
+
+    <p>The version I wince at most involved the review-room previews (<span class="xref">Ch. 23</span>). We built the preview pipeline for a normal week: a few hundred clips a day, a modest pool of machines turning them into something that played smoothly in a dark room. It worked beautifully for months. Then came the week of a big delivery, when every department wanted every shot reviewed at once, and the previews queued up behind each other like cars at a toll booth. The day before the review that mattered, the supervisor was looking at yesterday's work and asking, politely, whether today's existed. We fixed it with borrowed machines and one very long evening. The system had worked right up to the night it was needed.</p>
+
+    <p>The earlier chapters told the same story in other costumes. We planned storage around bytes and were surprised by the count of objects (<span class="xref">Ch. 2</span>, <span class="xref">Ch. 7</span>). We sized the old scheduler for steady load and learned its real shape when a crunch week met a full queue (<span class="xref">Ch. 19</span>). I now think of that as one regret with three addresses. If I could change one habit, it would be to ask, of any new system, a single question before launch: what does the worst night of the year look like, and has anyone actually run that night, even on paper?</p>
+
+    <h3>Assumptions about people</h3>
+
+    <p>This is the pile where I am the target, so let me be specific.</p>
+
+    <p>We built a lighting tool from a specification. It was a good specification: careful, reviewed, signed off by three departments. We shipped it to a room of lighters who had been using a spreadsheet for years. It looked inferior to the spreadsheet, and it was, in the ways that mattered. The spreadsheet tracked which lights were approved, which were waiting on a note, and which belonged to whom, all at a glance, in a layout every lighter could read half-asleep. Our tool had a better data model and none of that. The spreadsheet, it turned out, had been the specification all along, and none of us had looked at it because it was a spreadsheet and we were engineers. We spent two months adding to the tool what the spreadsheet already did. If one of us had sat behind a lighter for a single day, we'd have seen it by lunch. The lesson is the one the artists at the previewer design reviews taught us in <span class="xref">Ch. 11</span>, when they caught disagreements with the final look that we had called acceptable. They were right. Our acceptable wasn't theirs, and theirs was the one the director would see.</p>
+
+    <p>The same blindness showed up in <span class="xref">Ch. 10</span>, where an artist's instinct that something looked off got filed under nostalgia for the old renderer, and the instinct was correct. Artist trust is a feature. You can spend it down faster than you can earn it, and the exchange rate is poor.</p>
+
+    <p>The other half of this pile is about talent, and I got it wrong for years. The people who sit between art and engineering (<span class="xref">Ch. 26</span>) are the ones who catch these problems early, because they speak both dialects. We hired them slowly, promoted them reluctantly, and treated the role as a stepping stone to somewhere more respectable. When a few of them left, the translation went with them, and I could trace nearly every tool built from a specification to a period when that bridge was thin. I wish I could say this was a hard thing to see. It wasn't. It was on my own org chart.</p>
+
+    <h3>Assumptions about time</h3>
+
+    <p>Three kinds of regret live here, and they are close cousins.</p>
+
+    <p>The first is the temporary solution. Every pipeline has one that is old enough to vote. Ours was a stopgap meant to survive a single delivery, and I can't find the day anyone chose to keep it. We simply stopped looking at it, which in a busy facility is how most things are kept. This is the debt of <span class="xref">Ch. 29</span> in its natural habitat: not a bad decision, just a decision with no expiry date, so it never expired.</p>
+
+    <p>The second is the migration plan that assumed an end. We told the studio the scene-format overlap would take six months, and it took fourteen. The renderer overlap was planned at four and ran nine (<span class="xref">Ch. 28</span>). We weren't careless planners. We planned the migration as a project with a finish line, and it behaved like a second pipeline that had to be run alongside the first until the last stubborn show let go. The plan was right about the work and wrong about the people who had to leave the old thing behind.</p>
+
+    <p>The third is the one I mind most: the decommission date for the old scheduler, which we put in a slide deck as a promise. The slide was a promise to a room of department heads who were, reasonably, planning around it. The date came and went, then came and went again, because the old scheduler turned out to hold fairness rules that lived only in code, and nobody could retire it until someone wrote them down. Each missed date cost a little trust. A range with a “what would change this” line beneath it would have cost nothing, and been more honest. We'd confused a target with a commitment, which is a mistake you can only make while presenting.</p>
+
+    <p>One more regret belongs in this pile, because it's the one that taught me to distinguish aging from error. The research prototype that got promoted too early (<span class="xref">Ch. 27</span>) was a good prototype and a bad product. We took the applause for the first and then asked it to be the second, and the people who maintained it afterwards were not the people who had been applauded.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Regret</th><th>Group</th><th>Where it came from</th><th>What it really was</th></tr></thead>
+          <tbody>
+            <tr><td>Renderer decision, no written reasons</td><td class="who">Time</td><td><span class="xref">Ch. 3</span> · <span class="xref">Ch. 8</span></td><td>Record written after the fact</td></tr>
+            <tr><td>Counting bytes, not objects</td><td class="who">Scale</td><td><span class="xref">Ch. 2</span> · <span class="xref">Ch. 7</span></td><td>Sized for the average show</td></tr>
+            <tr><td>Provenance, paid for late</td><td class="who">Time</td><td><span class="xref">Ch. 6</span></td><td>Right insistence, late cost</td></tr>
+            <tr><td>Review-room previews</td><td class="who">Scale</td><td><span class="xref">Ch. 23</span></td><td>Sized for a normal week</td></tr>
+            <tr><td>The lighting tool and the spreadsheet</td><td class="who">People</td><td><span class="xref">Ch. 23</span> · <span class="xref">Ch. 11</span></td><td>Built from a spec, not a day of watching</td></tr>
+            <tr><td>The bridge role, grown slowly</td><td class="who">People</td><td><span class="xref">Ch. 26</span></td><td>Treated as a stepping stone</td></tr>
+            <tr><td>Scheduler decommission date</td><td class="who">Time</td><td><span class="xref">Ch. 19</span> · <span class="xref">Ch. 28</span></td><td>A target presented as a promise</td></tr>
+            <tr><td>Prototype promoted early</td><td class="who">Time</td><td><span class="xref">Ch. 27</span></td><td>A demo asked to be a product</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 30.1</b>The regret map. Eight entries; two or three could sit in a different column, which says something in itself.</figcaption>
+    </figure>
+
+    <h2 id="aged" data-short="Bad versus aged">Bad decisions and decisions that aged</h2>
+
+    <p>I keep drawing a line between a bad decision and one that aged, and I should say where I think it falls, because it's a line that flatters the person drawing it.</p>
+
+    <p>A decision aged if, on the day we made it, a careful person with the facts we had would have made it too. A decision was simply bad if we had the facts and ignored them, or never looked. By that test, the scene format, the renderer and the old scheduler aged. The lighting tool was bad: the spreadsheet was sitting in the room. The scheduler decommission slide was bad, because we knew the fairness rules were unwritten and promised a date anyway.</p>
+
+    <p>A third category matters more than either: a decision that was good, aged, and nobody was assigned to notice. The giant's feet hovered an inch above the forest floor for six weeks (<span class="xref">Ch. 1</span>) because everyone assumed the stage before them had checked. Most of our aging decisions hovered the same way. The assumption stopped holding on a certain day, and for months no one's job was to look down.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>A good decision</th><th>The day its assumption stopped holding</th><th>The day we noticed</th></tr></thead>
+          <tbody>
+            <tr><td>Size previews for a normal week</td><td>The first show with two deliveries in one month</td><td>The night before a review</td></tr>
+            <tr><td>Keep the old scheduler through the busy season</td><td>Its fairness rules stopped matching how shows were staffed</td><td>When the replacement forced us to write them down</td></tr>
+            <tr><td>Treat the stopgap as temporary</td><td>The delivery it was built for ended</td><td>Years later, during a migration</td></tr>
+            <tr><td>Overlap the old and new renderer for four months</td><td>The first show that needed both for its whole run</td><td>Month five</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 30.2</b>Decisions that aged. The gap between the middle and right columns is the expensive part.</figcaption>
+    </figure>
+
+    <p>The gap between the middle column and the right is where the money went. We rarely lacked the data to see an assumption failing; we lacked an owner and a date. Which brings me to the first lesson that I'd put on the wall.</p>
+
+    <h2 id="lessons" data-short="Lessons, with their sources">The lessons, with their sources</h2>
+
+    <p>I promised myself this would not turn into a list of platitudes, so each lesson below points back to a story already told. If you can't find the story, the lesson doesn't belong.</p>
+
+    <p><strong>Decide in writing, and review on a date.</strong> We did write decision records (<span class="xref">Ch. 3</span>). We wrote them too late. A record written after the arguments have already repeated themselves is a summary of the fight. A record written in the first week is a tool for avoiding it, and it only needs three things: what we decided, why, and what would change our minds. The date for reviewing it is what keeps a good decision from aging in silence.</p>
+
+    <p><strong>Know your data before you design for it.</strong> Count objects, not just bytes, before the first design review (<span class="xref">Ch. 2</span>, <span class="xref">Ch. 7</span>). The count tells you what a million tasks will do to your storage. The byte total tells you what to buy.</p>
+
+    <p><strong>Make provenance cheap from day one.</strong> Our insistence on being able to reproduce an old shot was right (<span class="xref">Ch. 6</span>). Where we were wrong was the price. Because we started late, recording what went into a frame became an archaeology project eighteen months in, a slow and expensive dig through old logs to discover what we should have written down in the first place. Right in insistence, late in cost. Both halves belong in the sentence.</p>
+
+    <p><strong>Negotiate “correct” with the people who use it.</strong> The renderer, the previewer and the artist's eye all disagreed at times (<span class="xref">Ch. 8</span>, <span class="xref">Ch. 10</span>, <span class="xref">Ch. 11</span>). In every case the disagreement was information, and in every case we got more of it for free by asking an artist earlier.</p>
+
+    <p><strong>Treat tools as products, with owners and users.</strong> A tool with no owner is a tool whose problems arrive as complaints about the pipeline in general (<span class="xref">Ch. 23</span>, <span class="xref">Ch. 24</span>).</p>
+
+    <p><strong>Plan failure as the normal case</strong> before the first big night, not after it (<span class="xref">Ch. 20</span>). <strong>Make cost visible earlier</strong>, while people can still change what they do with it (<span class="xref">Ch. 21</span>, <span class="xref">Ch. 22</span>). <strong>Invest in the bridge role sooner</strong> (<span class="xref">Ch. 26</span>), and <strong>kill ideas faster and more kindly</strong> (<span class="xref">Ch. 27</span>). The last two are the same lesson from opposite ends: keep the people who can tell whether something is working, and give the ones with a bad idea a clean way out.</p>
+
+    <p>One more lesson doesn't belong to a chapter, because it's what the middle of the book kept repeating without ever saying it aloud. <strong>Keep the human decision separate from the regenerated product.</strong> The same pattern turns up in the asset lanes (<span class="xref">Ch. 4</span>), the simulations (<span class="xref">Ch. 12</span>), the scene assembly (<span class="xref">Ch. 15</span>), the capture pipeline (<span class="xref">Ch. 16</span>) and the rigs (<span class="xref">Ch. 18</span>). Every time, what saved us was keeping the thing a person chose apart from the thing a machine could rebuild, so one could change without the other. When we kept them together, we ended up with a file nobody dared to regenerate.</p>
+
+    <h3>Where two lessons collide</h3>
+
+    <p>You may have noticed that two of these fight. “Move fast” and “write it down” are both true, and if you follow either one literally you break the other. A team that writes a full decision record before every experiment never experiments. A team that never writes anything down repeats the Tuesday meeting.</p>
+
+    <p>Our compromise is imperfect but it has held: <em>write it down after the first week, not before.</em> Spend the first week learning what the decision really is. At the end of it, write three lines: what we chose, why, and what would change our minds. Put a date on the review. It costs about twenty minutes, and it has paid for itself every time we've done it, which is more than I can say about most of what's in this book.</p>
+
+    <h2 id="right" data-short="What we got right">What we got right, by luck or stubbornness</h2>
+
+    <p>It would be easy to make this chapter all regret, and that would be its own kind of dishonesty. Three decisions were criticized at the time and held up. I want to be careful about the credit, because a fair share of it belongs to luck.</p>
+
+    <p>The first is the insistence on reproducing an old shot, which I've already reconciled above. People called it overkill for two years, until the first time a director asked for a shot from a finished show to be revisited, and we could answer. (The giant's blue shadow, from <span class="xref">Ch. 6</span>, was exactly that kind of question.) It was right. It was also late and costlier than it needed to be, and both of those are true at once.</p>
+
+    <p>The second is letting the old renderer finish the shows already in flight (<span class="xref">Ch. 28</span>). This was criticized as slow and as paying twice. It was both. But the shows that finished on the renderer they started on never saw the disruption that the others did, and I have no regret about the months it cost. I'd add that we had no particular wisdom; we were nervous. Nervousness, sometimes, is a design principle that hasn't had its press release.</p>
+
+    <p>The third is the habit of comparing old and new both ways on real shots, not test scenes (<span class="xref">Ch. 5</span>, <span class="xref">Ch. 8</span>). It's tedious, and artists grumbled at being asked to look at two nearly identical frames. It also caught the one difference that mattered, which no benchmark would have. We kept it more from stubbornness than from foresight, and I'm happy to take stubbornness as a method when it works.</p>
+
+    <p>I should say a word about measuring any of this. Some of the metrics we used to decide we were doing well turned out to be misleading; Appendix C lists the ones we believed and then retired. Hindsight is easier with a ledger.</p>
+
+    <h2 id="advice" data-short="Advice for a new team">Advice for a new pipeline team</h2>
+
+    <p>If a new team asked me over coffee what to do first, I would not talk about tools. I'd say something closer to the closing lines of Chapters 20 to 27, in a longer version: take care of the questions behind the technology, because the technology will mostly be fine.</p>
+
+    <p>Write down what you decided and what would change your mind, in the first week. Watch someone work before you build for them, for a full day, with the spreadsheet open. Count things, and plan for the worst night, not the average one. Take on debt knowingly and repay it in installments, with the ledger visible to everyone who might be asked to pay. Finally, hire and keep the people who sit between art and engineering, because they are the ones who can tell you, early and kindly, which of your assumptions has already expired.</p>
+
+    <div class="callout">
+      <span class="callout-label">If I were starting a pipeline team on Monday</span>
+      <p>Write the decision down in week one, with a date to revisit it.<br>
+      Spend a full day beside a user before building anything for them.<br>
+      Count objects as well as bytes, and run the worst night on paper.<br>
+      Pay debt in installments and keep the ledger public.<br>
+      Treat every tool as a product with an owner.<br>
+      Hire and keep the people who sit between art and engineering.</p>
+    </div>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>This chapter will date too. I expect that in five years I'll disagree with parts of it, and I'd like to be able to say which parts, and why, in writing, with a date. If you read this later and find a lesson that no longer fits, you've found the next entry in the regret map. That's the system working.</p>
+
+    <p>What I learned, more than any particular lesson, is that the goal isn't to stop making mistakes. A pipeline that makes none is a pipeline nobody is changing. The goal is to make new ones, to notice them within days instead of years, and to have written down enough that somebody can tell which kind they are.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">What stuck</span>
+      <p>We were rarely wrong about the technology. We were often wrong about how long it would stay right.</p>
+    </div>
+
+    <p>That's the backward look. The next chapter is the forward one: from regrets to bets, and an honest account of which ones I'd make again.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

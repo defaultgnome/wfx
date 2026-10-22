@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Real-Time on Set · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 17. On a virtual production stage the picture must be right every frame, with a crew watching. Real time is not a faster pipeline; it is a different promise, and latency is a budget.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch17">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part V · Characters and Performance</p>
+    <p class="chap-num" aria-hidden="true">17</p>
+    <h1>Real-Time on Set</h1>
+    <p class="dek">On a stage, the image has to be right now, every frame, with the director watching. That is not a faster pipeline. It is a different promise.</p>
+    <p class="meta"><span>Chapter 17</span><span>Continues from: Chapter 16</span><span id="reading-time">15 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">The camera operator panned left, and the forest behind the actor arrived three frames late.</p>
+
+    <p>Nobody said anything for about a second. On a stage that is a long time. There were perhaps forty people in the room: the director, the camera crew, a handful of actors in costume, and the people who were paying for the day by the hour. The supervisor looked at the wall of screens, looked at the operator, and asked, very calmly, “Who touched the network?”</p>
+
+    <p>Nobody had. It took two hours to find the cause, and it was mundane. A display processor had switched on a smoothing mode after a firmware prompt was dismissed during lunch. Smoothing is a kindness to a viewer in a living room, and a small disaster on a stage, because it holds each image back to blend it with its neighbors. The picture lagged the camera by three frames, and the crew could see it.</p>
+
+    <div class="callout">
+      <span class="callout-label">A note on the stage</span>
+      <p>The stage, the crew and the numbers in this chapter are a composite, as always. The millisecond figures are illustrative orders of magnitude, chosen to teach the idea, and they do not describe any particular hardware or production.</p>
+    </div>
+
+    <p>Until now this book has assumed that time is cheap. A frame takes hours, a night is a unit of work, and a bad render is found on Thursday. This chapter removes all of that. It is about the one corner of the business where the answer is wanted in a sixtieth of a second, where failure is observed live by the people who signed the checks, and where a pipeline team learns to think in a unit it has never used: the millisecond.</p>
+
+    <p>First, some words. <dfn>Virtual production</dfn> means shooting actors with a live view of the digital world around them, so that decisions are made on the day rather than months later. <dfn>In-camera visual effects</dfn> are the version where that digital world is shown on huge screens behind the actors and filmed directly, so the background is already in the shot. <dfn>Tracking</dfn> is the system that continuously measures where the real camera is and which way it points, so the screens can show the right view. The <dfn>stage</dfn>, which some people call the <dfn>volume</dfn>, is the tracked, screen-lined room where all this happens. (Careful: this is neither the volumetric data of <span class="xref">Ch. 9</span> and <span class="xref">Ch. 12</span> nor the capture volume of <span class="xref">Ch. 16</span>. Same word, different space, and I apologize on behalf of the industry.) And <dfn>previs</dfn> is the rough, early version of a scene that lets a director try ideas before anyone builds them properly.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>When we first walked into a stage I held a comfortable belief. We had spent nine years building a fast pipeline. We had a renderer we trusted and a farm that could eat a million tasks a night. Surely you take that renderer, point it at a screen, and call it live.</p>
+
+    <p>Fast and real-time turned out to be different words. Fast is a property of an average: this frame took four seconds instead of four hours, hooray. <em>Real time</em> is a promise with a deadline attached. Here I will define it once and use it that way for the rest of the chapter: real time means meeting the deadline of every single frame, every time, for as long as the camera is rolling. A system that is twice as fast as needed on average, and misses one frame in a thousand, is not real time. At sixty frames a second that is a visible stutter about every seventeen seconds.</p>
+
+    <p>The renderer was fast. The stage wanted a different word.</p>
+
+    <h2 id="cultures" data-short="Two cultures, one stage">Two cultures, one stage</h2>
+
+    <p>The stage is where two traditions meet, and neither of them is wrong. One is the film pipeline this book has described so far. The other is game-engine technology, which has spent decades getting plausible images out of machines in milliseconds. It is a collaborator, and on the stage we are its guests.</p>
+
+    <p>The film tradition is built on precision, provenance, scale and patience. The answer arrives late and is right, and if it is wrong we can say exactly why, because we recorded what went into it. The game tradition is built on speed, budgets and graceful degradation. The answer arrives now and is good enough, and when the machine is struggling it quietly lowers the quality rather than miss the deadline. I have watched each side politely explain their own word for “done” to the other, and both explanations were correct.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th></th><th>Film pipeline</th><th>Real-time engine</th></tr></thead>
+          <tbody>
+            <tr><td>Priority</td><td>Correctness and traceability</td><td>Meeting the deadline</td></tr>
+            <tr><td>Unit of time</td><td>Hours per frame, days per review</td><td>Milliseconds per frame</td></tr>
+            <tr><td>How failure looks</td><td>A bad frame, found later, redone at night</td><td>A visible stutter, live, with a crew watching</td></tr>
+            <tr><td>What is sacred</td><td>The final image, and knowing how it was made</td><td>The frame rate, which is never allowed to drop</td></tr>
+            <tr><td>When it is “done”</td><td>When the director approves the final render</td><td>When it holds at full speed through the whole take</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 17.1</b>Two traditions, both sensible. The seam between them is where this chapter lives.</figcaption>
+    </figure>
+
+    <p>What each finds baffling about the other is useful to know. Film engineers find it strange that a frame can be allowed to look slightly different from one run to the next, since we are used to renders that match to the pixel. Engine engineers find it strange that we would spend a night on one image when a good-looking one was available instantly. Neither reaction is foolish. Each is what you get from living under a different deadline.</p>
+
+    <p class="pullquote">The picture on the stage is never final. It only has to be true enough to decide with.</p>
+
+    <p>That sentence deserves a moment, because it holds two truths at once. The live picture is a promise about the day: the director can judge a framing, an actor can react to the sky, and the camera gets real light on a real face. The final render, produced offline by the machinery of <span class="xref">Ch. 8</span> to <span class="xref">Ch. 10</span>, will differ. Everyone on set has to understand which differences are acceptable, such as softer shadows or simpler reflections, and which would mislead, such as a character standing a foot to the left of where the final shot will put him. The stage has to be honest about which of the two it is showing.</p>
+
+    <h2 id="budget" data-short="The latency budget">The latency budget</h2>
+
+    <p>Think of an airport. You do not care how fast any single desk is. You care how long it takes from the curb to your seat, and that is the sum of check-in, security, a walk, boarding, and the many small gaps in between. A chain of quick desks can still make a slow trip.</p>
+
+    <p>A stage has the same shape. From the moment the camera moves to the moment the new image reaches the screen, the signal passes through a chain of stages. The tracking system sees the camera and works out its position. That position travels over a network to the machines that draw the picture. The engine evaluates the scene for the new camera, draws it, and sends it to a display processor, which prepares it for the screens, which finally light up. Each hop takes a little time, and that time is called <dfn>latency</dfn>. If the total is longer than a few frames, the background visibly trails the camera, and the illusion that the actor is standing in a forest becomes the impression that the actor is standing in front of a slow television.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 190" role="img" aria-labelledby="l1t l1d">
+          <title id="l1t">The latency budget, spent stage by stage</title>
+          <desc id="l1d">A stacked bar totaling eighty milliseconds. Tracking 8, transport 4, scene evaluation 6, rendering 17, display processing 12, panel 8, and a reserve of 25 milliseconds for everything forgotten.</desc>
+          <g class="node">
+            <rect x="60" y="50" width="70" height="56"/><text x="95" y="82" style="font-size:13px">8</text>
+            <rect x="130" y="50" width="35" height="56"/><text x="147" y="82" style="font-size:13px">4</text>
+            <rect x="165" y="50" width="53" height="56"/><text x="191" y="82" style="font-size:13px">6</text>
+            <rect x="218" y="50" width="149" height="56"/><text x="292" y="82" style="font-size:13px">17</text>
+            <rect x="367" y="50" width="105" height="56"/><text x="419" y="82" style="font-size:13px">12</text>
+            <rect x="472" y="50" width="70" height="56"/><text x="507" y="82" style="font-size:13px">8</text>
+          </g>
+          <g class="node ghost"><rect x="542" y="50" width="218" height="56"/><text x="651" y="82" style="font-size:13px">25 left for everything we forgot</text></g>
+          <g class="tick" style="font-size:12px">
+            <text x="95" y="130">tracking</text><text x="147" y="150">transport</text><text x="191" y="130">evaluate</text>
+            <text x="292" y="130">render</text><text x="419" y="130">display processor</text><text x="507" y="150">panel</text>
+          </g>
+          <text class="say" x="60" y="34" style="text-anchor:start">Camera moves</text>
+          <text class="say" x="760" y="34" style="text-anchor:end">Light reaches the lens: 80 ms in all</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 17.1</b>An illustrative budget, in milliseconds. At 24 frames a second one frame lasts about 42 ms, so this is roughly two frames of delay end to end.</figcaption>
+    </figure>
+
+    <p>The useful move is to treat this as a budget, in the same spirit as a cost budget. Decide the total you can afford, give each stage an allowance, and write the whole thing down as a plain table with one row per stage, a target, and a measured value. Then argue about it like adults. The sliver at the end of the bar matters most. Nobody knows what goes there, which is exactly why it must exist, and why it should never be spent in advance.</p>
+
+    <p>Budgets get eaten in ordinary ways. A network that is fast on average but occasionally hesitates, which is called jitter, will eat a stage's allowance on the unlucky frames, and unlucky frames are the ones people notice. One heavy asset, say a tree with far too many leaves, can turn a steady seventeen milliseconds into a missed deadline. And a screen that buffers one frame more than anyone expected quietly bills the whole chain fifty milliseconds, as our smoothing mode did, and it does so while appearing to be perfectly healthy.</p>
+
+    <h3>Measure end to end</h3>
+
+    <p>The first lesson was that per-stage numbers are comforting and misleading. Every box in our chain could show a green light and still deliver three frames of lag, because no single box owns the gaps between boxes. The only honest measurement is end to end: stamp a moment at the start, find the same moment at the end, and subtract. We learned this the slow way, and I will come back to it at the close.</p>
+
+    <h3>Degrade, don't drop</h3>
+
+    <p>The second lesson is borrowed from the game side, with thanks. When the machine is about to miss a deadline, reduce quality rather than miss the frame. Draw the far trees more simply, lower the resolution of a reflection, skip a bit of work that will not be noticed. Dropping a frame on the farm costs nothing but a retry. Dropping one on stage is visible, expensive and happens with the crew watching.</p>
+
+    <p>What the picture degrades is a creative decision, not a technical one, and so someone must decide it in advance. Is the background allowed to get softer if the foreground character stays crisp? Probably. The other way round? Definitely not. We keep that list written down and agreed before the shoot, because nobody wants to negotiate it with a director standing at a monitor.</p>
+
+    <h2 id="assets" data-short="Bringing the film assets over">Bringing the film assets over</h2>
+
+    <p>The giant lives in this chapter too. Say the production wants to shoot a scene on a stage that shows the pine forest he walked out of. The forest exists, built carefully for offline rendering, with geometry too dense to draw sixty times a second. It cannot go on the stage as it is.</p>
+
+    <p>So it has to be converted. Geometry is simplified, so that a thousand leaves become a few painted cards. Lighting that took the renderer minutes to compute is baked into textures ahead of time, and textures are shrunk to fit the memory. This is skilled work, and something is always lost: the moss no longer catches the light quite the same way. Someone has to look at the result and sign off on what was lost, and that someone is a person with an eye and a say, not a tool. For the offline pipeline we had provenance, a record of what went into each result. For this new copy we needed the same thing, or we would soon be unable to say what it was a copy of.</p>
+
+    <h3>Every asset has a twin</h3>
+
+    <p>This is the hardest data problem on the stage, and it is easy to state. Each shared asset now exists twice: the offline original and its real-time twin. They start in agreement. Then, on a Tuesday, an artist improves the giant's shoulder in the original, as artists do, and the twin on the stage is silently wrong. Nobody sees it until the final render comes back and the shoulder does not match the thing the director approved on the day.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Question</th><th>Offline original</th><th>Real-time twin</th></tr></thead>
+          <tbody>
+            <tr><td>Where it lives</td><td>The shared asset library</td><td>The stage's content build</td></tr>
+            <tr><td>What it is built for</td><td>The final render</td><td>Holding the frame rate</td></tr>
+            <tr><td>When it changes</td><td>Whenever an artist improves it</td><td>Only between shooting days</td></tr>
+            <tr><td>How we know they match</td><td>A recorded version link from twin to original</td><td>A check that compares the two versions and says if the twin is stale</td></tr>
+            <tr><td>Who signs off differences</td><td>The asset's owner</td><td>The stage supervisor, with the original's owner</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 17.2</b>Two copies, one sync check. The check is boring, and it is the most valuable line in the table.</figcaption>
+    </figure>
+
+    <p>The fix was not clever. Every twin carries a recorded link to the exact version of the original it came from, using the same scene description and versioning ideas as <span class="xref">Ch. 5</span> and <span class="xref">Ch. 6</span>, and a small check compares the link with the original's current version. If they differ, the twin is marked stale. A stale twin is not forbidden. It is simply visible, and a person decides, on purpose, whether the difference matters for tomorrow. The question to ask of any shared asset is the one in the heading: what is its real-time twin, and who keeps them in step?</p>
+
+    <p>We did not get this right the first time. On our first stage show, the twin of a hero prop was two versions behind its original for nine days. The prop looked fine on the stage, and the director loved it, and in the final render it was visibly different. We spent a weekend remaking it to match the picture people had actually approved, and I would very much like those two days back.</p>
+
+    <h3>Live characters</h3>
+
+    <p>Characters add one more twist. A character driven live by performance capture, the data of <span class="xref">Ch. 16</span>, has to move a rig fast enough to meet the deadline. The better the rig, the more expensive each frame, so there is a direct trade between quality and speed. That trade is the subject of <span class="xref">Ch. 18</span>, where rigs get treated as software and measured as such. For now, note only that the number of live characters on a stage is limited by it, and that nobody should discover this limit on the morning of the shoot.</p>
+
+    <h3>The shared reference</h3>
+
+    <p>The oldest trap on a stage is the picture that looks great there and is wrong in the final. The defense is a shared reference: for each important set and character, a still frame of the final-quality version, kept next to the live one, so anyone can hold the two up and see what is different. It is not glamorous. It stops arguments that would otherwise take an afternoon.</p>
+
+    <h2 id="service" data-short="Running a stage like a service">Running a stage like a service</h2>
+
+    <p>A stage is a distributed system with physical parts. There are tracking cameras, render machines, display processors, a network, and operators, plus one person whose job is to say “hold on.” Crew who have never heard of a scheduler turn out to be experts in queueing, because they have spent their careers deciding what happens while forty people wait for one machine. The most expensive silence in the building is everyone watching a loading bar while the clock runs on the day.</p>
+
+    <p>Our response was to run it like any other service, only with people in the loop. There is a dashboard on a screen beside the operator, and someone actually watches it during a take. It shows the frame time against the deadline, the temperature of the machines, and the measured latency. It is deliberately small. During a take, anything that cannot be understood in a glance is noise.</p>
+
+    <h3>The day, and the night</h3>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>When</th><th>What happens</th><th>Who decides</th></tr></thead>
+          <tbody>
+            <tr><td>Before call</td><td>Machines start, the tracking system is calibrated, the latency test runs</td><td>Stage operators</td></tr>
+            <tr><td>Setup</td><td>Lighting and framing tuned against the shared reference</td><td>Stage supervisor and the camera team</td></tr>
+            <tr><td>Shooting</td><td>Freeze: no changes to the content build until the take is done</td><td>The stage supervisor</td></tr>
+            <tr><td>Wrap</td><td>Notes and change requests collected, shot records saved</td><td>Everyone, in one room</td></tr>
+            <tr><td>Overnight</td><td>Changes made, twins rebuilt and checked, latency test repeated</td><td>The content and pipeline team</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 17.3</b>A day on the stage, call time to call time. The night shift is where the next day is won.</figcaption>
+    </figure>
+
+    <p>On a shooting day there is a constant temptation to tweak one last thing. It is a small change, it will take a minute, and it has about one chance in twenty of being the thing that breaks the take. So we have a freeze rule: once shooting starts, nothing in the content build changes until the take ends, and only the stage supervisor can lift it. It sounds bureaucratic, and it is the cheapest insurance I know. It is also the same rule we use elsewhere in the studio, and <span class="xref">Ch. 25</span> shows it applied on a real shooting day.</p>
+
+    <p>Changes are requested at wrap, and they must be ready by call time. That gives the night team a handful of hours to rebuild assets, run the twin check, and repeat the latency test, because a perfectly good change can still make the budget worse. Once or twice we skipped the test to save an hour, and each time we spent two hours the next morning finding what it would have caught.</p>
+
+    <h3>Recording what was shot</h3>
+
+    <p>The last duty of a stage closes a loop with the rest of the book. Everything the live system knew during a take is evidence about the final shot: the camera's position, the lens, the tracking data, and the state of the live scene. This is the stage's own record, and it has nothing to do with any volume of data. If we save it with the take, visual effects can reproduce the shot later, as <span class="xref">Ch. 6</span> would insist. If we do not, the effects team inherits a plate and a good deal of guesswork.</p>
+
+    <h2 id="seam" data-short="Where the seam still shows">Where the seam still shows</h2>
+
+    <p>I would like to say this is solved. It is not.</p>
+
+    <p>Materials and lighting still disagree between the engine and the final renderer, in small ways that are hard to eliminate and hard to explain to a director. Twins still drift, however good the check, and the check only catches what it was taught to look for. And the people who can speak both languages, fluent in film correctness and in frame budgets, are rare, so each of them ends up in too many meetings. We have written down the differences we know about and who accepts them. We have not removed them. If you want a view of where these two worlds might meet, <span class="xref">Ch. 31</span> offers one, and it is labeled there as an opinion.</p>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>Back to the three-frame lag. If it happened again today, we would not ask who touched the network. We would run the latency test, which stamps a marker at the tracking system, finds the same marker as it leaves the display processor, and prints the difference in milliseconds, stage by stage, in about a minute. The stamps would show the display processor adding fifty milliseconds that the budget had not allowed for. It would take a few minutes rather than two hours, and the question would be about a setting, not a person.</p>
+
+    <p>For years I assumed real time was what we already did, only quicker. It is not. The offline pipeline promises a correct answer eventually. A stage promises a good-enough answer on the deadline, and the work is to say honestly how good, and where it is not.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">Takeaway</span>
+      <p>Real time isn't a faster pipeline; it's a different promise. Latency is a budget, and everyone is a spender.</p>
+    </div>
+
+    <p>Which brings us to the character on the stage, who moves through a rig, and the rig has to keep up too. Rigs are software, and <span class="xref">Ch. 18</span> will treat them that way.</p>
+
+  </article>
+
+<nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Storage, Caching and the Network · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 7. The morning every dashboard was green and nothing finished: why a render farm is a very large machine for reading files, and how we stopped everyone asking for the same thing at once.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch7">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part II · Assets and Data</p>
+    <p class="chap-num" aria-hidden="true">07</p>
+    <h1>Storage, Caching and the Network</h1>
+    <p class="dek">At scale, a render farm is a very large machine for reading files. Storage design is mostly about not letting everyone ask for the same thing at once.</p>
+    <p class="meta"><span>Chapter 7</span><span>Continues from Chapter 6</span><span id="reading-time">15 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">The dashboards were green. <em>Nothing had finished.</em></p>
+
+    <p>It was a Monday morning, three shows into a heavy quarter, and every graph I owned said the farm was healthy. Nodes up. Scheduler up. Queue full of work, all of it dutifully “running.” An artist stopped me in the corridor with a polite, puzzled question: why had her twenty-minute task been running for three hours?</p>
+
+    <p>I went and looked at the farm. About 5,000 nodes, and the processors on most of them were sitting at roughly fifteen percent. Nobody was crashing. Nobody was idle, either, in the sense that every task was busy doing something. They were just not doing anything that looked like rendering. Then I looked at the storage array's graphs, which were a flat line pressed against the ceiling, like a sleeper's hand against a window. Everyone was busy. No one was working.</p>
+
+    <p>This chapter closes Part II. <span class="xref">Ch. 4</span> to <span class="xref">Ch. 6</span> were about <em>knowing</em> what the data is: naming it, describing scenes made of it, remembering which pieces went into which frame. Now the question is where all of it lives and how it moves, and the answer to that question turned out to decide how fast the whole studio could go.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>For years I carried a simple picture: storage is a big disk, and compute is the expensive part. It was even true in the budget meetings. Processors were the line item people argued about; storage was the line item people nodded at. If renders were slow, you bought more machines, and the renders got faster, and everyone went home.</p>
+
+    <p>That worked until the farm outgrew the thing it was reading from. The mistake wasn't buying machines. It was assuming that the cost of work lives where the money was spent. We had bought a great many more processors and, as it turned out, a faster way to wait.</p>
+
+    <h2 id="time" data-short="Where the time goes">Where the time goes</h2>
+
+    <p>To see the problem, follow one render task from the file system's point of view. The task starts and opens its scene description. That scene points at other files: models, textures, caches of simulated motion, a lighting setup. The task asks for each of them, reads what it needs, and spends most of its life computing. Near the end it writes a finished frame and exits. Then the next task starts and does the same thing, and so does the other million that night.</p>
+
+    <p>Storage can be the slow part in three different ways, and it's worth keeping them apart.</p>
+
+    <p><strong>Throughput</strong> is how many bytes per second can flow. This is the one everybody thinks of: fat pipes, big files, a large cache of simulated motion streaming off disk. <strong>Latency</strong> is how long one request waits before the first byte arrives. It matters when a task reads thousands of small things in sequence and each read pays the toll. The third is <strong>metadata</strong>, and it's the one that surprises people.</p>
+
+    <p>Metadata is information <em>about</em> a file rather than the file itself: does it exist, how big is it, when did it change, who may open it. Before a task reads a single byte of a texture, it asks the storage system a handful of questions about that texture. Each question is tiny. But each one lands on the same small set of machines whose job is to keep the directory of everything, and those machines don't get faster just because you hand them smaller questions.</p>
+
+    <p>Picture a library where every patron wants the same book at the same moment. The shelf isn't the problem; the book is on the shelf and it is not heavy. The problem is the single librarian, who has to look the book up, confirm it's in, check the patron's card, and also answer the phone. Add four thousand patrons and the phone rings off the hook. Nobody is reading anything. A large part of rendering, at scale, is standing in that line.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 300" role="img" aria-labelledby="f71t f71d">
+          <title id="f71t">The farm-to-storage funnel</title>
+          <desc id="f71d">Many small boxes representing render nodes across the top, narrowing through a network switch into a small group of storage servers at the bottom. The narrowest point, the storage servers' metadata service, is marked as the choke point.</desc>
+          <defs>
+            <marker class="ah" id="a71" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+          <g class="node">
+            <rect x="40" y="18" width="46" height="30" rx="5"/><rect x="98" y="18" width="46" height="30" rx="5"/><rect x="156" y="18" width="46" height="30" rx="5"/>
+            <rect x="214" y="18" width="46" height="30" rx="5"/><rect x="272" y="18" width="46" height="30" rx="5"/><rect x="330" y="18" width="46" height="30" rx="5"/>
+            <rect x="388" y="18" width="46" height="30" rx="5"/><rect x="446" y="18" width="46" height="30" rx="5"/><rect x="504" y="18" width="46" height="30" rx="5"/>
+            <rect x="562" y="18" width="46" height="30" rx="5"/><rect x="620" y="18" width="46" height="30" rx="5"/><rect x="678" y="18" width="46" height="30" rx="5"/>
+          </g>
+          <text class="say t" x="410" y="70" style="text-anchor:middle">5,000 nodes, a million tasks a night</text>
+          <g class="flow">
+            <path d="M63 50 L330 126" marker-end="url(#a71)"/><path d="M215 50 L360 126" marker-end="url(#a71)"/><path d="M410 50 L410 124" marker-end="url(#a71)"/>
+            <path d="M600 50 L460 126" marker-end="url(#a71)"/><path d="M700 50 L490 126" marker-end="url(#a71)"/>
+          </g>
+          <g class="node shared"><rect x="310" y="130" width="200" height="40" rx="8"/><text x="410" y="155">Network switches</text></g>
+          <path class="flow" d="M410 172 L410 208" marker-end="url(#a71)"/>
+          <g class="node"><rect x="330" y="212" width="160" height="40" rx="8"/><text x="410" y="237">Storage servers</text></g>
+          <path class="loop" d="M520 232 H600" marker-end="url(#a71)"/>
+          <text class="say" x="610" y="228" style="text-anchor:start">the choke point:</text>
+          <text class="say" x="610" y="248" style="text-anchor:start">directory questions</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 7.1</b>Thousands of nodes asking, a handful of machines answering. The narrow part is not where we first looked.</figcaption>
+    </figure>
+
+    <h2 id="one-texture" data-short="Five thousand nodes, one texture">Five thousand nodes, one texture</h2>
+
+    <p>The artist's slow task gave us the first thread. We pulled the logs and counted. In a window of about ninety seconds, roughly 20,000 tasks had asked for the same foliage texture set. Each task made a long run of requests on its way to opening it, and the storage servers were fielding about two million metadata requests a minute. Almost none of them were for actual data. They were all variations on <em>is it there, is it the same, may I look</em>.</p>
+
+    <p>The giant was in the middle of it, in a small way. His misty forest used a shared foliage set, the same pines and moss from <span class="xref">Ch. 1</span>, and every task of every layer of every shot in that forest wanted it at the start of its life. Sixty frames times thirty layers, times however many versions people were trying, times every other shot in the sequence. The hot file wasn't hot because it was big. It was hot because everyone politely arrived at once.</p>
+
+    <p><span class="xref">Ch. 2</span> gave this a name, the hot file problem, and promised to come back. Here is what we tried first, in the order we tried it, because the order is the lesson.</p>
+
+    <p>We bought faster disks. The disks weren't the bottleneck, so the graphs barely moved. We added more network links between the farm and the storage. The links had room to spare; the questions were small. We bought a bigger array, which gave us more of the thing that wasn't short. Each purchase felt like progress, because each one was a real purchase with a real delivery date. That was a mistake in method, and I'll own it: we chose the fix before we'd located the problem.</p>
+
+    <div class="callout aside">
+      <span class="callout-label">The green dashboard</span>
+      <p>The real reason it took us so long was that our dashboards measured how busy things were, not what they were waiting for. Processors at fifteen percent read as “plenty of headroom.” The storage graph read as “working hard.” Every panel was green, and every panel was correct, while the output folder stayed empty. A busy machine and a productive machine look identical until you ask what each one is waiting on.</p>
+    </div>
+
+    <p>The reframe came from a whiteboard and a very simple question: why is each task asking? There was no reason for the same node to ask for the same texture twenty times in a row, and no reason for twenty nodes in the same rack to ask separately. The answer was dull and obvious in hindsight. <strong>Fetch once per node, or once per rack, not once per task.</strong> Move the data one time, then read it locally many times.</p>
+
+    <h3>What we built</h3>
+
+    <p>Three things, none of them clever.</p>
+
+    <p>First, a local cache on every node. A node keeps a copy of data it has recently read on its own fast disk. The second task to need the foliage set on that node gets it from the local copy and never touches the shared storage.</p>
+
+    <p>Second, a staging step before work starts. When a batch of tasks is about to run, a small step reads its scene, works out which files it will need, and pulls them to the nodes in advance. The tasks arrive to find the table already set. Staging also turns twenty thousand requests arriving in ninety seconds into a few hundred spread over a few minutes, which is a kindness to everyone.</p>
+
+    <p>Third, a read-through cache near the farm. It sits between the nodes and the main storage and answers on its behalf: the first request goes through to the real storage, and the next ones are served from the nearby copy. Between the three, the foliage set was fetched from the central storage a handful of times instead of tens of thousands.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 820 250" role="img" aria-labelledby="f72t f72d">
+          <title id="f72t">Cache layers between a task and storage</title>
+          <desc id="f72d">Four boxes in a row from left to right: the tool's own memory, the node's local disk, a rack or near-storage read-through cache, and central storage. Estimated hit rates are shown for each: a task finds what it needs on the node about eight times in ten, in the near cache about nineteen of the remaining twenty, and only a small share reaches central storage.</desc>
+          <defs>
+            <marker class="ah" id="a72" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+          <g class="node">
+            <rect x="10" y="60" width="160" height="60" rx="8"/><text x="90" y="86">In the tool</text><text class="sm" x="90" y="106">its own memory</text>
+            <rect x="230" y="60" width="160" height="60" rx="8"/><text x="310" y="86">On the node</text><text class="sm" x="310" y="106">local fast disk</text>
+            <rect x="450" y="60" width="160" height="60" rx="8"/><text x="530" y="86">Near the farm</text><text class="sm" x="530" y="106">read-through cache</text>
+          </g>
+          <g class="node shared"><rect x="670" y="60" width="140" height="60" rx="8"/><text x="740" y="86">Central storage</text><text class="sm" x="740" y="106">the source</text></g>
+          <g class="flow">
+            <path d="M170 90 H228" marker-end="url(#a72)"/><path d="M390 90 H448" marker-end="url(#a72)"/><path d="M610 90 H668" marker-end="url(#a72)"/>
+          </g>
+          <g class="tick">
+            <text x="200" y="150">miss</text><text x="420" y="150">miss</text><text x="640" y="150">miss</text>
+          </g>
+          <text class="say" x="310" y="190">about 8 in 10 requests stop here</text>
+          <text class="say" x="530" y="215">most of the rest stop here</text>
+          <text class="say" x="740" y="170">a small trickle arrives</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 7.2</b>Each layer trades freshness for speed. The hit rates are illustrative; the shape, not the percentages, is the point.</figcaption>
+    </figure>
+
+    <p>The scheduler helped, once we asked. If the tasks that need the same data land on the same nodes, the local cache does far more work, so we taught placement to prefer neighbors for tasks that share a scene. How the scheduler decides that is <span class="xref">Ch. 19</span>'s story; for now, notice only that storage and scheduling quietly became the same conversation.</p>
+
+    <p>Then I watched the two graphs I'd cared about the wrong way round. Processor use climbed from fifteen percent toward something that looked like a working farm. Storage queue depth fell from a flat ceiling to a lumpy, healthy-looking pattern with breathing room. The twenty-minute task took twenty minutes. I won't pretend there was a triumphant moment. I mostly felt that I'd paid for a lot of equipment to learn what a single graph could have told me.</p>
+
+    <h2 id="tiers" data-short="Tiers and the long tail">Tiers and the long tail</h2>
+
+    <p>Not all data deserves the same real estate. A shot being lit this week gets read constantly. A shot from a show that wrapped a year ago gets read approximately never, until the day somebody asks to re-render it. So storage comes in tiers.</p>
+
+    <p><strong>Fast storage</strong> is flash-heavy, near the farm, and expensive per terabyte. It holds what is active: current shows, current versions, the data tasks are reading right now. <strong>Bulk storage</strong> is large and cheaper, slower to respond but fine for things read now and then. <strong>Archive</strong> is cheaper again, and slow in a deliberate way: you ask, you wait, and what you want is brought back to you. Data moves down the tiers as it ages and up again when someone needs it.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Tier</th><th>What lives there</th><th>Typical age</th><th>How it's read</th></tr></thead>
+          <tbody>
+            <tr><td>Fast</td><td>Active shows, current versions, scratch</td><td>days to weeks</td><td class="who m">Constantly, by the farm</td></tr>
+            <tr><td>Bulk</td><td>Recent finals, older versions, source plates</td><td>weeks to months</td><td class="who">Now and then</td></tr>
+            <tr><td>Archive</td><td>Wrapped shows, manifests, finals</td><td>months to years</td><td class="who">Rarely; on request, with a wait</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 7.1</b>Three tiers and the movement between them. Boundaries are policy, not physics.</figcaption>
+    </figure>
+
+    <p><span class="xref">Ch. 4</span> and <span class="xref">Ch. 6</span> are what make this safe to run. Because every published version is immutable and every frame has a manifest listing exactly what it used, the system knows what a re-render of a shot from eighteen months ago will need. Restoring it means thawing exactly those files, in a time we can predict, rather than a week of someone guessing which folder mattered. Without the manifest, archiving is a gamble. With it, it's a queue.</p>
+
+    <p>The other half of the story is cost, and the temptation is “just keep everything on fast disk.” At a petabyte or more per show, with about eight shows in flight, that is not a decision; it is a line item that eats a budget. Putting a price on each tier, and making that price visible to the people choosing, is <span class="xref">Ch. 22</span>'s subject. Here I'll only say what we learned in practice: the tiers didn't hold until somebody owned them. A policy that nobody enforces is a wish.</p>
+
+    <p>Which brings me to cleaning up. Every facility has scratch space, the temporary working area where tasks leave intermediate files, and every scratch area grows a long tail of orphans: test renders, abandoned caches, the leftovers of tasks that died halfway. One quarter we ran a report on who owned the biggest folders. Near the top sat a single directory of about 400 terabytes that nobody would claim. We sent the question around the building. A week of polite emails later, I traced it through the logs to the account that had created it, and the account was mine. It was a set of benchmark runs from the caching work above. I deleted it quietly and told no one, then wrote this paragraph, so that is how well that went.</p>
+
+    <h2 id="network" data-short="The network is part of the machine">The network is part of the machine</h2>
+
+    <p>Everything so far assumed the pipes were fine. Often they are not, and they aren't ours alone.</p>
+
+    <p>Think of an airport. The runways are generous, the planes are fast, and the whole system still stalls because everyone's flight leaves at nine and there's one security checkpoint. Networks are built the same way, on purpose. A rack of machines connects to the rest of the building through a top-of-rack switch, and the link above it is usually narrower than the sum of everything below. That ratio is called <dfn>oversubscription</dfn>. It's a sensible bet that not everyone will talk at once, and it is a fine bet until a render kicks off and everybody does.</p>
+
+    <p>The farm isn't the only passenger. About 300 artists at one site and about 200 at the other, all working at the same time, sit on the same pipes as the render farm and the storage. So do the two sites' shared links to each other. And so do the artists who work from home, whose virtual workstations draw their desktops from a data center over the same infrastructure and read from the same caches. When one of those links is slow, the complaint doesn't say “the link is slow.” It says “the tool is laggy,” and a pipeline engineer gets a ticket.</p>
+
+    <p>It took us an embarrassingly long time to link a recurring symptom to its cause. Every so often, usually mid-morning, review sessions stuttered: video in the screening room froze for a second or two. We blamed the review software twice. Then somebody noticed it lined up with a large copy that a team started most mornings around ten, moving a finished sequence between tiers. The copy was well-behaved. It was also big enough to hog a shared link, and the review traffic, small and urgent, got in line behind it.</p>
+
+    <p>So we separated traffic where we could. Interactive work, meaning artists, review and virtual workstations, got its own lanes and its own priority. Batch work, meaning the farm and the big copies, got everything left over. It doesn't make the pipes bigger. It decides who waits, and it lets a person's mouse click beat a terabyte copy every time. One more thing belongs here in a sentence. Access control and content protection matter just as much inside the building as outside it, since the studio holds unreleased work, but the cloud is where those questions get loud, and <span class="xref">Ch. 21</span> will take them up.</p>
+
+    <h2 id="liars" data-short="Caches that lie">Caches that lie</h2>
+
+    <p>A word on vocabulary before I sing the praises of caching too loudly. In this chapter, a <dfn>cache</dfn> is a storage cache: a nearby copy of data that lives somewhere else. A simulation cache, the frame-by-frame record of simulated motion, is a different animal, and <span class="xref">Ch. 12</span> is where it gets its own treatment.</p>
+
+    <p>Caches are bargains, and bargains have fine print. The cost of a nearby copy is that the copy can be wrong. It can be stale: the original changed and the copy didn't hear. It can be partial: somebody wrote half a file, a node crashed, and the half got cached as if it were whole. And it can be stubborn. One of ours kept serving an old version of a model that everyone swore had been replaced a week earlier. A lighter spent an afternoon chasing a ghost shadow, because the farm's node believed, with perfect confidence, in a file that no longer existed upstream.</p>
+
+    <p>What saves us is a decision we made long before we built any of this, in <span class="xref">Ch. 4</span>: published versions never change. If version 12 of the foliage set is version 12 forever, then a copy of it can never go stale. There's nothing to go out of date. The cache can't lie about it, because there's no newer truth to disagree with. The dangerous things are the mutable ones, such as scratch files, work in progress and “latest” pointers, and we keep those out of the shared caches or give them short lives. Fingerprints, the content checksums from <span class="xref">Ch. 6</span>, let a node verify that what it holds is what it asked for. When something looks wrong, the answer is no longer “who touched it?” but “do the fingerprints match?”</p>
+
+    <p>We also learned what to watch. Hit rate on its own is a flattering number: it can look great while a few stuck requests stall a whole sequence. We track it alongside the time tasks spend waiting on reads, the depth of the queues at the storage servers, and the slowest few percent of requests rather than the average. The average is where bad news goes to hide. A graph that says most requests are fast tells you nothing about the one that held up an entire sequence.</p>
+
+    <h2 id="footnote" data-short="The honest footnote">The honest footnote</h2>
+
+    <p>The caching layer worked for years, which is the problem with caching layers that work. Over that time it quietly absorbed the habits of the storage system underneath it: how that system answered the metadata questions, how it aged data out, even which mistakes it made consistently enough that other software learned to expect them. None of this was written down. It was simply how things were.</p>
+
+    <p>Those habits turned out to be requirements. When the storage underneath was eventually replaced, we discovered them one at a time, usually as something that had always worked and suddenly didn't. That is one of the five migrations in <span class="xref">Ch. 28</span>, and I'll leave it there for now.</p>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>I wanted to buy more machines. What the situation needed was a better question: not “how busy is it?” but “what is it waiting for?” A processor at fifteen percent isn't underused, it's starved. A graph pressed against the ceiling isn't strength, it's a queue. The farm, it turns out, is a very large machine for reading files, and it's only as fast as the slowest thing it has to ask.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">Takeaway</span>
+      <p>Measure what the machines are waiting for, not how busy they look. Then move the data once and read it many times.</p>
+    </div>
+
+    <p>That closes Part II. We can name an asset (<span class="xref">Ch. 4</span>), describe the scene it appears in (<span class="xref">Ch. 5</span>), remember exactly what went into each frame (<span class="xref">Ch. 6</span>), and now keep all of it within reach of the machines that need it. I'll admit the tidiness is a little suspicious. Replacing the storage under all of this is a story for <span class="xref">Ch. 28</span>, and it did not go as tidily as the graphs above.</p>
+
+    <p>For now, all of that data exists for one reason: to be turned into pixels. Part III begins there, with a question I get asked at every conference and have never answered briefly. <span class="xref">Ch. 8</span>: why on earth did we write our own renderer?</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

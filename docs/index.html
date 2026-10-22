@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ten Thousand Shots a Year</title>
+<meta name="description" content="A tech lead's account of the 3D pipeline, the problems it caused, and the fixes that worked. For developers. Details yes, code no.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:title" content="Ten Thousand Shots a Year">
+<meta property="og:description" content="Building the pipeline behind digital worlds.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/book.css">
+</head>
+<body data-root="" data-slug="">
+<a class="skip" href="#toc">Skip to contents</a>
+
+<header class="topbar">
+  <a class="brand" href="index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<main>
+  <section class="cover">
+    <div>
+      <p class="cover-eyebrow">A working draft</p>
+      <h1>Ten Thousand Shots a Year</h1>
+      <p class="cover-sub">Building the pipeline behind digital worlds</p>
+      <p class="cover-tag">A tech lead's account of the 3D pipeline, the problems it caused, and the fixes that worked. Written for developers: details yes, code no, and a few jokes at the author's expense.</p>
+      <p class="cover-by" id="byline"></p>
+      <a class="cta" href="chapters/ch1.html">Start with Chapter 1 <span aria-hidden="true">→</span></a>
+    </div>
+
+    <!-- Cover art: a tiny dependency graph, with one note flowing backwards -->
+    <svg class="cover-art" viewBox="0 0 400 400" role="img" aria-label="A small network of connected nodes with one dashed line looping backwards">
+      <defs>
+        <marker id="ca" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor" style="color:var(--accent)"/></marker>
+      </defs>
+      <g class="e">
+        <path d="M60 310 L150 230"/><path d="M150 230 L140 110"/><path d="M150 230 L255 175"/>
+        <path d="M150 230 L215 330"/><path d="M255 175 L340 215"/><path d="M215 330 L340 215"/>
+        <path d="M255 175 L330 80"/><path d="M140 110 L255 175"/><path d="M60 310 L215 330"/><path d="M340 215 L360 320"/>
+      </g>
+      <path class="l" d="M340 215 C 380 120, 250 40, 144 104" marker-end="url(#ca)"/>
+      <g>
+        <circle class="n" cx="60" cy="310" r="11"/><circle class="n" cx="150" cy="230" r="14"/>
+        <circle class="n cool" cx="140" cy="110" r="12"/><circle class="n" cx="255" cy="175" r="14"/>
+        <circle class="n" cx="215" cy="330" r="11"/><circle class="n hot" cx="340" cy="215" r="15"/>
+        <circle class="n" cx="330" cy="80" r="10"/><circle class="n" cx="360" cy="320" r="9"/>
+      </g>
+    </svg>
+  </section>
+
+  <section class="toc-wrap" aria-labelledby="toc-h">
+    <h2 id="toc-h">Contents</h2>
+    <p>Chapters appear here as they're finished. Everything marked “Soon” is outlined and on its way.</p>
+    <div id="toc"></div>
+  </section>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="assets/js/chapters.js"></script>
+<script src="assets/js/book.js"></script>
+<script>document.getElementById("byline").textContent = "By " + window.BOOK.author;</script>
+</body>
+</html>

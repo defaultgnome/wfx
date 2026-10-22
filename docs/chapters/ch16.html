@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>From Capture to Character · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 16. A performance passes through ten transformations on its way from an actor to a creature, and every one of them can lose the part that mattered.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch16">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part V · Characters and Performance</p>
+    <p class="chap-num" aria-hidden="true">16</p>
+    <h1>From Capture to Character</h1>
+    <p class="dek">An actor's eyebrow, ten transformations, and the quiet ways a performance leaks on its way to a creature that has no eyebrows at all.</p>
+    <p class="meta"><span>Chapter 16</span><span>Continues from: Chapter 15</span><span id="reading-time">12 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">“That’s not what he did.”</p>
+
+    <p>The director said it quietly, in a review room, watching a close-up of the creature. Nobody argued. The animation was clean, the feet were planted, the mouth hit every word. By any number we had, the shot was correct. But the actor on the capture stage had lifted his left eyebrow a fraction before the line, a small, doubting lift, and the creature's brow had not. Everyone in the room felt the scene go slightly dead and nobody could say why.</p>
+
+    <p>It took us three days to find it. There was no bug. The raw face video showed the lift clearly, four frames before the first word. Somewhere on the way to the creature, the lift had been smoothed into nothing, because the creature's heavy brow ridge was set to respond slowly, and a slow response eats a quick flick. Each step in the chain had done something reasonable.</p>
+
+    <div class="callout">
+      <span class="callout-label">A note on this story</span>
+      <p>It is a composite, like everything else in this book: I've blended a few real incidents and removed anything that could point at a show or a performer. The four frames and the three days are illustrative, but the shape of the story is as typical as they come.</p>
+    </div>
+
+    <p>This chapter opens Part V, and with it a change of subject. Parts III and IV were about light and matter. Here we turn to the thing audiences actually watch, which is a performance. It also echoes the fifth of the Foreword's differences: software outlives its purpose, yet is expected to vanish. A capture session lasts a few days and is never repeated. The pipeline that carries it lasts years.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>In the first pitch deck I ever saw for a creature show, there was a single arrow. On the left, an actor in a suit covered in small reflective dots. On the right, the monster. Between them, the arrow. It was a lovely arrow.</p>
+
+    <p>The belief behind it is that performance is a thing you record once and apply, like pouring a drink from one glass into another. Capture the actor, put the result on the character, go home. And to be fair, for the first few seconds of a test, it does look like that. The creature stands up, turns its head, and moves like something alive. Then someone asks for the creature to be nine feet taller, with a stride twice the length, and the arrow quietly turns into a plumbing diagram.</p>
+
+    <h2 id="chain" data-short="The chain of ten">The chain of ten</h2>
+
+    <p>I now draw the arrow with ten boxes in it. I count them every time, because a chain you haven't counted is a chain you can't audit. Here they are, in order, with what each one can lose.</p>
+
+    <p><em>Capture</em> is the recording itself: cameras track small reflective <dfn>markers</dfn> on a performer's body inside the <dfn>capture volume</dfn> (the tracked physical space, not volumetric render data), while a helmet camera films the face. It can lose timing if the clocks drift, and it loses anything the cameras couldn't see. <em>Cleanup</em> removes noise and fills the holes where a marker was hidden behind an arm. It can lose genuine small motion, because small motion and noise look alike to an algorithm. <em>Solve</em> turns a cloud of points into a <dfn>skeleton</dfn> pose for every frame. It can lose accuracy quietly: it can find a perfectly confident, perfectly wrong answer.</p>
+
+    <p><em>Retarget</em> moves that motion onto the character, whose proportions, joints, and sometimes limb count differ from the performer's. It can lose almost everything that matters, as we'll see. <em>Animation edit</em> is where an animator changes the performance for the shot, and it can lose the original if the edit overwrites it. <em>Rig evaluation</em> runs the character's control skeleton, the <dfn>rig</dfn> (the subject of <span class="xref">Ch. 18</span>), and it can lose fidelity wherever the rig deforms differently from the performer.</p>
+
+    <p><em>Simulation</em> adds secondary motion such as flesh, cloth and hair (<span class="xref">Ch. 14</span>), and it can absorb or fight the animation it sits on. <em>Corrective shapes</em> are stored sculpts, called <dfn>blendshapes</dfn> when they hold a facial expression, that patch the places where the rig looks wrong at extreme poses. They can lose a pose entirely if nobody sculpted one for it. <em>Geometry cache</em> bakes the result to disk so that the farm can render it, and it can lose precision or, worse, a version. <em>Render</em> is the last step, where lighting and shading can bury a subtle expression in shadow.</p>
+
+    <figure class="fig wide">
+      <div class="fig-box">
+        <svg viewBox="0 0 840 240" role="img" aria-labelledby="f16t f16d">
+          <title id="f16t">The chain of ten</title>
+          <desc id="f16d">Ten boxes in two rows of five, numbered from capture to render, each with a short caption naming what can leak at that step.</desc>
+          <g class="node"><rect x="10" y="14" width="148" height="44" rx="8"/><text x="84" y="41" style="font-size:13.5px">1. Capture</text><text class="sm" x="84" y="90">timing, if clocks drift</text><rect x="175" y="14" width="148" height="44" rx="8"/><text x="249" y="41" style="font-size:13.5px">2. Cleanup</text><text class="sm" x="249" y="90">small motion, smoothed as noise</text><rect x="340" y="14" width="148" height="44" rx="8"/><text x="414" y="41" style="font-size:13.5px">3. Solve</text><text class="sm" x="414" y="90">a plausible but wrong pose</text><rect x="505" y="14" width="148" height="44" rx="8"/><text x="579" y="41" style="font-size:13.5px">4. Retarget</text><text class="sm" x="579" y="90">contact, weight, intent</text><rect x="670" y="14" width="148" height="44" rx="8"/><text x="744" y="41" style="font-size:13.5px">5. Animation edit</text><text class="sm" x="744" y="90">the source, if overwritten</text><rect x="10" y="134" width="148" height="44" rx="8"/><text x="84" y="161" style="font-size:13.5px">6. Rig evaluation</text><text class="sm" x="84" y="210">deformation differences</text><rect x="175" y="134" width="148" height="44" rx="8"/><text x="249" y="161" style="font-size:13.5px">7. Simulation</text><text class="sm" x="249" y="210">motion absorbed by physics</text><rect x="340" y="134" width="148" height="44" rx="8"/><text x="414" y="161" style="font-size:13.5px">8. Corrective shapes</text><text class="sm" x="414" y="210">expression at extremes</text><rect x="505" y="134" width="148" height="44" rx="8"/><text x="579" y="161" style="font-size:13.5px">9. Geometry cache</text><text class="sm" x="579" y="210">precision, versions</text><rect x="670" y="134" width="148" height="44" rx="8"/><text x="744" y="161" style="font-size:13.5px">10. Render</text><text class="sm" x="744" y="210">what lighting hides</text></g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 16.1</b> The chain of ten. Each step looks fine on its own numbers; the caption is what it can quietly lose.</figcaption>
+    </figure>
+
+    <p>None of those ten is exotic. Most of them are somebody's entire department. The trouble is that each is owned by different people who judge it by different numbers, and a performance can be wrong without any one number being wrong. Everything looked fine at every step, which was the problem.</p>
+
+    <p>The eyebrow, for the record, died at step four. I'm telling you the step because the habit I took from it is the only transferable lesson in this chapter: whenever data passes through several departments, draw the chain, count the steps, and write under each one what it can lose. It takes twenty minutes and it changes the arguments you have.</p>
+
+    <h2 id="bodies" data-short="Bodies">Bodies: skeletons, scale and weight</h2>
+
+    <p>Solving a body looks easy to describe. You have a few dozen points moving through space, and you want the skeleton that best explains them. The trouble is that “best” is not unique. A shoulder marker can be explained by a raised shoulder or by a leaned torso, and the solver picks one. Usually it picks well. When it doesn't, the answer is smooth and confident and a little bit wrong, which is the most dangerous kind of wrong, since nothing flags it.</p>
+
+    <p>Then comes retargeting, the central difficulty of the chapter. A human leg is a certain length. The creature's leg is, say, a third longer, with the knee bending the other way. If you copy the joint angles across, the feet slide on the floor. If you copy the foot positions across, the knees do something unsettling. The honest answer is that no arithmetic carries over <em>weight</em>, the sense that a body is heavy and takes effort to move. That has to be rebuilt by something that knows what the character is.</p>
+
+    <figure class="fig">
+      <div class="fig-box">
+        <svg viewBox="0 0 640 220" role="img" aria-labelledby="f16bt f16bd">
+          <title id="f16bt">Retargeting with and without contact constraints</title>
+          <desc id="f16bd">Two stick figures on a floor line. On the left the foot hovers above the floor with a gap marked. On the right the foot is planted and the hip is lowered to compensate.</desc>
+          <g class="node ghost">
+            <line x1="20" y1="190" x2="300" y2="190" stroke="currentColor" stroke-width="2"/>
+            <line x1="340" y1="190" x2="620" y2="190" stroke="currentColor" stroke-width="2"/>
+          </g>
+          <g stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round">
+            <circle cx="160" cy="36" r="12"/><path d="M160 48 V110 M160 110 L130 158 L128 176 M160 110 L196 150 L198 168 M160 64 L128 92 M160 64 L192 90"/>
+            <circle cx="480" cy="52" r="12"/><path d="M480 64 V122 M480 122 L450 160 L448 188 M480 122 L516 160 L518 188 M480 80 L448 108 M480 80 L512 106"/>
+          </g>
+          <text class="sm" x="160" y="212" text-anchor="middle" fill="currentColor">copied angles: feet float</text>
+          <text class="sm" x="480" y="212" text-anchor="middle" fill="currentColor">contact as a constraint: feet planted</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 16.2</b> Retargeting without and with contact constraints. On the right the hip gives way so the foot can stay where the floor is.</figcaption>
+    </figure>
+
+    <p>The part viewers forgive least is <em>contact</em>: a foot on the floor, a hand on a railing. People who couldn't name a single joint will notice a foot that slides a centimeter. So we treat contact as a constraint, not an afterthought. Feet are marked as planted for the frames where they should be, and the retarget is allowed to bend everything else, hips, knees, even the timing of the swing, to keep them there. This costs fidelity. The creature no longer moves exactly like the actor. It moves like the actor would, if the actor were that creature and the floor were still the floor.</p>
+
+    <p>That leads to the real trade-off, and it is a dial rather than a switch. At one end you are faithful to the performer, and the creature may look like a person in a costume. At the other end the creature is physically right for its body and the performer's intent thins out. Someone has to hold that dial, shot by shot, and the right person is usually an animation supervisor with a strong opinion and a recorded decision.</p>
+
+    <p>The giant was the clean case. His walk cycle, three strides of a performer walking slowly across the capture stage, had to carry its footfall timing through all ten steps without a single foot sliding. It did, mostly because one person insisted the planted frames be marked at step three and honored at step nine. Footfalls were the only thing that walk had to say, and for once the chain let it say them.</p>
+
+    <h2 id="faces" data-short="Faces">Faces: a shared vocabulary</h2>
+
+    <p>Faces are harder, for a reason that has nothing to do with technology. Every audience member is an expert. You have spent your entire life reading faces, and you will notice a quarter-second of wrong timing in an eyebrow that you'd never see in an elbow.</p>
+
+    <p>So we don't try to move raw points on the face. We describe a performance as a set of expression controls: the brow raises, the left corner of the mouth pulls, the jaw opens. A face is a mix of those controls over time, a few hundred channels sampled at 120 frames a second. The cost of this approach is that everyone has to agree on the vocabulary: the actor's controls, the creature's controls, and the stylized character's controls all need to mean the same things. Getting that agreement is a meeting, a very long one, and it is better to have it before the shoot.</p>
+
+    <p>The capture itself has its own misery. The performer wears a helmet with a small camera pointed at their face, and the helmet moves. Between takes it slips on the forehead, or someone adjusts it at lunch, and suddenly the same face reads as having a different brow position. We once spent an afternoon looking at a performer who appeared to change his mind about his own forehead between morning and afternoon. The fix is dull and effective: a quick neutral-face calibration at the start of every take, stored with the take.</p>
+
+    <figure class="fig">
+      <div class="fig-box">
+        <svg viewBox="0 0 640 170" role="img" aria-labelledby="f16ct f16cd">
+          <title id="f16ct">One expression, three faces</title>
+          <desc id="f16cd">A small grid. One doubting brow lift from a human actor maps to a human character as a brow raise, to a creature as a ridge shift and eye narrowing, and to a stylized face as an eye-size change.</desc>
+          <g class="node">
+            <rect x="10" y="20" width="180" height="48" rx="8"/><text x="100" y="49">Actor: brow lifts</text>
+            <rect x="230" y="12" width="180" height="40" rx="8"/><text x="320" y="37" style="font-size:13px">Human: brow lifts</text>
+            <rect x="230" y="62" width="180" height="40" rx="8"/><text x="320" y="87" style="font-size:13px">Creature: ridge, eye</text>
+            <rect x="230" y="112" width="180" height="40" rx="8"/><text x="320" y="137" style="font-size:13px">Stylized: eye widens</text>
+          </g>
+          <text class="sm" x="530" y="85" text-anchor="middle" fill="currentColor">same doubt, three faces</text>
+        </svg>
+      </div>
+      <figcaption><b>Figure 16.3</b> One expression, three vocabularies. The mapping is authored, not computed.</figcaption>
+    </figure>
+
+    <p>Retargeting to a non-human face forces the question, <em>what does “the same expression” even mean?</em> The creature has no eyebrows; it has a ridge. A doubting lift on a human is a small upward movement. On the creature we decided it should be a slight forward shift of the ridge and a narrowing of the eyes, which reads as the same doubt but shares no geometry with it. Some of that mapping can be automatic. The part that matters is authored by a person who understands both faces, and it is a piece of design, not a piece of math.</p>
+
+    <p>The uncanny valley, the unsettling feeling of a face that is almost but not quite human, tends to be blamed on detail. In the data it shows up as <em>timing and asymmetry</em>. A real face is never quite symmetric, and a real expression does not begin everywhere at once. Smooth both of those away, as our eyebrow got smoothed away, and you get a face that is perfect and wrong.</p>
+
+    <h2 id="recoverable" data-short="Keeping the original">Keeping the original recoverable</h2>
+
+    <p>This is the data-engineering heart of the chapter, and where the book's earlier themes come back. The performance belongs to the performer, and the pipeline's duty is to carry it faithfully. Two habits follow.</p>
+
+    <p>First, <em>layer, never overwrite</em>. The source performance sits at the bottom of a stack, frozen. Every change an animator makes goes into a named layer above it: “lift the brow earlier”, “soften the landing”. The final result is the stack added up, and any layer can be switched off to see what's underneath. This is the same instinct as provenance in <span class="xref">Ch. 6</span>: the human decision and the original stay separate from the regenerated product.</p>
+
+    <figure class="fig">
+      <div class="fig-box">
+        <svg viewBox="0 0 640 190" role="img" aria-labelledby="f16dt f16dd">
+          <title id="f16dt">The layered performance stack</title>
+          <desc id="f16dd">Four stacked bars. The source solve at the bottom is marked frozen. Above it are an animator edit layer, a director note layer, and the final result on top.</desc>
+          <g class="node">
+            <rect x="120" y="14" width="400" height="34" rx="6"/><text x="320" y="36">Final: the sum of the layers</text>
+            <rect x="120" y="54" width="400" height="34" rx="6"/><text x="320" y="76">Layer: director note, brow earlier</text>
+            <rect x="120" y="94" width="400" height="34" rx="6"/><text x="320" y="116">Layer: animator edit, softer landing</text>
+            <rect x="120" y="134" width="400" height="38" rx="6"/><text x="320" y="157">Source solve: frozen, never edited</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption><b>Figure 16.4</b> Edits sit on top of the source. Any layer can be toggled; the bottom one can't be changed.</figcaption>
+    </figure>
+
+    <p>Second, <em>take everything immutable and traceable</em>. A take, the recording of one run of a scene, is as precious as a film negative: named, tagged, and never altered. A solve is tied to the exact solver version and settings that produced it, and a retarget to the exact solve it came from. When someone asks “which solver made this?”, the answer is a lookup, not an investigation.</p>
+
+    <p>That discipline gets tested the day a better solver arrives. Ours arrived at week twenty of a show. It was clearly better, so we re-solved all 300 takes. Of the animators' edits sitting on top of the old solves, 35 no longer lined up. The new solve had put a wrist a few centimeters from where the old one had it, and an edit that said “lift this wrist” was now lifting the wrong wrist. It took one person about a week to re-base them by hand. There was no clean answer, only a recorded one: we wrote down which takes had moved, why, and what we had done about each. We'd do it again, but we'd have scheduled it between sequences instead of during one.</p>
+
+    <p>There's one more cost, which is storage. The face video from a single capture day runs to tens of gigabytes an hour, and the body data is small by comparison. All of it has to be kept, because the source is exactly the thing we promised not to lose. It is a storage and I/O problem like the ones in <span class="xref">Ch. 7</span>, only with a longer memory. The payoff is that takes get reused. A walk captured for one shot becomes part of a motion library, and the same library feeds the crowds in <span class="xref">Ch. 13</span>.</p>
+
+    <p>I should say a word about machine learning. Learned solvers can speed up cleanup and give a nicer first pass at a solve, and we've tried them. But a learned solver is one more versioned dependency, with all the provenance questions that implies, and I'll leave the larger questions to <span class="xref">Ch. 31</span>.</p>
+
+    <h2 id="disagree" data-short="Artists and engineers">Where artists and engineers disagree</h2>
+
+    <p>Some animators would rather throw the capture away and animate the shot by hand. Some engineers would like exactly one trustworthy pipeline and no exceptions. They are both a little right.</p>
+
+    <p>The animators have a point. Capture is a record of what a person did, not what the shot needs, and a performer who isn't a nine-foot creature doesn't always know what a nine-foot creature should do. The engineers have a point too: a path that doesn't exist yet is a path that nobody has debugged. Our middle road is that each shot is declared as one of three things, and the declaration is recorded. Capture as <em>reference</em>: the animator watches it and animates by hand. Capture as <em>foundation</em>: the animator starts from it and edits in layers. Capture as <em>final</em>: the performance goes straight through with minimal change. The supervisor chooses, per shot, and can change the choice later without losing anything.</p>
+
+    <p>I learned the value of that choice by overruling an animator once. A shot of the creature stumbling had come out of capture looking stiff, and the animator wanted to key it by hand. I said no: schedule, and the take was good. She did it my way without comment. The shot went through four rounds of notes, and every one of them said, in some form, that it looked like a man pretending to stumble. In the end she keyed it by hand over a weekend and it was right on the first try. Her only remark, delivered very kindly, was that it had been the educational way to spend a month. She was right, and I've been grateful for the principle ever since: ask the person with the hands.</p>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>Back to the eyebrow. These days, before a performance shot goes to the director, we put the raw face video next to the final result and make the differences visible: a short list of what moved, what didn't, and when. It isn't glamorous. It catches things that look fine at every step, which is exactly the thing the director's quiet sentence was trying to tell us.</p>
+
+    <p>Looking back across Parts II to V, there is one principle I keep arriving at in different clothes: <em>keep the human decision and the original separate from the regenerated product.</em> Provenance, memory, simulation caches and now performance are all the same lesson. We'll name it properly in <span class="xref">Ch. 30</span>.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">Takeaway</span>
+      <p>You can't preserve everything, so decide what you're preserving, out loud. Retargeting is translation, and translation is where the meaning leaks.</p>
+    </div>
+
+    <p>Everything so far has assumed we have time: capture, then solve, then edit, then render, then watch in a review room. But the same performance data can drive a character live, in front of the camera, while the director is still standing there. <span class="xref">Chapter 17</span> takes it to the set, where there is no time to be right, only to be fast.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

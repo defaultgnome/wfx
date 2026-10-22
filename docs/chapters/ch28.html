@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Five Migrations That Nearly Went Wrong · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 28. Five migrations, one playbook, and the lesson that a migration is a period of running two systems at once, not a project with an end date.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch28">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part VIII · Hard-Won Lessons</p>
+    <p class="chap-num" aria-hidden="true">28</p>
+    <h1>Five Migrations That Nearly Went Wrong</h1>
+    <p class="dek">Chapter 3 said every choice is a lease with a hidden exit fee. This is the chapter where the bills arrive.</p>
+    <p class="meta"><span>Chapter 28</span><span>Continues from: Chapter 27</span><span id="reading-time">15 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">The migration was declared done on a Tuesday. <em>The shot was not.</em></p>
+
+    <p>The dashboard said one hundred percent. Every show was on the new renderer, the old one had been switched off, and somebody had put a cake in the kitchen. Two weeks later an artist on a show that had wrapped a year earlier reopened a shot for a re-delivery, and it did not look the way it used to.</p>
+
+    <p>It was the giant, as it happens, in an early cut that had been recut for a trailer. The soft shadow under his planted foot, which the archive rendered one way, came out slightly harder in the new renderer. You could only see it if you laid the two frames on top of each other, but a supervisor who has approved a shot once will lay the frames on top of each other. Fixing that one shot took three hours. Finding out how many others had the same quiet difference took four days.</p>
+
+    <p>If this sounds like the mystery from <span class="xref">Ch. 6</span>, the old shot that re-rendered with a blue shadow, it is a cousin. That one was a plugin update. This one was the renderer itself, behaving differently in a corner nobody had tested. (The cloud-versus-local variant from <span class="xref">Ch. 21</span> is still a cousin we haven't fully pinned down.) The point is the same: the migration was finished, and the shot was not.</p>
+
+    <p>This chapter pays off the last of the Foreword's five differences, <em>software outlives its purpose, yet is expected to vanish</em>. We were told, repeatedly and in good faith, that the old system would be gone by the end of the quarter. Each time, it wasn't.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>Here is how a migration looks on a slide. Build the new thing. Switch everyone over. Switch off the old thing. A tidy chart with a bar for each phase and a diamond at the end that says <em>decommission</em>.</p>
+
+    <p>I have seen that diamond move many times. On one project it moved four times, and then someone quietly renamed it a “target,” which was honest, and a little sad.</p>
+
+    <p>The slide is not a lie so much as a picture of the wrong thing. It treats a migration as a project with an end date. What we kept learning, at some cost, is that a migration is a <strong>period of running two systems at once</strong>, and the hard part is the overlap. The new system usually works fine. What takes the time is that nobody can leave the old one yet.</p>
+
+    <h2 id="chronology" data-short="The real order">The real order</h2>
+
+    <p>I'll tell the five stories in the order of the book's chapters, because that is where you can find the technical detail. The real order was different, so let me state it once and not again.</p>
+
+    <p>The scene format started first. The renderer followed, and overlapped it for a good while. Then came storage, then the scheduler, then the scripting runtime, and only those last three were anything like sequential. Through all of it the farm kept rendering a million tasks a night, because films do not pause for plumbing. In a bad quarter we were running three “old” things at once, and for a while I could not have told you, without looking it up, which old thing a given artist was complaining about.</p>
+
+    <h2 id="callbacks" data-short="Two you've already met">Two you've already met</h2>
+
+    <p><strong>The renderer.</strong> What moved, and how we matched the look and retrained the artists, is in <span class="xref">Ch. 8</span>. The new angle here is the overlap. We let shows already in flight finish on the old renderer, which was kind and sensible, and it also meant the overlap was tied to the slowest show instead of to the calendar. We planned four months. It took nine. In the middle of it, a renderer-upgrade freeze on one show (<span class="xref">Ch. 25</span>) pushed that show's cutover back by another month, and nobody was wrong to ask for it.</p>
+
+    <p><strong>The scene format.</strong> The fidelity test suite and the rule that nothing is retired until the last user is found are in <span class="xref">Ch. 5</span>. What I want to add is the long tail. The last ten percent of readers were not tools; they were one-off scripts that someone wrote for one show and never mentioned again, and finding them dominated the overlap. We planned six months. It took fourteen. If a migration has a tail, that is where the calendar goes.</p>
+
+    <p>Those two taught us the shape. The next three taught us to expect it.</p>
+
+    <h2 id="storage" data-short="Case file: storage">Case file: storage</h2>
+
+    <p><strong>What moved.</strong> <span class="xref">Ch. 7</span> ended with an honest footnote: the storage we described would one day be replaced, and its habits would turn out to be requirements. About thirty petabytes lived on it, spread across live shows and an archive of everything we'd ever delivered. The new system was faster, cheaper per terabyte and easier to grow. Moving to it meant copying all of that while around 500 artists and a farm kept writing to it.</p>
+
+    <p><strong>What almost broke.</strong> Anyone who has tried to copy a directory that is still changing knows the problem in miniature. The copy finishes, and by the time it finishes the source has moved on. At this scale the copy never converges, because data has a kind of gravity: the bigger it gets, the harder it is to move, and the more it keeps changing while you try. The second problem was paths. Old scenes and caches had the old locations baked into them, and <span class="xref">Ch. 6</span>'s provenance records pointed at places that were about to stop existing.</p>
+
+    <p><strong>What saved us.</strong> Three things. We moved by project instead of by volume, so a project could be frozen briefly, copied, and handed over, and the work in flight stayed small. We redirected paths instead of rewriting them, so a scene that asked for the old location was quietly sent to the new one and nothing stored had to be edited. And we verified by checksum before anything was deleted, which sounds obvious and is the step most tempting to skip when the old disks are full.</p>
+
+    <p>The near miss came from that last step. One project folder had been marked <em>copied and verified</em>. It had been, truthfully, on the day we checked. But inside it was a cache directory still being written by an overnight job on the farm that nobody remembered launching, and the old copy was one click from deletion. We had added a final pre-delete check almost as an afterthought: has anything in here been modified in the past week? It had. The folder belonged to the giant's final comp, which had a week left to run. I would like to say we planned that check from experience. We added it after the first scare, and it caught the second.</p>
+
+    <p>Planned overlap: five months. Actual: eleven.</p>
+
+    <h2 id="scheduler" data-short="Case file: the scheduler">Case file: the scheduler</h2>
+
+    <p><strong>What moved.</strong> The scheduler in <span class="xref">Ch. 19</span> is the old one. It served us for years, it was well loved in the way a creaky staircase is well loved, and it was written for a farm a fraction of the size. We replaced it with a queue-based scheduler that could handle a million tasks a night without developing opinions about them.</p>
+
+    <p><strong>What almost broke.</strong> The old scheduler's fairness rules lived in its code, unwritten. Nobody had ever sat down and said what <em>fair</em> meant. There were priorities, caps, and a number of special cases that had accreted over the years, and the whole thing amounted to a political settlement between shows, encoded as logic. When the new scheduler behaved differently, people did not say “the policy changed.” They said “the new one has a bug,” because from where they sat, the old behavior was simply how the farm worked.</p>
+
+    <p>This is the parity trap. We had promised that the new scheduler would behave like the old one, and that sentence is a trap because the old one's quirks were the real specification. You cannot match a specification that is not written down, and the people who benefit from it do not know they are benefiting.</p>
+
+    <p><strong>What saved us.</strong> We wrote the rules down first. That exercise, which is the policy you saw in finished form in <span class="xref">Ch. 19</span>, was not a side effect of the migration; it was what the migration forced. Then we ran both queues in shadow mode for several weeks. The new scheduler saw the same incoming work and decided what it <em>would</em> start, while the old one actually did. Each morning we compared the two lists and argued about the differences, which was far cheaper than arguing about them in production.</p>
+
+    <p>One difference survived all the argument and then turned up anyway. A rule nobody remembered let the shortest tasks jump the line at night, because artists were waiting on them. It had been added years ago for a reason that was good at the time. The new queue did not have it. On the first Monday of a trial, three supervisors asked why their thumbnails were slow. We put the rule back, wrote it down, and gave it a name.</p>
+
+    <p>Planned overlap: three months. Actual: seven.</p>
+
+    <h2 id="runtime" data-short="Case file: the runtime">Case file: the runtime</h2>
+
+    <p><strong>What moved.</strong> This is the least glamorous of the five and the most widespread. Almost every tool and every plugin in every DCC runs on a scripting language, and that language's runtime was reaching the end of its supported life. This was the maintenance tax that <span class="xref">Ch. 24</span> foreshadowed, now with an invoice attached. Nothing about the upgrade was interesting. That was the problem.</p>
+
+    <p><strong>What almost broke.</strong> There were thousands of small scripts. Many had no owner, which is the bolt-on trap from <span class="xref">Ch. 3</span> in its natural habitat: each script was cheap to write, so nobody thought of it as something that needed a name on it. A few of them were load-bearing. You cannot tell which few by reading, because a script that looks like a harmless utility may be the thing a render submission quietly depends on.</p>
+
+    <p><strong>What saved us.</strong> We stopped asking around. Asking tells you what people remember, and what people remember is the scripts they wrote last month. Instead we instrumented the runtime for several weeks and logged what actually ran, what it imported and who triggered it. The inventory found about 3,000 scripts. Roughly 400 had no owner. And one, which nobody believed existed until we showed the log, resized thumbnails every Friday at four in the afternoon and had apparently been doing so for years. Two departments' weekly reviews depended on it.</p>
+
+    <p>We did the migration in slices, show by show, with the old runtime available in each slice until its scripts passed. It was the slowest of the five and also the only one where nothing reached production before it had been seen running. We paid for that in calendar time.</p>
+
+    <p>Planned overlap: eight months. Actual: fifteen.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Migration</th><th>Planned overlap</th><th>Actual overlap</th><th>What stretched it</th></tr></thead>
+          <tbody>
+            <tr><td>Scene format</td><td>6 months</td><td>14 months</td><td class="who">The long tail of one-off readers</td></tr>
+            <tr><td>Renderer</td><td>4 months</td><td>9 months</td><td class="who">The slowest show in flight, and a freeze</td></tr>
+            <tr><td>Storage</td><td>5 months</td><td>11 months</td><td class="who">Data that kept changing while we copied it</td></tr>
+            <tr><td>Scheduler</td><td>3 months</td><td>7 months</td><td class="who">Rules that had never been written down</td></tr>
+            <tr><td>Scripting runtime</td><td>8 months</td><td>15 months</td><td class="who">Scripts nobody could find</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 28.1</b>Planned and actual overlap, illustrative. The plans were not careless. They were the plans of people who had not yet met the overlap.</figcaption>
+    </figure>
+
+    <p>Add up the right-hand column and you see why a bad quarter had three old things running at once. We never once finished early. I'd call that a pattern.</p>
+
+    <h2 id="common" data-short="What the five share">What the five share</h2>
+
+    <p>I used to think each of these went wrong in its own way, and for a long while I filed them separately. Looked at side by side, they went wrong in the same four ways.</p>
+
+    <p>First, <strong>the old system is a specification nobody wrote down</strong>. The scheduler's fairness rule, the renderer's shadow, the thumbnail script: each was behavior someone depended on and no one could name. The old system had a reputation for being terrible, and it was, and everybody depended on its behavior anyway. The only reliable way to find those behaviors is to run old and new side by side on real work and look at the differences, which is the pattern we used in <span class="xref">Ch. 5</span> and <span class="xref">Ch. 8</span>.</p>
+
+    <p>Second, <strong>the overlap costs more than either system alone</strong>. During it you pay to run both, you pay to keep them in sync, and you pay with people's attention, because every question now begins with “which one are you on?” It is a cost curve that rises, sits at a plateau for far longer than anyone budgeted, and only falls once the old system is actually off. This is why the planned months in the table are so optimistic: we budgeted for the climb and forgot the plateau.</p>
+
+    <p>Third, <strong>the last ten percent is the long tail of one-off users</strong>. The first ninety percent of readers or scripts or projects moved in the first third of the time. The remainder were the odd ones, each needing someone to find it, understand it and decide. The long tail is where migrations go to live.</p>
+
+    <p>Fourth, <strong>reversibility is worth paying for until a deliberate, announced point of no return</strong>. In every case, what saved us was a way back. We kept the old copy of the data, the old queue, the old runtime, for exactly as long as we were unsure. Then we picked a day, told everyone, and crossed it. The day does not have to be early. It has to be chosen, because an undeclared point of no return is just a deletion nobody scheduled.</p>
+
+    <p>There is a fifth thing that is more about calendar than architecture. A facility like ours has no quiet season. There is always a delivery, always a show in its worst fortnight, and so there is no good window, only a least bad one. We picked cutover dates by looking at which shows could afford a week of mild disruption, and we respected the freezes from <span class="xref">Ch. 25</span>, even when that made a migration slower. A migration that breaks a show in its final week is not a migration, it is an incident.</p>
+
+    <div class="callout">
+      <span class="callout-label">The migration checklist</span>
+      <p><strong>1. Inventory the users.</strong> Find them by watching what actually runs, not by asking around.</p>
+      <p><strong>2. Define parity.</strong> Write down what “the same” means, including the quirks someone will call bugs.</p>
+      <p><strong>3. Shadow-run.</strong> Let the new system decide, or render, or copy, alongside the old one, and compare real work.</p>
+      <p><strong>4. Migrate in slices.</strong> By shot, by show or by project, never by a single date for everyone.</p>
+      <p><strong>5. Set the point of no return.</strong> Choose it, announce it, and keep the way back open until then.</p>
+      <p><strong>6. Turn it off and mean it.</strong> A system left running “just in case” becomes the next one somebody has to migrate.</p>
+    </div>
+
+    <p>I should be plain about the checklist. We did not follow it the first time, and the scene format, which came first, paid for that. By the runtime we followed it closely, and we still came in at nearly twice the plan. It does not make a migration short. It makes it survivable.</p>
+
+    <h2 id="stuck" data-short="What stuck">What stuck</h2>
+
+    <p>Go back to the Tuesday with the cake. The right response to “is the migration done?” turns out to be a question: <em>done for whom?</em> For the dashboard, yes. For the artist reopening the giant's year-old shot, no. For the script that resizes thumbnails on Fridays, nobody knew yet.</p>
+
+    <p>When we finally did finish the renderer, the tidy moment I had imagined never arrived. There was no cutover day when the lights changed. The old system just gradually stopped being something anyone worried about, one show and one script at a time, until a month passed without a question about it.</p>
+
+    <div class="callout stuck">
+      <span class="callout-label">Takeaway</span>
+      <p>You don't finish a migration. You stop being afraid of the old system.</p>
+    </div>
+
+    <p>Migrations are the dramatic version of change: a named project, a diamond on a slide, a cake. The daily version has no diamond and no cake. It is technical debt, and it has no completion date at all. That is <span class="xref">Ch. 29</span>.</p>
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>

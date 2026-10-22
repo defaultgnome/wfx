@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tools Artists Actually Use · Ten Thousand Shots a Year</title>
+<meta name="description" content="Chapter 23. Internal tools rarely fail because they are broken. They fail because they were built for the workflow in the spec, not the one in the room. Plus the review room, where a shot's fate is decided.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23c0502a'/%3E%3Cpath d='M8 21l5-9 4 6 3-4 4 7z' fill='%23faf7f2'/%3E%3C/svg%3E">
+<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..700,0..100;1,9..144,300..700,0..100&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/css/book.css">
+</head>
+<body data-root="../" data-slug="ch23">
+<a class="skip" href="#content">Skip to the chapter</a>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<header class="topbar">
+  <a class="brand" href="../index.html">Ten Thousand Shots <span>a Year</span></a>
+  <div class="bar-actions">
+    <button class="btn" id="drawer-toggle" type="button" aria-expanded="false" aria-controls="drawer">Contents</button>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle light or dark theme">Theme</button>
+  </div>
+</header>
+
+<div class="drawer" id="drawer" hidden>
+  <nav class="drawer-panel" aria-label="Table of contents">
+    <div class="drawer-head"><strong>Contents</strong><button class="btn" type="button" data-close>Close</button></div>
+    <div class="drawer-body"></div>
+  </nav>
+</div>
+
+<aside class="rail" aria-label="On this page">
+  <h4>On this page</h4>
+  <ol id="rail-list"></ol>
+</aside>
+
+<main id="content">
+  <header class="chap-head">
+    <p class="eyebrow">Part VII · People and Process</p>
+    <p class="chap-num" aria-hidden="true">23</p>
+    <h1>Tools Artists Actually Use</h1>
+    <p class="dek">You can build something correct, fast and well tested, and an artist will still route around it. Why that happens, what a day of watching teaches, and the one tool every artist and supervisor uses more than any other: the review room.</p>
+    <p class="meta"><span>Chapter 23</span><span>Continues from: Chapter 22</span><span id="reading-time">16 min read</span><span>Draft</span></p>
+  </header>
+
+  <article class="prose">
+
+    <p class="lede">The tool had taken four months to build, and it sat there, unopened, while the artist next to me did the job by hand.</p>
+
+    <p>I'd asked to sit behind a compositor for a morning. Not to review anything, just to see a normal day. The publish tool, the one we'd been proud of since spring, was right there on her shelf, one click away. She never touched it. Instead, each time she finished a version, she reached into a folder called <em>old_stuff_DONT_DELETE</em>, ran a ten-line script, and watched it rename her files and push them out the door.</p>
+
+    <p>Nobody in the room was embarrassed. Everybody was a little surprised, me most of all, and I did the one thing I'd promised myself I wouldn't: I opened my mouth to explain how much better the new tool was. She nodded politely. Then she ran the script again.</p>
+
+    <p>This chapter opens Part VII, where we leave the machines and spend some time with the people in front of them. Back in the Foreword I listed five ways this industry differs from the software you may know. The third was that our users' product is something else entirely. An artist isn't there to use our tool; she is there to make a shot look right by Thursday. The tool is judged by her afternoon, not by our spec, and I learned that the slow way.</p>
+
+    <h2 id="belief" data-short="The comfortable belief">The comfortable belief</h2>
+
+    <p>Here is what I believed, and I suspect you believe it too. If the requirements are written down, and the tool meets them, and the tests pass, the work is done. What happens next is adoption, which is a matter of sending an email.</p>
+
+    <p>Our requirements document for the publish tool was thorough. It had nine pages, a glossary, and signatures from every lead who had a stake in it. Looking at it again afterwards, I noticed that nobody who would actually press the button had signed it. That wasn't negligence. Leads speak for their departments, and we assumed they spoke accurately. But a lead describes the workflow as it is meant to go, and the artist lives the workflow as it goes. The document was a careful portrait of a person who did not exist.</p>
+
+    <p>It's worth saying that the tool worked perfectly. It simply had no users.</p>
+
+    <h2 id="collision" data-short="Where tools go to die">Where tools go to die</h2>
+
+    <p>I've watched tools die three different ways, and none of them involved a bug.</p>
+
+    <h3>The tool nobody opened</h3>
+
+    <p>The publish tool is the first. Its validation step was lovely: it checked naming, frame ranges and color tags before anything left the artist's machine. It also took a couple of minutes longer than the script from the old folder, because the script skipped validation entirely. The script saved each compositor about two minutes per publish, and the department publishes roughly thirty-five times a day. Do the sum: seventy minutes of department time a day, every day, and the tool asked them to spend it for a safety net they didn't feel they needed. For six weeks they politely declined. The tool wasn't wrong. It was just two minutes slower, and two minutes, repeated, wins every argument.</p>
+
+    <h3>The twenty-second tax</h3>
+
+    <p>The second death is slow, and it's the one that frightens me most, because it never produces a complaint. A button in one of our tools was meant to copy a shot's name to the clipboard. It copied the wrong field. A compositor had to re-type the name by hand, about nine times a day, and she had been doing it for months. When I finally saw it, I said, "Why didn't you tell us?" She looked at me and said, "I didn't think you could just fix that." The fix took ten minutes.</p>
+
+    <p>Now multiply. A tool that wastes twenty seconds, used sixty times a day by three hundred of our artists, burns a hundred hours every working day. Over about 250 working days that is 25,000 hours, which at roughly 2,300 working hours to a person-year is about eleven person-years, lost every year, to something that never once appeared in a ticket queue. Nobody files a ticket about twenty seconds.</p>
+
+    <aside class="scale">
+      <span class="callout-label">The twenty-second tax</span>
+      <dl>
+        <div><dt>One small friction</dt><dd>20 seconds</dd></div>
+        <div><dt>Times a day, per artist</dt><dd>60</dd></div>
+        <div><dt>Artists affected</dt><dd>300</dd></div>
+        <div><dt>Lost each working day</dt><dd>about 100 hours</dd></div>
+        <div><dt>Lost each year (about 250 days)</dt><dd>about 25,000 hours</dd></div>
+        <div><dt>In person-years (about 2,300 hours each)</dt><dd>about eleven</dd></div>
+      </dl>
+      <small>Illustrative, but the multiplication is the point: small, silent, and larger than a team.</small>
+    </aside>
+
+    <p>That brings up what I call the captive-audience illusion. Our artists have to use what we give them, so when a tool is bad, the feedback looks like silence. We read silence as approval. It is closer to the opposite: it is a workaround in progress.</p>
+
+    <h3>The script nobody told us about</h3>
+
+    <p>The third death is the loudest, and it happened on a delivery night. Years ago, during a storage migration (the kind <span class="xref">Ch. 5</span> and <span class="xref">Ch. 28</span> describe from the data side), we moved a department's home folders to new machines. We copied everything, checked the counts, and congratulated ourselves. What we didn't know was that one compositor had a small script in her home folder that quietly fixed a color tag on every plate she loaded. Over the years the rest of the department had come to depend on it without ever asking where it lived. The migration dropped that folder from the active set. The script stopped running.</p>
+
+    <p>Nothing failed. No alarm fired. Thirty shots went out a shade off, and the first person to notice was a supervisor squinting at them in dailies, which is a very public way to find a hole in your pipeline. We fixed the shots overnight. It took us two days longer to understand what had happened, because the tool that mattered was not in any inventory we owned.</p>
+
+    <p>Every department has these. Personal scripts, shelf buttons, folder habits, a text file of commands someone pastes from. They are the glue that holds the real workflow together, and they sit exactly on the steps an engineer most wants to replace. Touch the step, break the glue, and you won't know until someone downstream notices a color.</p>
+
+    <h2 id="watch" data-short="Watch, don't ask">Watch, don't ask</h2>
+
+    <p>The reframe, when it came, was almost insultingly cheap. Surveys and requirement meetings record what people <em>say</em> they do. A day of sitting behind someone records what they do. Those are different workflows, and the gap between them is where our tools kept falling.</p>
+
+    <p>So we started shadowing. The method is simple, and it is harder than it sounds. You bring nothing: no laptop to demo on, no slides. You say almost nothing, because every explanation you offer steers the artist toward the workflow you want to see. You write down what happens, especially the parts that seem too small to mention. And you ask only two questions, both after the fact: what did you do before this tool existed, and what do you do when it breaks?</p>
+
+    <p>I'll be honest that the first few sessions feel like an intrusion, and the artist is doing you a favor by tolerating it. I sat very still, trying hard not to explain my own tool, and I am fairly sure it was the longest I had gone without talking since I was last asked to give a talk. But what I saw in a single day was more than a year of survey results had told us.</p>
+
+    <figure class="fig wide">
+      <div class="tablewrap">
+        <table class="datatable">
+          <thead><tr><th>Publishing a version</th><th>As spoken</th><th>As observed</th></tr></thead>
+          <tbody>
+            <tr><td>Before</td><td>"I just hit publish."</td><td>Closes two other scripts, saves a backup copy by hand "just in case"</td></tr>
+            <tr><td>Naming</td><td>"The tool names it."</td><td>Renames files manually first, then lets the tool find them</td></tr>
+            <tr><td>Checking</td><td>"Validation runs."</td><td>Opens the result in a second window to look at it anyway</td></tr>
+            <tr><td>After</td><td>"Then I tell the lead."</td><td>Types the shot name into chat, nine times a day, from a sticky note</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <figcaption><b>Table 23.1</b>One task, two accounts. The right-hand column is the one the tool actually has to serve. Illustrative.</figcaption>
+    </figure>
+
+    <p>The things you see are things no survey asks about: the second monitor lined with sticky notes, the manual rename before every publish, the step done twice because once did not feel safe. Two lessons repeat. Speed and predictability beat features, since artists forgive a missing feature faster than a surprise. And error messages are user experience: a message written for the engineer is a support call written for us.</p>
+
+    <div class="callout">
+      <span class="callout-label">A one-page shadowing checklist</span>
+      <p>Bring nothing, and book half a day at least. Say almost nothing; if you must speak, ask what they are about to do. Write down every workaround, however small. Note every window, sticky note and script, and where the script lives. Count the steps done twice. Ask the two questions at the end: what did you do before this tool existed, and what do you do when it breaks? Then thank them, and go and fix one small thing within the week, so they see that watching leads somewhere.</p>
+    </div>
+
+    <h2 id="review-room" data-short="The review room">The review room</h2>
+
+    <p>If there is one tool that every artist and every supervisor uses more than any other, it is not on a shelf. It is a room: one big screen, fifty minutes, and a queue of versions much longer than the time. That's <dfn>dailies</dfn>, the daily review session where supervisors look at the day's new versions and say what each artist does tomorrow. It is the place where a shot's life is decided, and back in <span class="xref">Ch. 2</span> I listed it as the fifth thing that breaks first when volume grows. This is where we pay that off.</p>
+
+    <p>For years I believed review was a meeting, not a system. Meetings you schedule; systems you build. I was wrong, and the room taught me how.</p>
+
+    <p>Here is what went wrong, usually in the same week. Media wasn't ready: a version had been published, but the playable review file hadn't finished, so the supervisor saw a gap and the artist lost her slot. A color mismatch: the artist approved a shot on her monitor, and on the big screen it looked different enough that a note about the sky meant nothing. Lost notes: a supervisor said something sharp and useful in the room, and by the time it reached the artist's inbox it had become a sentence that could mean three things. Each is an engineering failure wearing a meeting's clothes.</p>
+
+    <p>The reframe was to treat dailies as a pipeline whose output is a decision. Look at it as one: review media is generated for every submitted version, the versions are queued for the session, played back color-accurately, notes are captured against the exact frame, and the next version links back to the notes that caused it. That last link matters most. It is what makes "time from note to new version" a number we can measure, which Appendix C comes back to, and the whole loop is drawn in Appendix B.3.</p>
+
+    <p>What we built was unglamorous, and it is all illustrative of the kind of thing that works. Review media is made automatically on every publish, so nobody has to remember. The playlist order is agreed with the supervisors in advance, shots that are ready first. One calibrated screen standard applies in every room at both sites, so a color note means the same thing in either. Annotations are drawn on the frame and attached to the version, because a note drawn on the frame beats a note typed about it, as long as it survives into the next artist's hands. And each new version carries a link to the notes it answers.</p>
+
+    <p>This cost something. Supervisors lost the freedom to "just show one more", because a fixed playlist is fixed, and the rule needed an owner with the standing to say no politely. Some of them disliked that, with reason. Review is also where the honest footnote is biggest: capacity is the one limit the farm can't buy away. There is one room and a fixed number of minutes, and about 10,000 shots a year all want a slot. Choosing what gets reviewed is a scheduling problem with feelings.</p>
+
+    <p>Two loose ends, flagged as questions rather than promises. Review formats are changing, with higher dynamic range, new kinds of display, and remote and immersive review, and the room will inherit all of them; <span class="xref">Ch. 31</span> takes that up as speculation. And finding things is a question we have, not a tool we adopted (<span class="xref">Ch. 31</span> lists it too): nobody can yet reliably search "the shot with the green sky from last Tuesday's dailies", because nobody tagged it, and the media knows nothing about what it contains.</p>
+
+    <h2 id="changed" data-short="What we changed">What we changed</h2>
+
+    <p>The first change was the cheapest, and it came straight out of the old folder. We went back to the publish tool and copied the script's behavior into it: the same rename, the same speed, with validation running quietly in the background instead of in the artist's way. Nothing about the tool's purpose changed. Within a week, adoption went from near zero to nearly everyone. The script's author, a compositor with a dry sense of humor, asked whether she was now being paid by the line. She was not, and I have felt bad about it since.</p>
+
+    <p>The reverse story is worth one paragraph too, because it shows what pull looks like. A technical director once built a rough contact-sheet tool in an afternoon, to lay a dozen frames side by side so he could stop opening them one at a time. It had no icon and no documentation, and its error messages were mostly punctuation. Three departments were using it within a month, passed along by word of mouth, because it did one thing and it did it before you finished reaching for the mouse. We had spent a quarter on tools that came with a launch email, and none of them spread like that.</p>
+
+    <p>From those two stories, and a lot of sitting still, came a handful of habits. None is clever. They work because they put an engineer where the problem is.</p>
+
+    <p>We started embedding an engineer with a department for a week, and then doing it again a few months later. It is not a visit. The engineer sits with the artists, takes the same interruptions, and fixes one small thing a day. By Friday the department has stopped treating the pipeline team as a distant office that answers tickets, and the engineer has a list of thirty small frictions that would never have reached a queue. Most take an hour. A few are awkward, and those become real projects, but now with a person's name attached to the pain.</p>
+
+    <p>We also ship small and often, and we keep a changelog that artists can read. That means plain sentences written for the person at the desk: "The publish button no longer asks you twice." It does not mean a list of ticket numbers. A changelog is the cheapest proof that watching leads somewhere. When artists see their own complaint appear in it, a week later, they start telling us the next one.</p>
+
+    <p>Then there is the matter of personal scripts. We used to treat them as violations: unreviewed, unsupported, a risk. After the delivery night, we reversed the instinct and began treating them as requirements. Every department has a handful of scripts that people copy from each other, and the most-copied ones are a ranked list of what the official tools got wrong. So we find them, ask the author what problem each one solves, and promote the best into the real pipeline with the author's name on the first release note. I'll admit this is the opposite of the bolt-on trap that <span class="xref">Ch. 3</span> describes, where a hurried script quietly becomes a platform nobody owns. The difference is that here someone chooses, on purpose, with the author in the room.</p>
+
+    <p>Error messages got the same treatment. A message now has to answer three questions for whoever is looking at it: what happened, whether it is their problem, and what to do next. The old one read something like "validation failed, code 14". The new one says that a frame range doesn't match the shot, that the artist doesn't need to fix it, and that the lead has already been told. Support questions about that single message fell to nearly nothing. At two in the morning, which <span class="xref">Ch. 25</span> returns to, a clear message is the cheapest on-call engineer we have.</p>
+
+    <p>Finally, we changed what we measure. Counting clicks and feature use tells you what people touched, not what they got done. Time to complete a task is harder to collect and much more honest: how long does it take, start to finish, to publish a version, or to answer a note? If that number drops, the tool is working, whatever the usage chart says. Appendix C looks at the numbers that mislead, and a few of those were ours.</p>
+
+    <h2 id="stick" data-short="Making tools stick">Making tools stick</h2>
+
+    <p>Once you have watched enough people, a few rules of thumb fall out, and they are less about design than about manners.</p>
+
+    <p>Live inside the application the artist already has open. Every time a tool asks someone to leave their software, open another window and come back, it is spending goodwill. Most of what artists use is embedded in a larger program, which is why <span class="xref">Ch. 24</span> is about living there as a guest, and about what that costs.</p>
+
+    <p>Make the default right nine times out of ten, and leave an escape hatch for the tenth. Here is the part that took me longest to accept: an optional step will be skipped. If a step is not the default, assume it won't happen, however good it is for them. This is exactly why the cost visibility in <span class="xref">Ch. 22</span> had to appear in front of the artist and not in a report somewhere else.</p>
+
+    <p>And do not start with a mandate. Pull beats push. If you have to order people to use a tool, the tool is telling you something, and the useful reaction is curiosity: why would a sensible person rather not? Sometimes the answer is a missing feature. More often it is two minutes, or a surprise, or a button that copies the wrong field. A mandate is still allowed, occasionally, but only after you know the reason and have decided it isn't one you can fix.</p>
+
+    <p>The feedback loop can be light. A visible channel, a promise to answer within a day, and the discipline to say no with reasons. That last part matters more than it looks. Saying no without a reason teaches artists to stop asking, and we are back to silence.</p>
+
+    <p>There is a reverse failure here, and I'd be dishonest to leave it out. A tool shaped entirely by its loudest user is as wrong as one shaped by a requirements document. The department that writes the most messages gets the most features, and the quiet one, which might process more shots, gets a workflow designed by someone else's preferences. Watching a few people in each department, and not only the ones who invite you, is a modest guard against that.</p>
+
+    <h2 id="unsolved" data-short="What isn't solved">What isn't solved</h2>
+
+    <p>Tools can't fix a bad review process, only make a good one faster. If a supervisor gives vague notes, faster media and better annotation will deliver the vague note sooner and in better color. I'd like to say we found a cure for that, and we haven't. We found a way to make it visible, which is a smaller thing and sometimes enough.</p>
+
+    <p>Shadowing doesn't scale. We have about 500 artists across two sites, and one engineer can sit behind perhaps a few dozen people a year before the other work notices. So the loudest department gets the most attention, and the quiet ones are under-watched, whatever our intentions. We try to rotate, and we try to ask a department we haven't visited recently before one we have, but it is a habit and not a system, and habits slip in a delivery month.</p>
+
+    <p>Last, people leave, and they take their workflows with them. The compositor whose script saved the department seventy minutes a day will one day move to another studio, and unless someone has written down what that script does and why, the knowledge walks out of the door with her coat. We have promoted a few scripts, documented a few more, and lost a few anyway. The folder of old scripts is an archive, but it is not a safe one.</p>
+
+    <h2 id="past-self" data-short="What I'd tell my past self">What I'd tell my past self</h2>
+
+    <p>I still have the folder. It sits on a shared drive now, renamed to something respectable, and it is the first place I send anyone who joins the pipeline team. Each script in it is a small, honest statement of what some artist needed and our tools did not provide. Read together, they are a free requirements document, written by the people who will press the button, in the only language that is never wrong: what they do when no one is looking.</p>
+
+    <p>If I could sit across from myself on the day I opened my mouth to explain the new tool, I'd say one thing. The first user interview is the one where you stop talking. Everything else, the checklist, the embedded weeks, the changelog, follows from that, and so does most of the trust.</p>
+
+    <p>One more thing, though, and it is what sends us to the next chapter. Almost every tool an artist touches lives inside somebody else's software, and that software has its own opinions, its own release schedule, and no interest in ours. Building a tool people want is half the work. The other half is being a decent guest in a house we don't own, which is what <span class="xref">Ch. 24</span> is about.</p>
+
+
+  </article>
+
+  <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+</main>
+
+<footer class="footer">Ten Thousand Shots a Year · Working draft</footer>
+
+<script src="../assets/js/chapters.js"></script>
+<script src="../assets/js/book.js"></script>
+</body>
+</html>
